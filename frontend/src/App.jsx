@@ -1,0 +1,47 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Layout from './components/Layout';
+import Landing from './pages/Landing';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import Finances from './pages/Finances';
+import Tasks from './pages/Tasks';
+import Routines from './pages/Routines';
+import Goals from './pages/Goals';
+import Projects from './pages/Projects';
+import Settings from './pages/Settings';
+
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">Carregando...</div>;
+  if (!user) return <Navigate to="/auth" replace />;
+  return <Layout>{children}</Layout>;
+}
+
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-400">Carregando...</div>;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/finances" element={<ProtectedRoute><Finances /></ProtectedRoute>} />
+          <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+          <Route path="/routines" element={<ProtectedRoute><Routines /></ProtectedRoute>} />
+          <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+          <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
