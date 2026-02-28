@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Wallet, CheckSquare2, RotateCw, Target, FolderKanban, Code2, 
-  Star, ChevronRight, CheckCircle2, Menu, X, ArrowRight
+  Star, ChevronRight, CheckCircle2, Menu, X, ArrowRight, LayoutGrid 
 } from 'lucide-react';
-import { motion, AnimatePresence, useSpring, useInView } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { motion, useScroll, useTransform, AnimatePresence, useSpring, useInView } from 'framer-motion';
 
-// --- Sub-components ---
+// --- Components ---
 
-// Navbar
+// Navbar - Floating Pill Style (Adjusted for Top Banner)
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,11 +19,6 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const handleAuthNavigation = () => {
-    setMobileMenuOpen(false);
-    navigate('/auth');
-  };
 
   return (
     <>
@@ -42,15 +35,28 @@ const Navbar = () => {
             }
           `}
         >
-          {/* Logo */}
-          <div className="flex items-center gap-2 font-semibold text-lg tracking-tight cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-             <img 
-              src="/devsboard.png" 
-              alt="DevsBoard Logo" 
-              className={`w-8 h-8 rounded-lg object-cover border transition-colors duration-500 ${isScrolled ? 'border-white/20' : 'border-[#0e3b44]/10'}`}
-            />
-            <span className="hidden sm:inline">DevsBoard</span>
-          </div>
+
+          <div className="flex items-center gap-2 font-semibold text-lg tracking-tight group cursor-pointer" style={{ perspective: "1000px" }}>
+  
+  {/* A Imagem da logo solta (transparente), com animação 3D */}
+  <img 
+    src="/devsboard.png" // Caminho para imagem na pasta public
+    alt="DevsBoard Logo"
+    className={`w-8 h-8 object-contain transition-all duration-500 ease-out
+      ${isScrolled ? 'brightness-0 invert' : ''} // Ajuste de cor condicional se necessário
+      group-hover:scale-110 group-hover:rotate-[-5deg]`}
+    style={{ 
+      transformStyle: "preserve-3d",
+      transform: "translateZ(30px)", // Efeito de flutuação 3D no hover
+      filter: isScrolled ? 'drop-shadow(0 2px 4px rgba(255,255,255,0.2))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+    }} 
+  />
+
+  {/* Texto da logo */}
+  <span className={`hidden sm:inline transition-colors duration-500 ${isScrolled ? 'text-white' : 'text-[#0e3b44]'}`}>
+    DevsBoard
+  </span>
+</div>
 
           {/* Desktop Links */}
           <div className={`hidden md:flex items-center gap-6 text-[13px] font-medium transition-colors duration-500 ${isScrolled ? 'text-white/80' : 'text-[#0e3b44]/80'}`}>
@@ -63,7 +69,6 @@ const Navbar = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.96 }}
-              onClick={handleAuthNavigation}
               className={`
                 px-5 py-2 rounded-full text-[13px] font-semibold transition-all duration-500
                 ${isScrolled ? 'bg-[#485c10] text-white hover:bg-[#3d4a0c]' : 'bg-[#0e3b44] text-white hover:bg-[#092a31]'}
@@ -91,24 +96,25 @@ const Navbar = () => {
             className="fixed inset-0 z-[60] bg-[#f5f5dc] flex flex-col p-8 pt-24"
           >
             <div className="flex justify-between items-center mb-12">
-              <span className="text-2xl font-bold text-[#0e3b44] flex items-center gap-2">
-                <img src="/devsboard.png" alt="Logo" className="w-8 h-8 rounded-lg" />
-                DevsBoard
-              </span>
+              <span className="text-2xl font-bold text-[#0e3b44]">DevsBoard</span>
               <button onClick={() => setMobileMenuOpen(false)} className="p-3 bg-[#0e3b44]/5 rounded-full hover:bg-[#0e3b44]/10 transition-colors">
                 <X size={24} className="text-[#0e3b44]" />
               </button>
             </div>
             <nav className="flex flex-col gap-6">
-              <a href="#recursos" onClick={() => setMobileMenuOpen(false)} className="text-4xl font-bold text-[#0e3b44] hover:text-[#485c10] transition-colors tracking-tight">Recursos</a>
-              <a href="#beneficios" onClick={() => setMobileMenuOpen(false)} className="text-4xl font-bold text-[#0e3b44] hover:text-[#485c10] transition-colors tracking-tight">Benefícios</a>
-              <button onClick={handleAuthNavigation} className="text-left text-4xl font-bold text-[#0e3b44] hover:text-[#485c10] transition-colors tracking-tight">Login</button>
+              {['Recursos', 'Benefícios', 'Preços', 'Login'].map((item) => (
+                <a 
+                  key={item}
+                  href="#" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-4xl font-bold text-[#0e3b44] hover:text-[#485c10] transition-colors tracking-tight"
+                >
+                  {item}
+                </a>
+              ))}
             </nav>
             <div className="mt-auto">
-                <button 
-                  onClick={handleAuthNavigation}
-                  className="w-full py-5 bg-[#0e3b44] text-white rounded-[24px] font-bold text-lg hover:bg-[#092a31] transition-colors"
-                >
+                <button className="w-full py-5 bg-[#0e3b44] text-white rounded-[24px] font-bold text-lg">
                     Criar Conta Gratuita
                 </button>
             </div>
@@ -119,7 +125,7 @@ const Navbar = () => {
   );
 };
 
-// Animated Counter Component
+// Animated Counter Component with Design Fixes
 const Counter = ({ from = 0, to, suffix = "", label }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-20px" });
@@ -146,6 +152,7 @@ const Counter = ({ from = 0, to, suffix = "", label }) => {
 
   return (
     <div className="flex flex-col items-center justify-center">
+      {/* Number and Suffix Container */}
       <div className="flex items-baseline leading-none relative">
         <span ref={ref} className="text-[3.5rem] md:text-[5rem] font-semibold text-[#0f172a] tabular-nums tracking-tighter">
           {displayValue}
@@ -156,6 +163,8 @@ const Counter = ({ from = 0, to, suffix = "", label }) => {
           </span>
         )}
       </div>
+      
+      {/* Label */}
       <span className="text-sm md:text-lg text-gray-500 font-medium mt-2 tracking-wide">
         {label}
       </span>
@@ -190,10 +199,8 @@ const FeatureCard = ({ icon: Icon, title, description, delay }) => {
   );
 };
 
-// Main Landing Page Component
-const LandingPage = () => {
-  const navigate = useNavigate();
-
+// Main App Component
+export default function App() {
   return (
     <div className="w-full bg-[#f5f5dc] min-h-screen text-slate-900 overflow-x-hidden selection:bg-[#485c10] selection:text-white">
       
@@ -211,7 +218,7 @@ const LandingPage = () => {
 
       <Navbar />
 
-      {/* Hero Section */}
+      {/* Hero Section - Padding adjusted to move content up (pt-24/md:pt-32) */}
       <section className="relative pt-28 pb-20 md:pt-36 md:pb-32 px-6 overflow-hidden">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center z-10 relative">
           
@@ -243,7 +250,7 @@ const LandingPage = () => {
             transition={{ delay: 0.4 }}
             className="text-lg md:text-xl font-medium text-slate-600 mb-10 max-w-2xl leading-relaxed"
           >
-            A plataforma para desenvolvedores que querem produtividade e organização.
+            Menos bagunça mental. Mais execução diária.
           </motion.p>
 
           <motion.div 
@@ -255,22 +262,21 @@ const LandingPage = () => {
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/auth')}
               className="px-8 py-4 bg-[#485c10] rounded-full text-white font-bold flex items-center gap-2 shadow-xl shadow-[#485c10]/25 hover:bg-[#3d4a0c] transition-colors"
             >
               Começar Agora
               <ArrowRight className="w-4 h-4" />
             </motion.button>
-            <motion.a 
-              href="#beneficios"
+            <motion.button 
               whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.05)" }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-transparent border-2 border-slate-200 text-slate-700 rounded-full font-bold hover:border-slate-300 transition-colors cursor-pointer flex items-center justify-center"
+              className="px-8 py-4 bg-transparent border-2 border-slate-200 text-slate-700 rounded-full font-bold hover:border-slate-300 transition-colors"
             >
               Ver Benefícios
-            </motion.a>
+            </motion.button>
           </motion.div>
 
+          {/* Stats - Refined to match image exactly */}
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -279,7 +285,7 @@ const LandingPage = () => {
             className="flex flex-row justify-center gap-12 md:gap-32 pt-8"
           >
             {[
-              { label: "Clientes", value: 20, suffix: "+" },
+              { label: "Usuários", value: 20, suffix: "+" },
               { label: "Gratuito", value: 100, suffix: "%" },
               { label: "Anúncios", value: 0, suffix: "" },
             ].map((stat, i) => (
@@ -299,7 +305,7 @@ const LandingPage = () => {
           viewport={{ once: true }}
           className="mb-16 text-center md:text-left"
         >
-          <span className="text-[#485c10] font-bold uppercase tracking-wider text-sm">Recursos Premium</span>
+          <span className="text-[#485c10] font-bold uppercase tracking-wider text-sm">Recursos</span>
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-3">O que a plataforma oferece</h2>
         </motion.div>
 
@@ -365,7 +371,6 @@ const LandingPage = () => {
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/auth')}
               className="mt-10 px-8 py-3 bg-white text-[#0e3b44] rounded-full font-bold inline-flex items-center gap-2 hover:bg-gray-100 transition-colors"
             >
               Criar conta gratuita
@@ -375,10 +380,10 @@ const LandingPage = () => {
 
           <div className="space-y-8">
             {[
-              { title: "TUDO EM UM SÓ LUGAR", desc: "Chega de alternar entre 5 apps diferentes." },
-              { title: "FOCO E FLUXO PARA DEVS", desc: "Interface limpa, atalhos intuitivos e zero distrações." },
-              { title: "SUA BASE SÓLIDA", desc: "Dados seguros e exportáveis a qualquer momento." },
-              { title: "PROJETOS ORGANIZADOS", desc: "Da ideia ao deploy, acompanhe cada etapa." }
+              { title: "Tudo em um só lugar", desc: "Chega de alternar entre 5 apps diferentes." },
+              { title: "Foco para devs", desc: "Interface limpa, atalhos intuitivos e zero distrações." },
+              { title: "Sua base sólida", desc: "Dados seguros e exportáveis a qualquer momento." },
+              { title: "projetos organizados", desc: "Da ideia ao deploy, acompanhe cada etapa." }
             ].map((item, i) => (
               <motion.div 
                 key={i}
@@ -406,21 +411,22 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer className="bg-[#f5f5dc] border-t border-[#485c10]/10 py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#485c10] rounded-lg flex items-center justify-center overflow-hidden">
-               <img src="/devsboard.png" alt="DevsBoard Logo" className="w-full h-full object-cover" />
-            </div>
-            <span className="text-sm font-medium font-mono text-[#485c10]">© 2026 DevsBoard</span>
-          </div>
+  <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="flex items-center gap-3">
+      {/* Imagem da logo importada da pasta public */}
+      <img 
+        src="/devsboard.png" 
+        alt="DevsBoard Logo" 
+        className="w-8 h-8 object-contain"
+      />
+      <span className="text-sm font-medium font-mono text-[#485c10]">© 2026 DevsBoard</span>
+    </div>
 
-          <p className="text-xs font-mono text-[#485c10]/80">
-            Desenvolvido por <a href="https://github.com/icaroCodes" className="font-bold">IcaroCodes</a>
-          </p>
-        </div>
-      </footer>
+    <p className="text-xs font-mono text-[#485c10]/80">
+      Desenvolvido por <a href="https://github.com/icarocodes" className='font-bold'>IcaroCodes</a>
+    </p>
+  </div>
+</footer>
     </div>
   );
 }
-
-export default LandingPage;
