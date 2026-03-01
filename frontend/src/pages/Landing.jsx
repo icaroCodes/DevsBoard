@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Wallet, CheckSquare2, RotateCw, Target, FolderKanban, Code2, 
-  Star, ChevronRight, CheckCircle2, Menu, X, ArrowRight, LayoutGrid 
+import {
+  Wallet, CheckSquare2, RotateCw, Target, FolderKanban, Code2,
+  Star, ChevronRight, CheckCircle2, Menu, X, ArrowRight, LayoutGrid
 } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence, useSpring, useInView } from 'framer-motion';
 
@@ -29,34 +29,34 @@ const Navbar = () => {
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
           className={`
             pointer-events-auto flex items-center justify-between px-6 py-3 rounded-full transition-all duration-500
-            ${isScrolled 
-              ? 'bg-[#0e3b44]/80 backdrop-blur-2xl text-white shadow-2xl border border-white/10 w-full max-w-xl' 
+            ${isScrolled
+              ? 'bg-[#0e3b44]/80 backdrop-blur-2xl text-white shadow-2xl border border-white/10 w-full max-w-xl'
               : 'bg-white/60 backdrop-blur-xl text-[#0e3b44] border border-[#0e3b44]/5 w-full max-w-5xl'
             }
           `}
         >
 
           <div className="flex items-center gap-2 font-semibold text-lg tracking-tight group cursor-pointer" style={{ perspective: "1000px" }}>
-  
-  {/* A Imagem da logo solta (transparente), com animação 3D */}
-  <img 
-    src="/devsboard.png" // Caminho para imagem na pasta public
-    alt="DevsBoard Logo"
-    className={`w-8 h-8 object-contain transition-all duration-500 ease-out
+
+            {/* A Imagem da logo solta (transparente), com animação 3D */}
+            <img
+              src="/devsboard.png" // Caminho para imagem na pasta public
+              alt="DevsBoard Logo"
+              className={`w-8 h-8 object-contain transition-all duration-500 ease-out
       ${isScrolled ? 'brightness-0 invert' : ''} // Ajuste de cor condicional se necessário
       group-hover:scale-110 group-hover:rotate-[-5deg]`}
-    style={{ 
-      transformStyle: "preserve-3d",
-      transform: "translateZ(30px)", // Efeito de flutuação 3D no hover
-      filter: isScrolled ? 'drop-shadow(0 2px 4px rgba(255,255,255,0.2))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-    }} 
-  />
+              style={{
+                transformStyle: "preserve-3d",
+                transform: "translateZ(30px)", // Efeito de flutuação 3D no hover
+                filter: isScrolled ? 'drop-shadow(0 2px 4px rgba(255,255,255,0.2))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+              }}
+            />
 
-  {/* Texto da logo */}
-  <span className={`hidden sm:inline transition-colors duration-500 ${isScrolled ? 'text-white' : 'text-[#0e3b44]'}`}>
-    DevsBoard
-  </span>
-</div>
+            {/* Texto da logo */}
+            <span className={`hidden sm:inline transition-colors duration-500 ${isScrolled ? 'text-white' : 'text-[#0e3b44]'}`}>
+              DevsBoard
+            </span>
+          </div>
 
           {/* Desktop Links */}
           <div className={`hidden md:flex items-center gap-6 text-[13px] font-medium transition-colors duration-500 ${isScrolled ? 'text-white/80' : 'text-[#0e3b44]/80'}`}>
@@ -76,10 +76,10 @@ const Navbar = () => {
             >
               Começar
             </motion.button>
-            
-             {/* Mobile Toggle */}
+
+            {/* Mobile Toggle */}
             <button className="md:hidden ml-2" onClick={() => setMobileMenuOpen(true)}>
-                <Menu size={20} className={isScrolled ? "text-white" : "text-[#0e3b44]"} />
+              <Menu size={20} className={isScrolled ? "text-white" : "text-[#0e3b44]"} />
             </button>
           </div>
         </motion.nav>
@@ -103,9 +103,9 @@ const Navbar = () => {
             </div>
             <nav className="flex flex-col gap-6">
               {['Recursos', 'Benefícios', 'Preços', 'Login'].map((item) => (
-                <a 
+                <a
                   key={item}
-                  href="#" 
+                  href="#"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-4xl font-bold text-[#0e3b44] hover:text-[#485c10] transition-colors tracking-tight"
                 >
@@ -114,9 +114,9 @@ const Navbar = () => {
               ))}
             </nav>
             <div className="mt-auto">
-                <button className="w-full py-5 bg-[#0e3b44] text-white rounded-[24px] font-bold text-lg">
-                    Criar Conta Gratuita
-                </button>
+              <button className="w-full py-5 bg-[#0e3b44] text-white rounded-[24px] font-bold text-lg">
+                Criar Conta Gratuita
+              </button>
             </div>
           </motion.div>
         )}
@@ -129,13 +129,13 @@ const Navbar = () => {
 const Counter = ({ from = 0, to, suffix = "", label }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-20px" });
-  
-  const springValue = useSpring(from, { 
-    stiffness: 50, 
-    damping: 15, 
-    mass: 1 
+
+  const springValue = useSpring(from, {
+    stiffness: 50,
+    damping: 15,
+    mass: 1
   });
-  
+
   const [displayValue, setDisplayValue] = useState(from);
 
   useEffect(() => {
@@ -163,7 +163,7 @@ const Counter = ({ from = 0, to, suffix = "", label }) => {
           </span>
         )}
       </div>
-      
+
       {/* Label */}
       <span className="text-sm md:text-lg text-gray-500 font-medium mt-2 tracking-wide">
         {label}
@@ -175,7 +175,7 @@ const Counter = ({ from = 0, to, suffix = "", label }) => {
 // Feature Card Component
 const FeatureCard = ({ icon: Icon, title, description, delay }) => {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
@@ -184,14 +184,14 @@ const FeatureCard = ({ icon: Icon, title, description, delay }) => {
       className="bg-[#0e3b44] rounded-[24px] p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-white/10" />
-      
+
       <div className="w-14 h-14 bg-[#8e9c78]/20 rounded-2xl flex items-center justify-center mb-6 text-[#8e9c78] group-hover:bg-[#485c10] group-hover:text-white transition-all duration-300">
         <Icon className="w-7 h-7" />
       </div>
-      
+
       <h3 className="text-xl font-bold font-sans mb-3 tracking-tight">{title}</h3>
       <p className="text-sm font-sans text-gray-300 leading-relaxed opacity-90">{description}</p>
-      
+
       <div className="mt-6 flex items-center text-xs font-bold text-[#8e9c78] opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
         Saiba mais <ArrowRight className="w-3 h-3 ml-1" />
       </div>
@@ -203,9 +203,9 @@ const FeatureCard = ({ icon: Icon, title, description, delay }) => {
 export default function App() {
   return (
     <div className="w-full bg-[#f5f5dc] min-h-screen text-slate-900 overflow-x-hidden selection:bg-[#485c10] selection:text-white">
-      
+
       {/* Top Banner */}
-      <motion.div 
+      <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 20 }}
@@ -221,8 +221,8 @@ export default function App() {
       {/* Hero Section - Padding adjusted to move content up (pt-24/md:pt-32) */}
       <section className="relative pt-28 pb-20 md:pt-36 md:pb-32 px-6 overflow-hidden">
         <div className="max-w-5xl mx-auto flex flex-col items-center text-center z-10 relative">
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -232,7 +232,7 @@ export default function App() {
             <span className="text-xs font-semibold text-[#485c10] uppercase tracking-wide">100% Gratuito</span>
           </motion.div>
 
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, type: "spring" }}
@@ -244,7 +244,7 @@ export default function App() {
             </span>
           </motion.h1>
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -253,13 +253,13 @@ export default function App() {
             Menos bagunça mental. Mais execução diária.
           </motion.p>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
             className="flex flex-col sm:flex-row items-center gap-4 mb-16"
           >
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-[#485c10] rounded-full text-white font-bold flex items-center gap-2 shadow-xl shadow-[#485c10]/25 hover:bg-[#3d4a0c] transition-colors"
@@ -267,7 +267,7 @@ export default function App() {
               Começar Agora
               <ArrowRight className="w-4 h-4" />
             </motion.button>
-            <motion.button 
+            <motion.button
               whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.05)" }}
               whileTap={{ scale: 0.95 }}
               className="px-8 py-4 bg-transparent border-2 border-slate-200 text-slate-700 rounded-full font-bold hover:border-slate-300 transition-colors"
@@ -277,7 +277,7 @@ export default function App() {
           </motion.div>
 
           {/* Stats - Refined to match image exactly */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -293,140 +293,156 @@ export default function App() {
             ))}
           </motion.div>
         </div>
-        
+
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#485c10]/5 rounded-full blur-3xl -z-10 pointer-events-none" />
       </section>
 
-      {/* Resources Section */}
-      <section id="recursos" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+      {/* Elegant Resources Grid Section */}
+      <section id="recursos" className="py-32 px-6 md:px-12 max-w-7xl mx-auto z-10 relative">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-16 text-center md:text-left"
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="mb-20 text-center md:text-left flex flex-col md:flex-row md:items-end md:justify-between gap-8"
         >
-          <span className="text-[#485c10] font-bold uppercase tracking-wider text-sm">Recursos</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-3">O que a plataforma oferece</h2>
+          <div>
+            <span className="text-[#485c10] font-bold tracking-widest text-[11px] uppercase mb-4 block">
+              Plataforma all-in-one
+            </span>
+            <h2 className="text-4xl md:text-6xl font-bold text-[#0e3b44] tracking-tight leading-[1.05]">
+              Tudo que você precisa,<br /> <span className="text-[#8e9c78]">nada do que não precisa.</span>
+            </h2>
+          </div>
+          <p className="text-slate-500 font-medium max-w-md text-lg leading-relaxed">
+            Um ecossistema desenhado para reduzir o atrito entre o seu planejamento e a sua execução.
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard 
-            icon={Wallet} 
-            title="Finanças" 
-            description="Gerencie receitas, despesas e tenha uma visão clara do seu fluxo de caixa pessoal."
-            delay={0}
-          />
-          <FeatureCard 
-            icon={CheckSquare2} 
-            title="Tarefas" 
-            description="Organize tarefas com prioridades, tags e status personalizados em um quadro Kanban."
-            delay={0.1}
-          />
-          <FeatureCard 
-            icon={RotateCw} 
-            title="Rotinas" 
-            description="Crie rotinas diárias e acompanhe a consistência dos seus hábitos ao longo do tempo."
-            delay={0.2}
-          />
-          <FeatureCard 
-            icon={Target} 
-            title="Metas" 
-            description="Defina OKRs, metas financeiras e de desempenho e visualize seu progresso."
-            delay={0.3}
-          />
-          <FeatureCard 
-            icon={FolderKanban} 
-            title="Projetos" 
-            description="Centralize documentação, links e tarefas de seus projetos paralelos."
-            delay={0.4}
-          />
-          <FeatureCard 
-            icon={Code2} 
-            title="Open Source" 
-            description="Contribua com o desenvolvimento da plataforma. Código aberto para a comunidade."
-            delay={0.5}
-          />
+          {[
+            { icon: Wallet, title: "Finanças Inteligentes", desc: "Controle de receitas, despesas e fluxo de caixa com gráficos limpos e direto ao ponto." },
+            { icon: CheckSquare2, title: "Tarefas & Kanban", desc: "Prioridades ágeis, tags inteligentes e status moldáveis ao seu próprio fluxo de trabalho." },
+            { icon: RotateCw, title: "Hábitos e Rotinas", desc: "Acompanhe e consolide a consistência das rotinas que alavancam a sua produtividade." },
+            { icon: Target, title: "Metas (OKRs)", desc: "Traduza objetivos grandiosos em execuções métricas através do sistema de OKRs." },
+            { icon: FolderKanban, title: "Workspace Projetos", desc: "Repositórios, documentações e anotações técnicas, lado a lado com suas pendências." },
+            { icon: Code2, title: "Filosofia Open Source", desc: "Audite o código. Contribua com a comunidade. Seus dados e a plataforma pertencem a você." },
+          ].map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+              whileHover={{ y: -5 }}
+              className="bg-white rounded-[32px] p-10 relative overflow-hidden group border border-[#0e3b44]/5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(14,59,68,0.08)] transition-all duration-500 cursor-default"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <item.icon className="w-32 h-32 text-[#0e3b44] transform rotate-12 group-hover:rotate-0 transition-transform duration-700" />
+              </div>
+
+              <div className="w-14 h-14 bg-[#0e3b44]/5 rounded-2xl flex items-center justify-center mb-8 text-[#0e3b44] group-hover:bg-[#485c10] group-hover:text-white transition-all duration-500">
+                <item.icon className="w-6 h-6" />
+              </div>
+
+              <h3 className="text-xl font-bold font-sans text-[#0e3b44] mb-3 tracking-tight relative z-10">{item.title}</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium relative z-10">{item.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section id="beneficios" className="py-24 bg-[#0e3b44] text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      {/* Cinematic Benefits Section */}
+      <section id="beneficios" className="py-32 px-6 bg-[#030303] text-white relative overflow-hidden border-t border-white/5">
+        {/* Abstract minimalistic background blurs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#8e9c78]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#485c10]/10 rounded-full blur-[150px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="flex flex-col h-full justify-center"
           >
-            <h2 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-              Por que escolher<br />
-              <span className="text-[#b47045]">DevsBoard?</span>
+            <h2 className="text-5xl md:text-7xl font-bold mb-8 leading-[1.05] tracking-tight text-white">
+              Arquitetura de <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8e9c78] to-[#485c10]">
+                Alta Performance.
+              </span>
             </h2>
-            <p className="text-lg text-gray-300 max-w-md leading-relaxed">
-              Construído para quem constrói o futuro. Uma ferramenta simples, poderosa e focada no que importa.
+            <p className="text-xl text-white/50 max-w-md leading-relaxed font-medium mb-12">
+              Não somos mais um app de to-do list genérico. Somos o cockpit de comando projetado milimetricamente para desenvolvedores e mentes criativas.
             </p>
-            
-            <motion.button 
+
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="mt-10 px-8 py-3 bg-white text-[#0e3b44] rounded-full font-bold inline-flex items-center gap-2 hover:bg-gray-100 transition-colors"
+              className="px-8 py-5 bg-white text-black rounded-full font-bold inline-flex items-center justify-center gap-3 w-fit hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-300"
             >
-              Criar conta gratuita
-              <ChevronRight className="w-4 h-4" />
+              Criar Base Gratuita
+              <ArrowRight className="w-5 h-5" />
             </motion.button>
           </motion.div>
 
-          <div className="space-y-8">
-            {[
-              { title: "Tudo em um só lugar", desc: "Chega de alternar entre 5 apps diferentes." },
-              { title: "Foco para devs", desc: "Interface limpa, atalhos intuitivos e zero distrações." },
-              { title: "Sua base sólida", desc: "Dados seguros e exportáveis a qualquer momento." },
-              { title: "projetos organizados", desc: "Da ideia ao deploy, acompanhe cada etapa." }
-            ].map((item, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="group cursor-default"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 w-8 h-8 rounded-full bg-[#8e9c78]/20 flex items-center justify-center flex-shrink-0 group-hover:bg-[#b47045] transition-colors duration-300">
-                    <CheckCircle2 className="w-5 h-5 text-[#8e9c78] group-hover:text-white transition-colors duration-300" />
+          {/* Minimalist Interactive List */}
+          <div className="relative">
+            {/* Decorational line connecting items */}
+            <div className="absolute left-[27px] top-6 bottom-10 w-px bg-white/10 hidden md:block" />
+
+            <div className="space-y-12">
+              {[
+                {
+                  title: "Single Source of Truth",
+                  desc: "Substitua dezenas de abas por um ecossistema que integra seus dados, rotinas e metas de forma nativa.",
+                  num: "01"
+                },
+                {
+                  title: "Design Minimalista Ativo",
+                  desc: "A interface recua quando você precisa focar. Menos menus hambúrgueres suspensos, mais atalhos globais.",
+                  num: "02"
+                },
+                {
+                  title: "Privacidade e Posse Autêntica",
+                  desc: "Sem tracking invisível. Suas anotações, métricas financeiras e rotinas criptografadas. Você é o dono dos seus dados.",
+                  num: "03"
+                }
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: i * 0.15, duration: 0.8, ease: "easeOut" }}
+                  className="group flex gap-8 items-start relative bg-white/[0.01] p-6 rounded-3xl border border-white/5 hover:bg-white/[0.04] transition-colors"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-black border border-white/10 flex items-center justify-center flex-shrink-0 relative z-10 shadow-xl group-hover:border-[#8e9c78]/50 transition-colors">
+                    <span className="font-mono font-bold text-[#8e9c78] text-lg">{item.num}</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white group-hover:text-[#b47045] transition-colors duration-300">{item.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{item.desc}</p>
-                    <div className="w-full h-px bg-white/10 mt-6 group-hover:bg-[#b47045]/50 transition-colors duration-500" />
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">{item.title}</h3>
+                    <p className="text-lg text-white/40 leading-relaxed font-medium">{item.desc}</p>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#f5f5dc] border-t border-[#485c10]/10 py-12 px-6">
-  <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-    <div className="flex items-center gap-3">
-      {/* Imagem da logo importada da pasta public */}
-      <img 
-        src="/devsboard.png" 
-        alt="DevsBoard Logo" 
-        className="w-8 h-8 object-contain"
-      />
-      <span className="text-sm font-medium font-mono text-[#485c10]">© 2026 DevsBoard</span>
-    </div>
-
-    <p className="text-xs font-mono text-[#485c10]/80">
-      Desenvolvido por <a href="https://github.com/icarocodes" className='font-bold'>IcaroCodes</a>
-    </p>
-  </div>
-</footer>
+      <footer className="bg-[#030303] border-t border-white/5 py-12 px-6 relative z-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <img src="/devsboard.png" alt="DevsBoard Logo" className="w-8 h-8 object-contain brightness-0 invert opacity-80" />
+            <span className="text-sm font-bold text-white/70 tracking-widest uppercase">® 2026 DEVSBOARD</span>
+          </div>
+          <p className="text-sm font-medium text-white/40">
+            Crafted by <a href="https://github.com/icarocodes" className='font-bold text-[#8e9c78] hover:text-[#485c10] transition-colors'>IcaroCodes</a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
