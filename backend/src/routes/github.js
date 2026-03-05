@@ -55,22 +55,28 @@ router.get('/callback', async (req, res) => {
     const email = githubUser.email || primaryEmail || `${githubUser.login}@github.noemail.com`;
     const name = githubUser.name || githubUser.login;
 
+    const avatar_url = githubUser.avatar_url || null;
+
     // Busca ou cria o usuário no banco
-    let { data: user } = await supabase.from('users').select('id, name, email').eq('email', email).single();
+    let { data: user } = await supabase.from('users').select('id, name, email, avatar_url').eq('email', email).single();
 
     if (!user) {
       const { data: newUser, error } = await supabase
         .from('users')
-        .insert({ name, email, password_hash: `github:${githubUser.id}` })
-        .select('id, name, email')
+        .insert({ name, email, password_hash: `github:${githubUser.id}`, avatar_url })
+        .select('id, name, email, avatar_url')
         .single();
       if (error) return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
       user = newUser;
+    } else {
+      // Atualiza o avatar sempre que fizer login
+      await supabase.from('users').update({ avatar_url }).eq('id', user.id);
+      user.avatar_url = avatar_url;
     }
 
     // Emite o JWT e redireciona para o frontend
     const token = jwt.sign({ userId: user.id }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
-    const params = new URLSearchParams({ token, id: user.id, name: user.name, email: user.email });
+    const params = new URLSearchParams({ token, id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url || '' });
     res.redirect(`${FRONTEND_URL}/auth?${params}`);
   } catch (err) {
     console.error(err);

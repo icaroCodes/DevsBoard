@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Settings() {
   const [form, setForm] = useState({ name: '' });
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { user, logout } = useAuth();
@@ -14,7 +15,10 @@ export default function Settings() {
 
   useEffect(() => {
     api('/settings')
-      .then((data) => setForm({ name: data.name }))
+      .then((data) => {
+        setForm({ name: data.name });
+        setAvatarUrl(data.avatar_url || null);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -50,7 +54,30 @@ export default function Settings() {
       <h1 className="text-2xl font-bold">Configurações</h1>
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">Perfil</h2>
+        <h2 className="text-lg font-semibold mb-6">Perfil</h2>
+
+        {/* Avatar */}
+        <div className="flex items-center gap-4 mb-6">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="Foto de perfil"
+              className="w-16 h-16 rounded-full object-cover border-2 border-zinc-700"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
+              <User size={28} className="text-zinc-500" />
+            </div>
+          )}
+          <div>
+            <p className="font-medium">{form.name}</p>
+            <p className="text-sm text-zinc-500">{user?.email}</p>
+            {avatarUrl && (
+              <p className="text-xs text-zinc-600 mt-0.5">Foto sincronizada pelo GitHub</p>
+            )}
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm text-zinc-400 mb-1">Nome</label>

@@ -9,7 +9,7 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('users').select('id, name, email, created_at').eq('id', req.userId).single();
+      .from('users').select('id, name, email, avatar_url, created_at').eq('id', req.userId).single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
     res.json(data);
   } catch (err) {
