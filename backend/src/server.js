@@ -3,6 +3,7 @@ import cors from 'cors';
 import config from './config/index.js';
 
 import authRoutes from './routes/auth.js';
+import githubRoutes from './routes/github.js';
 import dashboardRoutes from './routes/dashboard.js';
 import financesRoutes from './routes/finances.js';
 import tasksRoutes from './routes/tasks.js';
@@ -18,6 +19,7 @@ app.use(express.json());
 
 // Rotas públicas
 app.use('/auth', authRoutes);
+app.use('/auth/github', githubRoutes);
 
 // Rotas protegidas
 app.use('/dashboard', dashboardRoutes);

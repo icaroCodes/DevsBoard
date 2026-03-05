@@ -1,0 +1,25 @@
+{
+  "name": "projeto-icaro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently --names \"BACK,FRONT\" --prefix-colors \"cyan,magenta\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icaroCodes/DevsBoard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/icaroCodes/DevsBoard/issues"
+  },
+  "homepage": "https://github.com/icaroCodes/DevsBoard#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
