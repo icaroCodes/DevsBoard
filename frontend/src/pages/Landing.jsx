@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Wallet, CheckSquare2, RotateCw, Target, FolderKanban, Code2,
-  Star, ChevronRight, CheckCircle2, Menu, X, ArrowRight, LayoutGrid
+  Star, ChevronRight, CheckCircle2, Menu, X, ArrowRight, LayoutGrid, ChevronDown
 } from 'lucide-react';
 import { motion, useScroll, useTransform, AnimatePresence, useSpring, useInView } from 'framer-motion';
 
@@ -74,7 +74,7 @@ const Navbar = () => {
                 ${isScrolled ? 'bg-[#485c10] text-white hover:bg-[#3d4a0c]' : 'bg-[#0e3b44] text-white hover:bg-[#092a31]'}
               `}
             >
-              Começar
+              <a href="/auth">Começar</a>
             </motion.button>
 
             {/* Mobile Toggle */}
@@ -102,7 +102,7 @@ const Navbar = () => {
               </button>
             </div>
             <nav className="flex flex-col gap-6">
-              {['Recursos', 'Benefícios', 'Preços', 'Login'].map((item) => (
+              {['Recursos', 'Benefícios'].map((item) => (
                 <a
                   key={item}
                   href="#"
@@ -196,6 +196,94 @@ const FeatureCard = ({ icon: Icon, title, description, delay }) => {
         Saiba mais <ArrowRight className="w-3 h-3 ml-1" />
       </div>
     </motion.div>
+  );
+};
+
+const differentiators = [
+  {
+    title: "Tudo em um só lugar",
+    description: "Centralize tarefas, finanças, metas e projetos em uma única plataforma integrada, eliminando ferramentas dispersas e garantindo total controle da sua rotina."
+  },
+  {
+    title: "Foco para Devs",
+    description: "Interface pensada para desenvolvedores: objetiva, minimalista e orientada à produtividade, reduzindo distrações e priorizando performance e clareza."
+  },
+  {
+    title: "Organização em KanBan",
+    description: "Gerencie fluxos de trabalho com visualização Kanban intuitiva, permitindo acompanhamento preciso de tarefas, prioridades e entregas em tempo real."
+  },
+  {
+    title: "Projetos organizados",
+    description: "Estruture projetos com organização lógica, divisão por etapas e acompanhamento estratégico, facilitando execução consistente e evolução contínua."
+  }
+];
+
+const Differentiators = () => {
+  const [expandedIndex, setExpandedIndex] = useState(null);
+
+  const toggleIndex = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  return (
+    <section id="beneficios" className="py-24 bg-[#0e3b44] text-[#f5f5dc] overflow-hidden border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-start justify-between gap-12">
+        <div className="md:w-1/3">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-5xl font-bold tracking-tight mb-6"
+          >
+            Por que escolher <br />
+            <span className="text-[#b47045]">DevsBoard?</span>
+          </motion.h2>
+        </div>
+
+        <div className="md:w-1/2 flex flex-col space-y-4">
+          {differentiators.map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.15, duration: 0.6 }}
+              className="border-b border-[#f5f5dc]/10 pb-6 group cursor-pointer"
+              onClick={() => toggleIndex(index)}
+            >
+              <div className="flex items-center justify-between space-x-6">
+                <div className="flex items-center space-x-6">
+                  <CheckCircle2 className="text-[#b47045] w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <span className="text-xl md:text-3xl font-light tracking-wide">{item.title}</span>
+                </div>
+                <motion.div
+                  animate={{ rotate: expandedIndex === index ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ChevronDown className="text-[#b47045]/50 w-5 h-5" />
+                </motion.div>
+              </div>
+
+              <AnimatePresence>
+                {expandedIndex === index && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                    animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <p className="text-[#f5f5dc]/60 text-sm md:text-base leading-relaxed pl-12 max-w-md">
+                      {item.description}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -308,25 +396,22 @@ export default function App() {
         >
           <div>
             <span className="text-[#485c10] font-bold tracking-widest text-[11px] uppercase mb-4 block">
-              Plataforma all-in-one
+              Recursos
             </span>
             <h2 className="text-4xl md:text-6xl font-bold text-[#0e3b44] tracking-tight leading-[1.05]">
-              Tudo que você precisa,<br /> <span className="text-[#8e9c78]">nada do que não precisa.</span>
+              Tudo que você precisa.
             </h2>
           </div>
-          <p className="text-slate-500 font-medium max-w-md text-lg leading-relaxed">
-            Um ecossistema desenhado para reduzir o atrito entre o seu planejamento e a sua execução.
-          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { icon: Wallet, title: "Finanças Inteligentes", desc: "Controle de receitas, despesas e fluxo de caixa com gráficos limpos e direto ao ponto." },
-            { icon: CheckSquare2, title: "Tarefas & Kanban", desc: "Prioridades ágeis, tags inteligentes e status moldáveis ao seu próprio fluxo de trabalho." },
-            { icon: RotateCw, title: "Hábitos e Rotinas", desc: "Acompanhe e consolide a consistência das rotinas que alavancam a sua produtividade." },
-            { icon: Target, title: "Metas (OKRs)", desc: "Traduza objetivos grandiosos em execuções métricas através do sistema de OKRs." },
-            { icon: FolderKanban, title: "Workspace Projetos", desc: "Repositórios, documentações e anotações técnicas, lado a lado com suas pendências." },
-            { icon: Code2, title: "Filosofia Open Source", desc: "Audite o código. Contribua com a comunidade. Seus dados e a plataforma pertencem a você." },
+            { icon: Wallet, title: "Finanças", desc: "Gerencie receitas, despesas e tenha visão clara do seu dinheiro." },
+            { icon: CheckSquare2, title: "Tarefas", desc: "Organize tarefas com prioridades e status." },
+            { icon: RotateCw, title: "Hábitos", desc: "Crie rotinas e acompanhe hábitos no dia a dia." },
+            { icon: Target, title: "Metas", desc: "Defina metas financeiras e metas de desempenho e acompanhe seu progresso." },
+            { icon: FolderKanban, title: "Projetos", desc: "Planeje e organize projetos de forma simples." },
+            { icon: Code2, title: "Código Aberto", desc: "Projeto aberto para issues, PRs e contribuições." },
           ].map((item, index) => (
             <motion.div
               key={index}
@@ -352,94 +437,23 @@ export default function App() {
         </div>
       </section>
 
-      {/* Cinematic Benefits Section */}
-      <section id="beneficios" className="py-32 px-6 bg-[#030303] text-white relative overflow-hidden border-t border-white/5">
-        {/* Abstract minimalistic background blurs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#8e9c78]/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#485c10]/10 rounded-full blur-[150px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="flex flex-col h-full justify-center"
-          >
-            <h2 className="text-5xl md:text-7xl font-bold mb-8 leading-[1.05] tracking-tight text-white">
-              Arquitetura de <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8e9c78] to-[#485c10]">
-                Alta Performance.
-              </span>
-            </h2>
-            <p className="text-xl text-white/50 max-w-md leading-relaxed font-medium mb-12">
-              Não somos mais um app de to-do list genérico. Somos o cockpit de comando projetado milimetricamente para desenvolvedores e mentes criativas.
-            </p>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-5 bg-white text-black rounded-full font-bold inline-flex items-center justify-center gap-3 w-fit hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-300"
-            >
-              Criar Base Gratuita
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          </motion.div>
-
-          {/* Minimalist Interactive List */}
-          <div className="relative">
-            {/* Decorational line connecting items */}
-            <div className="absolute left-[27px] top-6 bottom-10 w-px bg-white/10 hidden md:block" />
-
-            <div className="space-y-12">
-              {[
-                {
-                  title: "Single Source of Truth",
-                  desc: "Substitua dezenas de abas por um ecossistema que integra seus dados, rotinas e metas de forma nativa.",
-                  num: "01"
-                },
-                {
-                  title: "Design Minimalista Ativo",
-                  desc: "A interface recua quando você precisa focar. Menos menus hambúrgueres suspensos, mais atalhos globais.",
-                  num: "02"
-                },
-                {
-                  title: "Privacidade e Posse Autêntica",
-                  desc: "Sem tracking invisível. Suas anotações, métricas financeiras e rotinas criptografadas. Você é o dono dos seus dados.",
-                  num: "03"
-                }
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ delay: i * 0.15, duration: 0.8, ease: "easeOut" }}
-                  className="group flex gap-8 items-start relative bg-white/[0.01] p-6 rounded-3xl border border-white/5 hover:bg-white/[0.04] transition-colors"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-black border border-white/10 flex items-center justify-center flex-shrink-0 relative z-10 shadow-xl group-hover:border-[#8e9c78]/50 transition-colors">
-                    <span className="font-mono font-bold text-[#8e9c78] text-lg">{item.num}</span>
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">{item.title}</h3>
-                    <p className="text-lg text-white/40 leading-relaxed font-medium">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Differentiators Section (Replacing Benefits) */}
+      <Differentiators />
 
       {/* Footer */}
-      <footer className="bg-[#030303] border-t border-white/5 py-12 px-6 relative z-10">
+      <footer className="bg-[#f5f5dc] py-8 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <img src="/devsboard.png" alt="DevsBoard Logo" className="w-8 h-8 object-contain brightness-0 invert opacity-80" />
-            <span className="text-sm font-bold text-white/70 tracking-widest uppercase">® 2026 DEVSBOARD</span>
+            <img
+              src="/devsboard.png"
+              alt="DevsBoard Logo"
+              className="w-8 h-8 object-contain"
+            />
+            <span className="text-xs font-mono font-medium text-[#485c10]/80">© 2026 DevsBoard</span>
           </div>
-          <p className="text-sm font-medium text-white/40">
-            Crafted by <a href="https://github.com/icarocodes" className='font-bold text-[#8e9c78] hover:text-[#485c10] transition-colors'>IcaroCodes</a>
+
+          <p className="text-xs font-mono text-[#485c10]/60">
+            Desenvolvido por <a href="https://github.com/IcaroCodes/" className="font-semibold text-[#485c10]">IcaroCodes</a>
           </p>
         </div>
       </footer>
