@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import pool from '../database/connection.js';
+import supabase from '../database/connection.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,8 +8,13 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM tasks WHERE user_id = ? ORDER BY priority DESC, id DESC', [req.userId]);
-    res.json(rows);
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', req.userId)
+      .order('id', { ascending: false });
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao listar tarefas' });
@@ -26,11 +31,13 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { title, description, priority = 'medium' } = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO tasks (user_id, title, description, priority) VALUES (?, ?, ?, ?)',
-      [req.userId, title, description || null, priority]
-    );
-    res.status(201).json({ id: result.insertId, title, description, priority, completed: false });
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({ user_id: req.userId, title, description: description || null, priority })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao criar tarefa' });
@@ -44,23 +51,19 @@ router.put('/:id', [
   body('completed').optional().isBoolean(),
 ], async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id FROM tasks WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Tarefa não encontrada' });
+    const { data: existing } = await supabase
+      .from('tasks').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    if (!existing) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
-    const updates = [];
-    const values = [];
-    ['title', 'description', 'priority', 'completed'].forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates.push(`${field} = ?`);
-        values.push(req.body[field]);
-      }
+    const updates = {};
+    ['title', 'description', 'priority', 'completed'].forEach(f => {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
-    if (updates.length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
 
-    values.push(req.params.id);
-    await pool.query(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`, values);
-    const [updated] = await pool.query('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
-    res.json(updated[0]);
+    const { data, error } = await supabase.from('tasks').update(updates).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar tarefa' });
@@ -69,8 +72,10 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const [result] = await pool.query('DELETE FROM tasks WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Tarefa não encontrada' });
+    const { data, error } = await supabase
+      .from('tasks').delete().eq('id', req.params.id).eq('user_id', req.userId).select();
+    if (error) throw error;
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Tarefa não encontrada' });
     res.status(204).send();
   } catch (err) {
     console.error(err);

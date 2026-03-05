@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import pool from '../database/connection.js';
+import supabase from '../database/connection.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,8 +8,9 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM goals WHERE user_id = ? ORDER BY id DESC', [req.userId]);
-    res.json(rows);
+    const { data, error } = await supabase.from('goals').select('*').eq('user_id', req.userId).order('id', { ascending: false });
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao listar metas' });
@@ -28,20 +29,13 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name, type, deadline_type = 'indefinite', deadline_date, target_value } = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO goals (user_id, name, type, deadline_type, deadline_date, target_value) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.userId, name, type, deadline_type, deadline_date || null, target_value || 0]
-    );
-    res.status(201).json({
-      id: result.insertId,
-      name,
-      type,
-      deadline_type,
-      deadline_date,
-      target_value: target_value || 0,
-      saved_amount: 0,
-      completed: false,
-    });
+    const { data, error } = await supabase
+      .from('goals')
+      .insert({ user_id: req.userId, name, type, deadline_type, deadline_date: deadline_date || null, target_value: target_value || 0 })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao criar meta' });
@@ -58,38 +52,29 @@ router.put('/:id', [
   body('remove_amount').optional().isFloat({ min: 0 }),
 ], async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM goals WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Meta não encontrada' });
+    const { data: goal } = await supabase
+      .from('goals').select('*').eq('id', req.params.id).eq('user_id', req.userId).single();
+    if (!goal) return res.status(404).json({ error: 'Meta não encontrada' });
 
-    const goal = rows[0];
+    const updates = {};
 
     if (req.body.add_amount !== undefined && goal.type === 'financial') {
-      const newAmount = Number(goal.saved_amount) + Number(req.body.add_amount);
-      await pool.query('UPDATE goals SET saved_amount = ? WHERE id = ?', [newAmount, req.params.id]);
+      updates.saved_amount = Number(goal.saved_amount) + Number(req.body.add_amount);
     }
-
     if (req.body.remove_amount !== undefined && goal.type === 'financial') {
-      const current = Number(goal.saved_amount);
-      const remove = Math.min(Number(req.body.remove_amount), current);
-      const newAmount = current - remove;
-      await pool.query('UPDATE goals SET saved_amount = ? WHERE id = ?', [newAmount, req.params.id]);
+      const remove = Math.min(Number(req.body.remove_amount), Number(goal.saved_amount));
+      updates.saved_amount = Number(goal.saved_amount) - remove;
     }
 
-    const updates = [];
-    const values = [];
-    ['name', 'deadline_type', 'deadline_date', 'target_value', 'completed'].forEach(field => {
-      if (req.body[field] !== undefined && field !== 'add_amount' && field !== 'remove_amount') {
-        updates.push(`${field} = ?`);
-        values.push(req.body[field]);
-      }
+    ['name', 'deadline_type', 'deadline_date', 'target_value', 'completed'].forEach(f => {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
-    if (updates.length > 0) {
-      values.push(req.params.id);
-      await pool.query(`UPDATE goals SET ${updates.join(', ')} WHERE id = ?`, values);
-    }
 
-    const [updated] = await pool.query('SELECT * FROM goals WHERE id = ?', [req.params.id]);
-    res.json(updated[0]);
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+
+    const { data, error } = await supabase.from('goals').update(updates).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar meta' });
@@ -98,15 +83,16 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM goals WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Meta não encontrada' });
+    const { data: goal } = await supabase
+      .from('goals').select('*').eq('id', req.params.id).eq('user_id', req.userId).single();
+    if (!goal) return res.status(404).json({ error: 'Meta não encontrada' });
 
-    const goal = rows[0];
     if (goal.type === 'financial' && Number(goal.saved_amount) > 0) {
       return res.status(400).json({ error: 'Deposite os valores guardados antes de excluir a meta' });
     }
 
-    await pool.query('DELETE FROM goals WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
+    const { error } = await supabase.from('goals').delete().eq('id', req.params.id);
+    if (error) throw error;
     res.status(204).send();
   } catch (err) {
     console.error(err);

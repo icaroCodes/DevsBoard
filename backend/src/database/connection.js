@@ -1,15 +1,6 @@
-import mysql from 'mysql2/promise';
+import { createClient } from '@supabase/supabase-js';
 import config from '../config/index.js';
 
-const pool = mysql.createPool({
-  host: config.database.host,
-  port: config.database.port,
-  user: config.database.user,
-  password: config.database.password,
-  database: config.database.database,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const supabase = createClient(config.supabase.url, config.supabase.serviceKey);
 
-export default pool;
+export default supabase;

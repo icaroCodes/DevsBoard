@@ -25,3 +25,4 @@ frontend/frontend/
 
 .env
 node_modules/
+.claude/

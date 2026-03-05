@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import pool from '../database/connection.js';
+import supabase from '../database/connection.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -9,38 +9,36 @@ router.get('/', async (req, res) => {
   try {
     const { userId } = req;
 
-    const [finances] = await pool.query(
-      `SELECT type, SUM(amount) as total FROM finances WHERE user_id = ? GROUP BY type`,
-      [userId]
-    );
-    const income = finances.find(f => f.type === 'income')?.total || 0;
-    const expense = finances.find(f => f.type === 'expense')?.total || 0;
-    const balance = Number(income) - Number(expense);
+    const [
+      { data: financeData },
+      { data: transactions },
+      { data: tasks },
+      { data: goals },
+    ] = await Promise.all([
+      supabase.from('finances').select('type, amount').eq('user_id', userId),
+      supabase.from('finances').select('*').eq('user_id', userId).order('transaction_date', { ascending: false }).order('id', { ascending: false }).limit(5),
+      supabase.from('tasks').select('completed').eq('user_id', userId),
+      supabase.from('goals').select('completed').eq('user_id', userId),
+    ]);
 
-    const [transactions] = await pool.query(
-      'SELECT * FROM finances WHERE user_id = ? ORDER BY transaction_date DESC, id DESC LIMIT 5',
-      [userId]
-    );
-
-    const [tasks] = await pool.query(
-      'SELECT COUNT(*) as total, SUM(completed) as completed FROM tasks WHERE user_id = ?',
-      [userId]
-    );
-
-    const [goals] = await pool.query(
-      'SELECT COUNT(*) as total, SUM(completed) as completed FROM goals WHERE user_id = ?',
-      [userId]
-    );
+    const income = (financeData || []).filter(f => f.type === 'income').reduce((s, f) => s + Number(f.amount), 0);
+    const expense = (financeData || []).filter(f => f.type === 'expense').reduce((s, f) => s + Number(f.amount), 0);
 
     res.json({
       finance: {
-        balance,
-        income: Number(income),
-        expense: Number(expense),
-        recentTransactions: transactions,
+        balance: income - expense,
+        income,
+        expense,
+        recentTransactions: transactions || [],
       },
-      tasks: tasks[0] || { total: 0, completed: 0 },
-      goals: goals[0] || { total: 0, completed: 0 },
+      tasks: {
+        total: tasks?.length || 0,
+        completed: tasks?.filter(t => t.completed).length || 0,
+      },
+      goals: {
+        total: goals?.length || 0,
+        completed: goals?.filter(g => g.completed).length || 0,
+      },
     });
   } catch (err) {
     console.error(err);

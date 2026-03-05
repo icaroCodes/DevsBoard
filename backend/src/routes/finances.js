@@ -1,30 +1,20 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import pool from '../database/connection.js';
+import supabase from '../database/connection.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 router.use(authenticate);
 
-const categories = ['Salário', 'Freelance', 'Investimentos', 'Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Outros'];
-
 router.get('/', async (req, res) => {
   try {
-    const { userId } = req;
-    const { type } = req.query;
-
-    let sql = 'SELECT * FROM finances WHERE user_id = ?';
-    const params = [userId];
-
-    if (type && ['income', 'expense'].includes(type)) {
-      sql += ' AND type = ?';
-      params.push(type);
+    let query = supabase.from('finances').select('*').eq('user_id', req.userId);
+    if (req.query.type && ['income', 'expense'].includes(req.query.type)) {
+      query = query.eq('type', req.query.type);
     }
-
-    sql += ' ORDER BY transaction_date DESC, id DESC';
-
-    const [rows] = await pool.query(sql, params);
-    res.json(rows);
+    const { data, error } = await query.order('transaction_date', { ascending: false }).order('id', { ascending: false });
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao listar finanças' });
@@ -43,11 +33,13 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { category, description, amount, type, transaction_date } = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO finances (user_id, category, description, amount, type, transaction_date) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.userId, category, description || null, amount, type, transaction_date]
-    );
-    res.status(201).json({ id: result.insertId, category, description, amount, type, transaction_date });
+    const { data, error } = await supabase
+      .from('finances')
+      .insert({ user_id: req.userId, category, description: description || null, amount, type, transaction_date })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao criar transação' });
@@ -62,26 +54,19 @@ router.put('/:id', [
   body('transaction_date').optional().isDate(),
 ], async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id FROM finances WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Transação não encontrada' });
+    const { data: existing } = await supabase
+      .from('finances').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    if (!existing) return res.status(404).json({ error: 'Transação não encontrada' });
 
-    const updates = [];
-    const values = [];
-
-    ['category', 'description', 'amount', 'type', 'transaction_date'].forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates.push(`${field} = ?`);
-        values.push(req.body[field]);
-      }
+    const updates = {};
+    ['category', 'description', 'amount', 'type', 'transaction_date'].forEach(f => {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
 
-    if (updates.length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
-
-    values.push(req.params.id);
-    await pool.query(`UPDATE finances SET ${updates.join(', ')} WHERE id = ?`, values);
-
-    const [updated] = await pool.query('SELECT * FROM finances WHERE id = ?', [req.params.id]);
-    res.json(updated[0]);
+    const { data, error } = await supabase.from('finances').update(updates).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar transação' });
@@ -90,8 +75,10 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const [result] = await pool.query('DELETE FROM finances WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Transação não encontrada' });
+    const { data, error } = await supabase
+      .from('finances').delete().eq('id', req.params.id).eq('user_id', req.userId).select();
+    if (error) throw error;
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Transação não encontrada' });
     res.status(204).send();
   } catch (err) {
     console.error(err);
@@ -99,5 +86,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-export { categories };
 export default router;
