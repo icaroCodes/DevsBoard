@@ -12,9 +12,11 @@ export default function Routines() {
   const [form, setForm] = useState({ name: '', visual_type: 'daily' });
   const [taskForm, setTaskForm] = useState({ routineId: null, title: '', description: '', priority: 'medium' });
 
-  const load = () => api('/routines').then(setItems).catch(console.error).finally(() => setLoading(false));
+  const load = () => {
+    api('/routines').then(setItems).catch(console.error).finally(() => setLoading(false));
+  };
 
-  useEffect(() => load(), []);
+  useEffect(() => { load(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

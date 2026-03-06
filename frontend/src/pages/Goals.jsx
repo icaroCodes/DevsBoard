@@ -11,9 +11,11 @@ export default function Goals() {
   const [form, setForm] = useState({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' });
   const [addAmount, setAddAmount] = useState({ id: null, value: '' });
 
-  const load = () => api('/goals').then(setItems).catch(console.error).finally(() => setLoading(false));
+  const load = () => {
+    api('/goals').then(setItems).catch(console.error).finally(() => setLoading(false));
+  };
 
-  useEffect(() => load(), []);
+  useEffect(() => { load(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

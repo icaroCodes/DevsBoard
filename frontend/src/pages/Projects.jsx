@@ -30,9 +30,11 @@ export default function Projects() {
     interface_requirements: '',
   });
 
-  const load = () => api('/projects').then(setItems).catch(console.error).finally(() => setLoading(false));
+  const load = () => {
+    api('/projects').then(setItems).catch(console.error).finally(() => setLoading(false));
+  };
 
-  useEffect(() => load(), []);
+  useEffect(() => { load(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
