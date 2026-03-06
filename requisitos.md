@@ -175,16 +175,16 @@ Desenvolvedores, estudantes de tecnologia e pequenas empresas.
 
 # 6. Rotas
 
-- **Domínio** - mydevsboard.vercel.app/
-- **Landing Page Inicial** - mydevsboard.vercel.app/
-- **Login** - mydevsboard.vercel.app/auth
-- **DashBoard** - mydevsboard.vercel.app/dashboard
-- **Finances** - mydevsboard.vercel.app/finances
-- **Tasks** - mydevsboard.vercel.app/tasks
-- **Routines** - mydevsboard.vercel.app/routines
-- **Goals** - mydevsboard.vercel.app/goals
-- **Projects** - mydevsboard.vercel.app/projects
-- **Settings** - mydevsboard.vercel.app/settings
+- **Domínio** - mydevsboardvercelapp.vercel.app.vercel.app/
+- **Landing Page Inicial** - mydevsboardvercelapp.vercel.app.vercel.app/
+- **Login** - mydevsboardvercelapp.vercel.app.vercel.app/auth
+- **DashBoard** - mydevsboardvercelapp.vercel.app.vercel.app/dashboard
+- **Finances** - mydevsboardvercelapp.vercel.app.vercel.app/finances
+- **Tasks** - mydevsboardvercelapp.vercel.app.vercel.app/tasks
+- **Routines** - mydevsboardvercelapp.vercel.app.vercel.app/routines
+- **Goals** - mydevsboardvercelapp.vercel.app.vercel.app/goals
+- **Projects** - mydevsboardvercelapp.vercel.app.vercel.app/projects
+- **Settings** - mydevsboardvercelapp.vercel.app.vercel.app/settings
 
 ---
 
