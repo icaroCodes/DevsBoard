@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --color-bg: #030303;
-  --color-surface: #0a0a0a;
-  --color-border: #1f1f2e;
-  --color-text: #f3f4f6;
-  --color-muted: #9ca3af;
-  --color-accent: #60a5fa;
+  --color-bg: #ffffff;
+  --color-surface: #f9f9f7;
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-text: #1d1d1f;
+  --color-muted: #6e6e73;
+  --color-accent: #4a6010;
 }
 
 * {
@@ -15,31 +15,42 @@
   scroll-behavior: smooth;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Inter", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Custom premium scrollbar */
+/* Scrollbar — ultra thin Apple style */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* Selection */
+::selection {
+  background: #4a601022;
+  color: #1d1d1f;
 }

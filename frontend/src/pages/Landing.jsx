@@ -348,23 +348,23 @@ export default function App() {
             className="flex flex-col sm:flex-row items-center gap-4 mb-16"
           >
             <motion.button
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
-  onClick={() => window.location.href = "/auth"}
-  className="px-8 py-4 bg-[#485c10] rounded-full text-white font-bold flex items-center gap-2 shadow-xl shadow-[#485c10]/25 hover:bg-[#3d4a0c] transition-colors"
->
-  Começar Agora
-  <ArrowRight className="w-4 h-4" />
-</motion.button>
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.href = "/auth"}
+              className="px-8 py-4 bg-[#485c10] rounded-full text-white font-bold flex items-center gap-2 shadow-xl shadow-[#485c10]/25 hover:bg-[#3d4a0c] transition-colors"
+            >
+              Começar Agora
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
 
-<motion.button
-  whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.05)" }}
-  whileTap={{ scale: 0.95 }}
-  onClick={() => window.location.href = "#beneficios"}
-  className="px-8 py-4 bg-transparent border-2 border-slate-200 text-slate-700 rounded-full font-bold hover:border-slate-300 transition-colors"
->
-  Ver Benefícios
-</motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, backgroundColor: "rgba(0,0,0,0.05)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.href = "#beneficios"}
+              className="px-8 py-4 bg-transparent border-2 border-slate-200 text-slate-700 rounded-full font-bold hover:border-slate-300 transition-colors"
+            >
+              Ver Benefícios
+            </motion.button>
           </motion.div>
 
           {/* Stats - Refined to match image exactly */}
