@@ -15,7 +15,7 @@ import settingsRoutes from './routes/settings.js';
 const app = express();
 
 app.use(cors({ origin: ['http://localhost:5173', 'https://mydevsboard.vercel.app'] }));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // Rotas públicas
 app.use('/auth', authRoutes);

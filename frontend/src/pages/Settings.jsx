@@ -8,9 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Settings() {
   const [form, setForm] = useState({ name: '' });
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarBase64, setAvatarBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,12 +24,31 @@ export default function Settings() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) return alert('Imagem muito grande (máximo 2MB)');
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarBase64(reader.result);
+      setAvatarUrl(reader.result); // Preview local
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await api('/settings', { method: 'PUT', body: JSON.stringify(form) });
+      const data = await api('/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ ...form, avatar_base64: avatarBase64 })
+      });
       alert('Perfil atualizado!');
+      updateUser(data); // Atualiza o contexto global
+      setAvatarBase64(null); // Limpa o base64 após salvar
     } catch (err) {
       alert(err.message);
     } finally {
@@ -58,22 +78,37 @@ export default function Settings() {
 
         {/* Avatar */}
         <div className="flex items-center gap-4 mb-6">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="Foto de perfil"
-              className="w-16 h-16 rounded-full object-cover border-2 border-zinc-700"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
-              <User size={28} className="text-zinc-500" />
+          <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-input').click()}>
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Foto de perfil"
+                className="w-16 h-16 rounded-full object-cover border-2 border-zinc-700 hover:border-cyan-500 transition-colors"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center group-hover:border-cyan-500 transition-colors">
+                <User size={28} className="text-zinc-500" />
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <span className="text-[10px] font-bold text-white uppercase tracking-wider">Alterar</span>
             </div>
-          )}
+            <input
+              id="avatar-input"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
           <div>
             <p className="font-medium">{form.name}</p>
             <p className="text-sm text-zinc-500">{user?.email}</p>
-            {avatarUrl && (
+            {avatarUrl && !avatarBase64 && avatarUrl.includes('github') && (
               <p className="text-xs text-zinc-600 mt-0.5">Foto sincronizada pelo GitHub</p>
+            )}
+            {avatarBase64 && (
+              <p className="text-xs text-orange-400 mt-0.5">Nova foto (salve para aplicar)</p>
             )}
           </div>
         </div>
