@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Pencil, Wallet } from 'lucide-react';
 import { api } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmModalContext';
 
 const CATEGORIES = ['Salário', 'Freelance', 'Investimentos', 'Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Outros'];
 
@@ -18,9 +20,11 @@ export default function Finances() {
     type: 'expense',
     transaction_date: new Date().toISOString().slice(0, 10),
   });
+  const { success, error } = useToast();
+  const { confirm } = useConfirm();
 
   const load = () => {
-    api('/finances').then(setItems).catch(console.error).finally(() => setLoading(false));
+    api('/finances').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => load(), []);
@@ -47,20 +51,27 @@ export default function Finances() {
       setModalOpen(false);
       setEditing(null);
       setForm({ category: '', description: '', amount: '', type: 'expense', transaction_date: new Date().toISOString().slice(0, 10) });
+      success(editing ? 'Transação atualizada!' : 'Transação registrada!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Excluir esta transação?')) return;
-    try {
-      await api(`/finances/${id}`, { method: 'DELETE' });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir transação?',
+      message: 'Tem certeza que deseja excluir este registro financeiro?',
+      onConfirm: async () => {
+        try {
+          await api(`/finances/${id}`, { method: 'DELETE' });
+          success('Transação excluída!');
+          load();
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   const openEdit = (item) => {

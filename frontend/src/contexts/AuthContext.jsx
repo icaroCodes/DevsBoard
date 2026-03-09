@@ -18,11 +18,22 @@ export function AuthProvider({ children }) {
       setLoading(false);
     } else {
       api('/settings')
-        .then((data) => setUser({ id: data.id, name: data.name, email: data.email }))
+        .then((data) => setUser(data))
         .catch(() => setUser(null))
         .finally(() => setLoading(false));
     }
   }, []);
+
+  const refreshUser = async () => {
+    try {
+      const data = await api('/settings');
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      return data;
+    } catch (err) {
+      console.error('Erro ao atualizar usuário:', err);
+    }
+  };
 
   const login = async (email, password) => {
     const data = await api('/auth/login', {
@@ -65,7 +76,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithToken, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithToken, logout, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

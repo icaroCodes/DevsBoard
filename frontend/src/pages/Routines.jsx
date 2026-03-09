@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmModalContext';
 
 export default function Routines() {
   const [items, setItems] = useState([]);
@@ -11,9 +13,11 @@ export default function Routines() {
   const [expanded, setExpanded] = useState({});
   const [form, setForm] = useState({ name: '', visual_type: 'daily' });
   const [taskForm, setTaskForm] = useState({ routineId: null, title: '', description: '', priority: 'medium' });
+  const { success, error } = useToast();
+  const { confirm } = useConfirm();
 
   const load = () => {
-    api('/routines').then(setItems).catch(console.error).finally(() => setLoading(false));
+    api('/routines').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -29,9 +33,10 @@ export default function Routines() {
       setModalOpen(false);
       setEditing(null);
       setForm({ name: '', visual_type: 'daily' });
+      success(editing ? 'Rotina atualizada!' : 'Rotina criada!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
@@ -43,9 +48,10 @@ export default function Routines() {
         body: JSON.stringify({ title: taskForm.title, description: taskForm.description, priority: taskForm.priority }),
       });
       setTaskForm({ routineId: null, title: '', description: '', priority: 'medium' });
+      success('Tarefa adicionada à rotina!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
@@ -57,27 +63,40 @@ export default function Routines() {
       });
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
   const deleteTask = async (routineId, taskId) => {
-    try {
-      await api(`/routines/${routineId}/tasks/${taskId}`, { method: 'DELETE' });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir tarefa?',
+      message: 'Deseja remover esta tarefa desta rotina?',
+      onConfirm: async () => {
+        try {
+          await api(`/routines/${routineId}/tasks/${taskId}`, { method: 'DELETE' });
+          success('Tarefa removida!');
+          load();
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Excluir esta rotina?')) return;
-    try {
-      await api(`/routines/${id}`, { method: 'DELETE' });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir rotina?',
+      message: 'Tem certeza que deseja excluir esta rotina inteira?',
+      onConfirm: async () => {
+        try {
+          await api(`/routines/${id}`, { method: 'DELETE' });
+          success('Rotina excluída!');
+          load();
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   const visualLabels = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };

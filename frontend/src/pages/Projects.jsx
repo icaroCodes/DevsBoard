@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmModalContext';
 
 const FIELDS = [
   { key: 'concept', label: 'Conceito' },
@@ -29,9 +31,11 @@ export default function Projects() {
     functional_requirements: '',
     interface_requirements: '',
   });
+  const { success, error } = useToast();
+  const { confirm } = useConfirm();
 
   const load = () => {
-    api('/projects').then(setItems).catch(console.error).finally(() => setLoading(false));
+    api('/projects').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -47,20 +51,27 @@ export default function Projects() {
       setModalOpen(false);
       setEditing(null);
       setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '' });
+      success(editing ? 'Projeto atualizado!' : 'Projeto criado!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Excluir este projeto?')) return;
-    try {
-      await api(`/projects/${id}`, { method: 'DELETE' });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir projeto?',
+      message: 'Tem certeza que deseja excluir este projeto e todo o seu planejamento?',
+      onConfirm: async () => {
+        try {
+          await api(`/projects/${id}`, { method: 'DELETE' });
+          success('Projeto excluído!');
+          load();
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   const openEdit = (p) => {

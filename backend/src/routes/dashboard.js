@@ -9,17 +9,21 @@ router.get('/', async (req, res) => {
   try {
     const { userId } = req;
 
-    const [
-      { data: financeData },
-      { data: transactions },
-      { data: tasks },
-      { data: goals },
-    ] = await Promise.all([
+    const results = await Promise.all([
       supabase.from('finances').select('type, amount').eq('user_id', userId),
       supabase.from('finances').select('*').eq('user_id', userId).order('transaction_date', { ascending: false }).order('id', { ascending: false }).limit(5),
       supabase.from('tasks').select('completed').eq('user_id', userId),
       supabase.from('goals').select('completed').eq('user_id', userId),
     ]);
+
+    results.forEach((res, i) => {
+      if (res.error) console.error(`Dashboard Supabase error [${i}]:`, res.error);
+    });
+
+    const financeData = results[0].data || [];
+    const transactions = results[1].data || [];
+    const tasks = results[2].data || [];
+    const goals = results[3].data || [];
 
     const income = (financeData || []).filter(f => f.type === 'income').reduce((s, f) => s + Number(f.amount), 0);
     const expense = (financeData || []).filter(f => f.type === 'expense').reduce((s, f) => s + Number(f.amount), 0);

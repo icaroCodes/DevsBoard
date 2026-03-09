@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Pencil, Check, Circle } from 'lucide-react';
 import { api } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmModalContext';
 
 export default function Tasks() {
   const [items, setItems] = useState([]);
@@ -9,9 +11,11 @@ export default function Tasks() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ title: '', description: '', priority: 'medium' });
+  const { success, error } = useToast();
+  const { confirm } = useConfirm();
 
   const load = () => {
-    api('/tasks').then(setItems).catch(console.error).finally(() => setLoading(false));
+    api('/tasks').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => load(), []);
@@ -27,9 +31,10 @@ export default function Tasks() {
       setModalOpen(false);
       setEditing(null);
       setForm({ title: '', description: '', priority: 'medium' });
+      success(editing ? 'Tarefa atualizada!' : 'Tarefa criada!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
@@ -38,18 +43,24 @@ export default function Tasks() {
       await api(`/tasks/${item.id}`, { method: 'PUT', body: JSON.stringify({ completed: !item.completed }) });
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Excluir esta tarefa?')) return;
-    try {
-      await api(`/tasks/${id}`, { method: 'DELETE' });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir tarefa?',
+      message: 'Tem certeza que deseja excluir esta tarefa?',
+      onConfirm: async () => {
+        try {
+          await api(`/tasks/${id}`, { method: 'DELETE' });
+          success('Tarefa excluída!');
+          load();
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   const openEdit = (item) => {

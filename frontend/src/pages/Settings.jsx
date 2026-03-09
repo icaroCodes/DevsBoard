@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmModalContext';
 
 export default function Settings() {
   const [form, setForm] = useState({ name: '' });
@@ -11,7 +13,9 @@ export default function Settings() {
   const [avatarBase64, setAvatarBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, refreshUser } = useAuth();
+  const { success, error } = useToast();
+  const { confirm } = useConfirm();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +32,7 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) return alert('Imagem muito grande (máximo 2MB)');
+    if (file.size > 2 * 1024 * 1024) return error('Imagem muito grande (máximo 2MB)');
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -42,29 +46,49 @@ export default function Settings() {
     e.preventDefault();
     setSaving(true);
     try {
-      const data = await api('/settings', {
+      const payload = {
+        ...form,
+        avatar_base64: avatarBase64
+      };
+
+      // Só enviamos avatar_url se não for um preview Base64 (que gera erro de validação no backend)
+      // Se for Base64, o backend vai gerar uma nova URL via avatar_base64
+      if (avatarUrl && !avatarUrl.startsWith('data:')) {
+        payload.avatar_url = avatarUrl;
+      }
+
+      await api('/settings', {
         method: 'PUT',
-        body: JSON.stringify({ ...form, avatar_base64: avatarBase64 })
+        body: JSON.stringify(payload)
       });
-      alert('Perfil atualizado!');
-      updateUser(data); // Atualiza o contexto global
+
+      // Força uma nova chamada à API para garantir que o estado está sincronizado
+      const updatedUser = await refreshUser();
+
+      success('Perfil atualizado!');
+      setAvatarUrl(updatedUser?.avatar_url || null);
       setAvatarBase64(null); // Limpa o base64 após salvar
     } catch (err) {
-      alert(err.message);
+      error(`Erro ao salvar perfil: ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Tem certeza? Esta ação é irreversível e excluirá todos os seus dados.')) return;
-    try {
-      await api('/settings', { method: 'DELETE' });
-      logout();
-      navigate('/');
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir conta?',
+      message: 'Tem certeza? Esta ação é irreversível e excluirá todos os seus dados.',
+      onConfirm: async () => {
+        try {
+          await api('/settings', { method: 'DELETE' });
+          logout();
+          navigate('/');
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   if (loading) return <div className="h-32 bg-zinc-800 rounded-xl animate-pulse" />;
@@ -146,7 +170,17 @@ export default function Settings() {
 
       <div className="flex gap-4">
         <button
-          onClick={() => { logout(); navigate('/'); }}
+          onClick={() => {
+            confirm({
+              title: 'Sair da conta?',
+              message: 'Deseja realmente encerrar sua sessão?',
+              type: 'info',
+              onConfirm: () => {
+                logout();
+                navigate('/');
+              }
+            });
+          }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
         >
           <LogOut size={18} /> Sair

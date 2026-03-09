@@ -26,6 +26,9 @@ export async function api(endpoint, options = {}) {
   }
 
   const data = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || 'Erro na requisição');
+  if (!res.ok) {
+    const errorMsg = data?.error || (data?.errors && data.errors[0]?.msg) || 'Erro na requisição';
+    throw new Error(errorMsg);
+  }
   return data;
 }

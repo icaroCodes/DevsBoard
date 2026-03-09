@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, TrendingUp, TrendingDown, CheckSquare, Target } from 'lucide-react';
 import { api } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { error } = useToast();
 
   useEffect(() => {
     api('/dashboard')
       .then(setData)
-      .catch(console.error)
+      .catch(err => error(err.message))
       .finally(() => setLoading(false));
   }, []);
 

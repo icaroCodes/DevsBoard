@@ -27,39 +27,44 @@ router.put('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name, avatar_url, avatar_base64 } = req.body;
-    let finalAvatarUrl = avatar_url;
+    const updateData = { name };
 
     // Se houver uma imagem em base64, fazer o upload para o Supabase Storage
     if (avatar_base64) {
-      const buffer = Buffer.from(avatar_base64.split(',')[1], 'base64');
-      const fileExt = avatar_base64.split(';')[0].split('/')[1];
-      const fileName = `${req.userId}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      try {
+        const buffer = Buffer.from(avatar_base64.split(',')[1], 'base64');
+        const fileExt = avatar_base64.split(';')[0].split('/')[1];
+        const fileName = `${req.userId}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, buffer, {
-          contentType: `image/${fileExt}`,
-          upsert: true
-        });
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, buffer, {
+            contentType: `image/${fileExt}`,
+            upsert: true
+          });
 
-      if (uploadError) {
-        console.error('Erro no upload Storage:', uploadError);
-        // Prosseguir sem atualizar o avatar se o upload falhar, ou retornar erro?
-        // Vamos retornar erro para garantir.
-        return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
+        if (uploadError) {
+          console.error('Erro no upload Storage:', uploadError);
+          return res.status(500).json({ error: 'Erro ao fazer upload da imagem' });
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+        updateData.avatar_url = publicUrl;
+      } catch (err) {
+        console.error('Erro ao processar Base64:', err);
+        return res.status(400).json({ error: 'Formato de imagem inválido' });
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      finalAvatarUrl = publicUrl;
+    } else if (avatar_url !== undefined) {
+      updateData.avatar_url = avatar_url;
     }
 
     const { data, error } = await supabase
       .from('users')
-      .update({ name, avatar_url: finalAvatarUrl })
+      .update(updateData)
       .eq('id', req.userId)
       .select('id, name, email, avatar_url')
       .single();
@@ -67,7 +72,7 @@ router.put('/', [
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error(err);
+    console.error('Erro ao atualizar perfil:', err);
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
 });

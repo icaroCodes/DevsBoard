@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Pencil, Target, Check } from 'lucide-react';
 import { api } from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmModalContext';
 
 export default function Goals() {
   const [items, setItems] = useState([]);
@@ -10,9 +12,11 @@ export default function Goals() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' });
   const [addAmount, setAddAmount] = useState({ id: null, value: '' });
+  const { success, error } = useToast();
+  const { confirm } = useConfirm();
 
   const load = () => {
-    api('/goals').then(setItems).catch(console.error).finally(() => setLoading(false));
+    api('/goals').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -30,9 +34,10 @@ export default function Goals() {
       setModalOpen(false);
       setEditing(null);
       setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' });
+      success(editing ? 'Meta atualizada!' : 'Meta criada!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
@@ -41,7 +46,7 @@ export default function Goals() {
       await api(`/goals/${item.id}`, { method: 'PUT', body: JSON.stringify({ completed: !item.completed }) });
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
@@ -53,24 +58,29 @@ export default function Goals() {
         body: JSON.stringify({ add_amount: parseFloat(addAmount.value) }),
       });
       setAddAmount({ id: null, value: '' });
+      success('Valor adicionado!');
       load();
     } catch (err) {
-      alert(err.message);
+      error(err.message);
     }
   };
 
   const handleDelete = async (item) => {
-    if (item.type === 'financial' && Number(item.saved_amount) > 0) {
-      alert('Deposite os valores guardados antes de excluir a meta');
-      return;
-    }
-    if (!confirm('Excluir esta meta?')) return;
-    try {
-      await api(`/goals/${item.id}`, { method: 'DELETE' });
-      load();
-    } catch (err) {
-      alert(err.message);
-    }
+    confirm({
+      title: 'Excluir meta?',
+      message: item.saved_amount > 0
+        ? `Esta meta possui R$ ${Number(item.saved_amount).toFixed(2)} guardados. Ao excluir, este valor será devolvido ao seu saldo. Deseja continuar?`
+        : 'Tem certeza que deseja excluir esta meta?',
+      onConfirm: async () => {
+        try {
+          await api(`/goals/${item.id}`, { method: 'DELETE' });
+          success('Meta excluída e saldo devolvido!');
+          load();
+        } catch (err) {
+          error(err.message);
+        }
+      }
+    });
   };
 
   const deadlineLabels = { monthly: 'Mensal', yearly: 'Anual', indefinite: 'Indefinido' };

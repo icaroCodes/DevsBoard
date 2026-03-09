@@ -69,9 +69,12 @@ router.get('/callback', async (req, res) => {
       if (error) return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
       user = newUser;
     } else {
-      // Atualiza o avatar sempre que fizer login
-      await supabase.from('users').update({ avatar_url }).eq('id', user.id);
-      user.avatar_url = avatar_url;
+      // Se o usuário JÁ TIiver um avatar no banco, não sobrescrevemos com o do GitHub.
+      // Isso preserva a foto personalizada que ele alterou manualmente.
+      if (!user.avatar_url) {
+        await supabase.from('users').update({ avatar_url }).eq('id', user.id);
+        user.avatar_url = avatar_url;
+      }
     }
 
     // Emite o JWT e redireciona para o frontend

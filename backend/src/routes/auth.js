@@ -25,7 +25,7 @@ router.post('/register', [
     const { data: newUser, error } = await supabase
       .from('users')
       .insert({ name, email, password_hash })
-      .select('id, name, email')
+      .select('id, name, email, avatar_url')
       .single();
 
     if (error) throw error;
@@ -55,7 +55,7 @@ router.post('/login', [
     if (!valid) return res.status(401).json({ error: 'Credenciais inválidas' });
 
     const token = jwt.sign({ userId: user.id }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao fazer login' });
