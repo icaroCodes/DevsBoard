@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, CheckSquare, X, ListTodo, Search, Filter } from 'lucide-react';
+import { Plus, Trash2, Pencil, CheckSquare, X, ListTodo, Search, Filter, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -9,6 +9,7 @@ function TaskStatusCheck({ completed, priority, onClick }) {
   const getBorderColor = () => {
     if (priority === 'high') return 'border-[#FF453A] group-hover:bg-[#FF453A]/20';
     if (priority === 'medium') return 'border-[#FF9F0A] group-hover:bg-[#FF9F0A]/20';
+    if (priority === 'low') return 'border-[#32D74B] group-hover:bg-[#32D74B]/20';
     return 'border-[#86868B]/50 group-hover:bg-white/10';
   };
 
@@ -33,7 +34,7 @@ export default function Tasks() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ title: '', description: '', priority: 'medium' });
+  const [form, setForm] = useState({ title: '', description: '', priority: 'medium', submitting: false });
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
 
@@ -53,19 +54,25 @@ export default function Tasks() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.submitting) return;
+    setForm(prev => ({ ...prev, submitting: true }));
     try {
+      const payload = { ...form };
+      delete payload.submitting;
+
       if (editing) {
-        await api(`/tasks/${editing.id}`, { method: 'PUT', body: JSON.stringify(form) });
+        await api(`/tasks/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
       } else {
-        await api('/tasks', { method: 'POST', body: JSON.stringify(form) });
+        await api('/tasks', { method: 'POST', body: JSON.stringify(payload) });
       }
       setModalOpen(false);
       setEditing(null);
-      setForm({ title: '', description: '', priority: 'medium' });
+      setForm({ title: '', description: '', priority: 'medium', submitting: false });
       success(editing ? 'Tarefa atualizada' : 'Tarefa criada');
       load();
     } catch (err) {
       showError(err.message);
+      setForm(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -103,9 +110,9 @@ export default function Tasks() {
     setModalOpen(true);
   };
 
-  const priorityLabels = { low: 'Baixa', medium: 'Média', high: 'Alta' };
-  const priorityColors = { low: 'text-[#86868B]', medium: 'text-[#FF9F0A]', high: 'text-[#FF453A]' };
-  const priorityBg = { low: 'bg-[#86868B]/10', medium: 'bg-[#FF9F0A]/10', high: 'bg-[#FF453A]/10' };
+  const priorityLabels = { none: 'Nenhuma', low: 'Baixa', medium: 'Média', high: 'Alta' };
+  const priorityColors = { none: 'text-[#86868B]', low: 'text-[#32D74B]', medium: 'text-[#FF9F0A]', high: 'text-[#FF453A]' };
+  const priorityBg = { none: 'bg-[#86868B]/10', low: 'bg-[#32D74B]/10', medium: 'bg-[#FF9F0A]/10', high: 'bg-[#FF453A]/10' };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -119,12 +126,13 @@ export default function Tasks() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
-        </div>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
+        />
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Carregando tarefas...</p>
       </div>
     );
   }
@@ -285,7 +293,7 @@ export default function Tasks() {
                   <div className="space-y-1.5">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1">Prioridade</label>
                     <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.02] relative">
-                      {['low', 'medium', 'high'].map(pLevel => (
+                      {['none', 'low', 'medium', 'high'].map(pLevel => (
                         <button type="button" key={pLevel} onClick={() => setForm({ ...form, priority: pLevel })} className={`relative flex-1 py-3 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${form.priority === pLevel ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}>
                           {form.priority === pLevel && (
                              <motion.div layoutId="activePriority" className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
@@ -298,8 +306,17 @@ export default function Tasks() {
                 </div>
 
                 <div className="pt-4">
-                  <button type="submit" className="w-full py-3.5 rounded-[16px] bg-[#0A84FF] text-white text-[16px] font-medium hover:bg-[#007AFF] transition-colors focus:ring-4 focus:ring-[#0A84FF]/30 active:scale-[0.98]">
-                    {editing ? 'Salvar Alterações' : 'Criar Tarefa'}
+                  <button 
+                    type="submit" 
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Salvando...</span>
+                      </>
+                    ) : editing ? 'Salvar Alterações' : 'Criar Tarefa'}
                   </button>
                  </div>
               </form>

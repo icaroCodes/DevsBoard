@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
 router.post('/', [
   body('title').trim().notEmpty().withMessage('Título é obrigatório'),
   body('description').optional().trim(),
-  body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -47,7 +47,7 @@ router.post('/', [
 router.put('/:id', [
   body('title').optional().trim().notEmpty(),
   body('description').optional().trim(),
-  body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
   body('completed').optional().isBoolean(),
 ], async (req, res) => {
   try {

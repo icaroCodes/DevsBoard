@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, FolderKanban, X, Layout, Target, HelpCircle, Users, ListFilter, Monitor } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, FolderKanban, X, Layout, Target, HelpCircle, Users, ListFilter, Monitor, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -30,6 +30,7 @@ export default function Projects() {
     initial_scope: '',
     functional_requirements: '',
     interface_requirements: '',
+    submitting: false,
   });
   const { success, error } = useToast();
   const { confirm } = useConfirm();
@@ -42,19 +43,25 @@ export default function Projects() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.submitting) return;
+    setForm(prev => ({ ...prev, submitting: true }));
     try {
+      const payload = { ...form };
+      delete payload.submitting;
+
       if (editing) {
-        await api(`/projects/${editing.id}`, { method: 'PUT', body: JSON.stringify(form) });
+        await api(`/projects/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
       } else {
-        await api('/projects', { method: 'POST', body: JSON.stringify(form) });
+        await api('/projects', { method: 'POST', body: JSON.stringify(payload) });
       }
       setModalOpen(false);
       setEditing(null);
-      setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '' });
-      success(editing ? 'Projeto atualizado!' : 'Projeto criado!');
+      setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '', submitting: false });
+      success(editing ? 'Projeto atualizado!' : 'Projeto criou!');
       load();
     } catch (err) {
       error(err.message);
+      setForm(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -122,10 +129,13 @@ export default function Projects() {
       </div>
 
       {loading ? (
-        <div className="flex gap-2 items-center justify-center h-[40vh]">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
+        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
+          />
+          <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Carregando projetos...</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -254,8 +264,17 @@ export default function Projects() {
                 </div>
 
                 <div className="pt-4 sticky bottom-0 bg-[#1C1C1E] pb-2">
-                  <button type="submit" className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all focus:ring-4 focus:ring-[#0A84FF]/30 active:scale-[0.98]">
-                    {editing ? 'Salvar Planejamento' : 'Iniciar Projeto'}
+                  <button 
+                    type="submit" 
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Salvando...</span>
+                      </>
+                    ) : editing ? 'Salvar Planejamento' : 'Iniciar Projeto'}
                   </button>
                 </div>
               </form>

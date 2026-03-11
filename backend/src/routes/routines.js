@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
-  body('visual_type').isIn(['daily', 'weekly', 'monthly']).withMessage('Tipo inválido'),
+  body('visual_type').isIn(['daily', 'weekly']).withMessage('Tipo inválido'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -51,7 +51,7 @@ router.post('/', [
 
 router.put('/:id', [
   body('name').optional().trim().notEmpty(),
-  body('visual_type').optional().isIn(['daily', 'weekly', 'monthly']),
+  body('visual_type').optional().isIn(['daily', 'weekly']),
 ], async (req, res) => {
   try {
     const { data: existing } = await supabase
@@ -87,7 +87,7 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/tasks', [
   body('title').trim().notEmpty().withMessage('Título é obrigatório'),
   body('description').optional().trim(),
-  body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
   body('start_time').optional().matches(/^([01]\d|2[0-3]):?([0-5]\d)$/).withMessage('Horário inválido'),
   body('day_of_week').optional().isInt({ min: 0, max: 6 }).withMessage('Dia inválido'),
 ], async (req, res) => {
@@ -119,7 +119,7 @@ router.post('/:id/tasks', [
 router.put('/:id/tasks/:taskId', [
   body('title').optional().trim().notEmpty(),
   body('description').optional().trim(),
-  body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
   body('completed').optional().isBoolean(),
 ], async (req, res) => {
   try {

@@ -30,40 +30,44 @@ export function ConfirmProvider({ children }) {
             {children}
             <AnimatePresence>
                 {modal.isOpen && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={handleCancel}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                            initial={{ opacity: 0, scale: 1.05, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 10, transition: { duration: 0.15 } }}
-                            className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6"
+                            exit={{ opacity: 0, scale: 1.05, y: 10, transition: { duration: 0.15, ease: "easeIn" } }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className="relative w-full max-w-[340px] bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] rounded-[22px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' }}
                         >
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className={`p-2 rounded-lg ${modal.type === 'danger' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
-                                    <AlertCircle size={24} />
+                            <div className="p-6 text-center">
+                                <div className={`w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center ${modal.type === 'danger' ? 'bg-red-500/10 text-red-500' : 'bg-[#0A84FF]/10 text-[#0A84FF]'}`}>
+                                    <AlertCircle size={28} strokeWidth={2.5} />
                                 </div>
-                                <h3 className="text-lg font-bold text-zinc-100">{modal.title}</h3>
-                                <button onClick={handleCancel} className="ml-auto p-1 text-zinc-500 hover:text-zinc-300 transition-colors">
-                                    <X size={20} />
-                                </button>
+                                <h3 className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight mb-2 leading-tight">
+                                    {modal.title}
+                                </h3>
+                                <p className="text-[14px] text-[#A1A1A6] leading-snug px-2">
+                                    {modal.message}
+                                </p>
                             </div>
 
-                            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-                                {modal.message}
-                            </p>
-
-                            <div className="flex gap-3">
+                            <div className="flex border-t border-white/[0.06]">
                                 <button
                                     onClick={handleCancel}
-                                    className="flex-1 py-2 px-4 rounded-xl font-medium text-zinc-400 hover:bg-zinc-800 transition-colors"
+                                    className="flex-1 py-3.5 text-[17px] font-medium text-[#0A84FF] hover:bg-white/[0.04] transition-colors border-r border-white/[0.06]"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleConfirm}
-                                    className={`flex-1 py-2 px-4 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-95 ${modal.type === 'danger'
-                                            ? 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/30'
-                                            : 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-lg shadow-cyan-500/30'
-                                        }`}
+                                    className={`flex-1 py-3.5 text-[17px] font-semibold transition-colors hover:bg-white/[0.04] ${modal.type === 'danger' ? 'text-[#FF453A]' : 'text-[#0A84FF]'}`}
                                 >
                                     Confirmar
                                 </button>

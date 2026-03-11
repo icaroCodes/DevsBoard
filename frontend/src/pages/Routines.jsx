@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, ChevronDown, Repeat, CheckSquare, X, GripVertical, Clock } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, CheckSquare, GripVertical, Repeat, X, Clock, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -46,7 +46,7 @@ function TaskStatusCheck({ completed, colorClass = "bg-[#8E9C78]" }) {
   return <div className={`w-5 h-5 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10`} />;
 }
 
-function SortableTask({ routineId, task, onToggle, onDelete }) {
+function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
   const {
     attributes,
     listeners,
@@ -65,7 +65,8 @@ function SortableTask({ routineId, task, onToggle, onDelete }) {
   const priorityColors = {
     high: '#FF453A',
     medium: '#FF9F0A',
-    low: '#32D74B'
+    low: '#32D74B',
+    none: 'transparent'
   };
 
   const formatDay = (day) => {
@@ -115,7 +116,7 @@ function SortableTask({ routineId, task, onToggle, onDelete }) {
                   )}
                 </div>
               )}
-              {task.priority && !task.completed && (
+              {task.priority && task.priority !== 'none' && !task.completed && (
                 <div 
                   className="w-1.5 h-1.5 rounded-full shrink-0" 
                   style={{ backgroundColor: priorityColors[task.priority] }}
@@ -131,12 +132,20 @@ function SortableTask({ routineId, task, onToggle, onDelete }) {
           </div>
         </div>
       </div>
-      <button
-        onClick={() => onDelete(routineId, task.id)}
-        className="mt-0.5 p-1.5 text-[#86868B] hover:text-[#FF453A] opacity-0 group-hover:opacity-100 transition-all rounded-md"
-      >
-        <Trash2 size={16} />
-      </button>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        <button
+          onClick={() => onEdit(routineId, task)}
+          className="p-1.5 text-[#86868B] hover:text-[#0A84FF] rounded-md"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          onClick={() => onDelete(routineId, task.id)}
+          className="p-1.5 text-[#86868B] hover:text-[#FF453A] rounded-md"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -264,6 +273,15 @@ function SortableRoutine({
                       routineId={r.id} 
                       task={t} 
                       onToggle={toggleTask} 
+                      onEdit={(rid, task) => setTaskForm({ 
+                        routineId: rid, 
+                        id: task.id,
+                        title: task.title, 
+                        description: task.description || '', 
+                        priority: task.priority || 'medium', 
+                        start_time: task.start_time || '', 
+                        day_of_week: task.day_of_week 
+                      })}
                       onDelete={deleteTask} 
                     />
                   ))}
@@ -330,18 +348,18 @@ function SortableRoutine({
 
                   <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
                     <div className="flex gap-1.5">
-                      {['low', 'medium', 'high'].map((p) => (
+                      {['none', 'low', 'medium', 'high'].map((p) => (
                         <button
                           key={p}
                           type="button"
                           onClick={() => setTaskForm({ ...taskForm, priority: p })}
                           className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${
                             taskForm.priority === p 
-                              ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20'
+                              ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
                               : 'bg-white/5 text-[#86868B] hover:bg-white/10'
                           }`}
                         >
-                          {p === 'high' ? 'Alta' : p === 'medium' ? 'Média' : 'Baixa'}
+                          {p === 'high' ? 'Alta' : p === 'medium' ? 'Média' : p === 'low' ? 'Baixa' : 'Nenhuma'}
                         </button>
                       ))}
                     </div>
@@ -356,9 +374,15 @@ function SortableRoutine({
                       </button>
                       <button 
                         type="submit" 
-                        className="px-6 py-2 rounded-full bg-[#8E9C78] text-white text-[14px] font-bold hover:bg-[#9EAC88] transition-all shadow-lg shadow-[#8E9C78]/10"
+                        disabled={taskForm.submitting}
+                        className={`px-6 py-2 rounded-full bg-[#8E9C78] text-white text-[14px] font-bold hover:bg-[#9EAC88] transition-all shadow-lg shadow-[#8E9C78]/10 disabled:opacity-50 flex items-center justify-center gap-2 min-w-[100px]`}
                       >
-                        Salvar
+                        {taskForm.submitting ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Salvando...</span>
+                          </>
+                        ) : 'Salvar'}
                       </button>
                     </div>
                   </div>
@@ -385,8 +409,8 @@ export default function Routines() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [expanded, setExpanded] = useState({});
-  const [form, setForm] = useState({ name: '', visual_type: 'daily' });
-  const [taskForm, setTaskForm] = useState({ routineId: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null });
+  const [form, setForm] = useState({ name: '', visual_type: 'daily', submitting: false });
+  const [taskForm, setTaskForm] = useState({ routineId: null, id: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null, submitting: false });
   const [activeId, setActiveId] = useState(null);
   const { success, error } = useToast();
   const { confirm } = useConfirm();
@@ -410,41 +434,56 @@ export default function Routines() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.submitting) return;
+    setForm(prev => ({ ...prev, submitting: true }));
     try {
       if (editing) {
-        await api(`/routines/${editing.id}`, { method: 'PUT', body: JSON.stringify(form) });
+        await api(`/routines/${editing.id}`, { method: 'PUT', body: JSON.stringify({ name: form.name, visual_type: form.visual_type }) });
       } else {
-        await api('/routines', { method: 'POST', body: JSON.stringify(form) });
+        await api('/routines', { method: 'POST', body: JSON.stringify({ name: form.name, visual_type: form.visual_type }) });
       }
       setModalOpen(false);
       setEditing(null);
-      setForm({ name: '', visual_type: 'daily' });
+      setForm({ name: '', visual_type: 'daily', submitting: false });
       success(editing ? 'Rotina atualizada!' : 'Rotina criada!');
       load();
     } catch (err) {
       error(err.message);
+      setForm(prev => ({ ...prev, submitting: false }));
     }
   };
 
   const handleTaskSubmit = async (e) => {
     e.preventDefault();
-    if (!taskForm.title.trim()) return;
+    if (!taskForm.title.trim() || taskForm.submitting) return;
+    setTaskForm(prev => ({ ...prev, submitting: true }));
     try {
-      await api(`/routines/${taskForm.routineId}/tasks`, {
-        method: 'POST',
-        body: JSON.stringify({ 
-          title: taskForm.title, 
-          description: taskForm.description, 
-          priority: taskForm.priority,
-          start_time: taskForm.start_time || null,
-          day_of_week: taskForm.day_of_week ?? null
-        }),
-      });
-      setTaskForm({ routineId: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null });
-      success('Tarefa adicionada à rotina!');
+      const payload = { 
+        title: taskForm.title, 
+        description: taskForm.description, 
+        priority: taskForm.priority,
+        start_time: taskForm.start_time || null,
+        day_of_week: taskForm.day_of_week ?? null
+      };
+
+      if (taskForm.id) {
+        await api(`/routines/${taskForm.routineId}/tasks/${taskForm.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await api(`/routines/${taskForm.routineId}/tasks`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      }
+      
+      setTaskForm({ routineId: null, id: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null, submitting: false });
+      success(taskForm.id ? 'Tarefa atualizada!' : 'Tarefa adicionada à rotina!');
       load();
     } catch (err) {
       error(err.message);
+      setTaskForm(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -556,7 +595,7 @@ export default function Routines() {
     });
   };
 
-  const visualLabels = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };
+  const visualLabels = { daily: 'Diária', weekly: 'Semanal' };
   
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -693,7 +732,7 @@ export default function Routines() {
                 <div>
                   <label className="block text-[13px] font-medium text-[#86868B] mb-3 uppercase tracking-wider">Frequência</label>
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
-                    {['daily', 'weekly', 'monthly'].map((type) => (
+                    {['daily', 'weekly'].map((type) => (
                       <button
                         key={type}
                         type="button"
@@ -709,15 +748,24 @@ export default function Routines() {
                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                           />
                         )}
-                        {type === 'daily' ? 'Diária' : type === 'weekly' ? 'Semanal' : 'Mensal'}
+                        {type === 'daily' ? 'Diária' : 'Semanal'}
                       </button>
                     ))}
                   </div>
                 </div>
                 
                 <div className="pt-2">
-                  <button type="submit" className="w-full py-3 rounded-[12px] bg-[#0A84FF] hover:bg-[#5E94FF] text-white text-[15px] font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 outline-none">
-                    {editing ? 'Salvar Alterações' : 'Criar Rotina'}
+                  <button 
+                    type="submit" 
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[16px] bg-[#0A84FF] hover:bg-[#007AFF] text-white text-[16px] font-semibold transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Salvando...</span>
+                      </>
+                    ) : editing ? 'Salvar Alterações' : 'Criar Rotina'}
                   </button>
                 </div>
               </form>

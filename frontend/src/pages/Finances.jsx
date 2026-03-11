@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, X, BarChart3, Clock, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Plus, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, X, BarChart3, Clock, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
@@ -20,6 +20,7 @@ export default function Finances() {
     amount: '',
     type: 'expense',
     transaction_date: new Date().toISOString().slice(0, 10),
+    submitting: false,
   });
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
@@ -37,25 +38,31 @@ export default function Finances() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.submitting) return;
+    setForm(prev => ({ ...prev, submitting: true }));
     try {
+      const payload = { ...form, amount: parseFloat(form.amount) };
+      delete payload.submitting;
+
       if (editing) {
         await api(`/finances/${editing.id}`, {
           method: 'PUT',
-          body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+          body: JSON.stringify(payload),
         });
       } else {
         await api('/finances', {
           method: 'POST',
-          body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+          body: JSON.stringify(payload),
         });
       }
       setModalOpen(false);
       setEditing(null);
-      setForm({ category: '', description: '', amount: '', type: 'expense', transaction_date: new Date().toISOString().slice(0, 10) });
+      setForm({ category: '', description: '', amount: '', type: 'expense', transaction_date: new Date().toISOString().slice(0, 10), submitting: false });
       success(editing ? 'Transação atualizada' : 'Transação registrada');
       load();
     } catch (err) {
       showError(err.message);
+      setForm(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -119,12 +126,13 @@ export default function Finances() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
-        </div>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
+        />
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide font-sans">Carregando dados financeiros...</p>
       </div>
     );
   }
@@ -471,8 +479,17 @@ export default function Finances() {
                 </div>
 
                 <div className="pt-4">
-                  <button type="submit" className="w-full py-3.5 rounded-[16px] bg-[#0A84FF] text-white text-[16px] font-medium hover:bg-[#007AFF] transition-colors focus:ring-4 focus:ring-[#0A84FF]/30 active:scale-[0.98]">
-                    {editing ? 'Salvar Alterações' : 'Adicionar Transação'}
+                  <button 
+                    type="submit" 
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Salvando...</span>
+                      </>
+                    ) : editing ? 'Salvar Alterações' : 'Adicionar Transação'}
                   </button>
                 </div>
               </form>

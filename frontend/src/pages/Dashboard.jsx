@@ -19,7 +19,6 @@ import { useAuth } from '../contexts/AuthContext';
 const ROUTINE_TYPE_LABELS = {
   daily: 'Diária',
   weekly: 'Semanal',
-  monthly: 'Mensal',
 };
 
 const GOAL_TYPE_LABELS = {
@@ -40,6 +39,12 @@ function TaskStatusCheck({ completed, priority, colorClass = "bg-[#0A84FF]" }) {
   
   if (priority === 'high') {
     return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF453A] shrink-0 transition-all hover:bg-[#FF453A]/20" />;
+  }
+  if (priority === 'medium') {
+    return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF9F0A] shrink-0 transition-all hover:bg-[#FF9F0A]/20" />;
+  }
+  if (priority === 'low') {
+    return <div className="w-6 h-6 rounded-full border-[2px] border-[#32D74B] shrink-0 transition-all hover:bg-[#32D74B]/20" />;
   }
   return <div className={`w-6 h-6 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10`} />;
 }
@@ -106,12 +111,13 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
-        </div>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
+        />
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Preparando seu dashboard...</p>
       </div>
     );
   }
@@ -120,7 +126,7 @@ export default function Dashboard() {
 
   const { finance, tasks, goals, routines } = data;
   const displayName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário';
-  const routineTypeTabs = ['daily', 'weekly', 'monthly'];
+  const routineTypeTabs = ['daily', 'weekly'];
   const filteredRoutines = routines?.filter(r => r.visual_type === routineTab) || [];
   const routineTasks = filteredRoutines
     .flatMap(r => (r.tasks || []).map(t => ({ ...t, routineId: r.id })))

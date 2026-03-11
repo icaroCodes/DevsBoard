@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, Target, Check, X, Target as TargetIcon } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Check, X, Target as TargetIcon, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -10,34 +10,59 @@ export default function Goals() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' });
+  const [form, setForm] = useState({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '', submitting: false });
   const [addAmount, setAddAmount] = useState({ id: null, value: '' });
   const { success, error } = useToast();
   const { confirm } = useConfirm();
 
   const load = () => {
-    api('/goals').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
+    setLoading(true);
+    api('/goals')
+      .then(data => {
+        // Garantir que items seja sempre um array
+        const goalsArray = Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : []);
+        setItems(goalsArray);
+      })
+      .catch(err => {
+        console.error('Erro ao buscar metas:', err);
+        error(err.message);
+        setItems([]);
+      })
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.submitting) return;
+    setForm(prev => ({ ...prev, submitting: true }));
     try {
       const payload = { ...form };
-      if (form.type === 'financial' && form.target_value) payload.target_value = parseFloat(form.target_value);
+      delete payload.submitting;
+
+      // Converte para número apenas se for meta financeira e houver valor
+      if (form.type === 'financial') {
+        const val = parseFloat(form.target_value);
+        payload.target_value = isNaN(val) ? 0 : val;
+      } else {
+        payload.target_value = 0;
+      }
+
       if (editing) {
         await api(`/goals/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
       } else {
         await api('/goals', { method: 'POST', body: JSON.stringify(payload) });
       }
+
       setModalOpen(false);
       setEditing(null);
-      setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' });
+      setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '', submitting: false });
       success(editing ? 'Meta atualizada!' : 'Meta criada!');
       load();
     } catch (err) {
       error(err.message);
+      setForm(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -84,7 +109,7 @@ export default function Goals() {
   };
 
   const deadlineLabels = { monthly: 'Mensal', yearly: 'Anual', indefinite: 'Livre' };
-  
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.05 } }
@@ -96,10 +121,10 @@ export default function Goals() {
   };
 
   return (
-    <motion.div 
-      initial="hidden" 
-      animate="show" 
-      variants={containerVariants} 
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={containerVariants}
       className="max-w-4xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
@@ -108,7 +133,7 @@ export default function Goals() {
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Metas</h1>
           <p className="text-[17px] text-[#86868B] mt-1">Defina e alcance seus objetivos</p>
         </div>
-        
+
         <button
           onClick={() => { setEditing(null); setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
@@ -118,24 +143,43 @@ export default function Goals() {
       </div>
 
       {loading ? (
-        <div className="flex gap-2 items-center justify-center h-[40vh]">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
+        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
+          />
+          <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Buscando seus objetivos...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {items.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
-              <TargetIcon size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
-              <p className="text-[17px] font-medium text-[#F5F5F7]">Nenhuma meta definida</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-xs">Transforme seus sonhos em passos acionáveis.</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[100px]">
+          {(!items || items.length === 0) ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="col-span-full flex flex-col items-center justify-center py-24 bg-[#1C1C1E]/40 backdrop-blur-md rounded-[32px] border border-white/[0.04] border-dashed"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.02] flex items-center justify-center mb-6">
+                <TargetIcon size={32} className="text-[#86868B] opacity-40" />
+              </div>
+              <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">Comece sua jornada</p>
+              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-[280px] leading-relaxed">
+                Você ainda não tem metas definidas. Crie seu primeiro objetivo para começar a acompanhar seu progresso.
+              </p>
+            </motion.div>
           ) : (
-            items.map((item) => {
-              const progress = item.type === 'financial' && item.target_value > 0
-                ? Math.min(100, (Number(item.saved_amount) / Number(item.target_value)) * 100)
-                : 100;
+            items.filter(Boolean).map((item) => {
+              const saved = Number(item?.saved_amount) || 0;
+              const target = Number(item?.target_value) || 0;
+              let progress = 0;
+
+              if (item?.type === 'financial' && target > 0) {
+                progress = Math.min(100, (saved / target) * 100);
+              } else if (item?.completed) {
+                progress = 100;
+              }
+
+              if (isNaN(progress)) progress = 0;
 
               return (
                 <motion.div
@@ -145,8 +189,8 @@ export default function Goals() {
                 >
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="flex items-start gap-4 flex-1">
-                      <button 
-                        onClick={() => toggleComplete(item)} 
+                      <button
+                        onClick={() => toggleComplete(item)}
                         className={`mt-1 w-8 h-8 rounded-full flex items-center justify-center transition-all ${item.completed ? 'bg-[#30D158] text-zinc-950 shadow-lg shadow-[#30D158]/20' : 'bg-white/5 text-[#86868B] hover:bg-white/10'}`}
                       >
                         {item.completed ? <Check size={18} strokeWidth={3} /> : <Target size={18} />}
@@ -160,7 +204,7 @@ export default function Goals() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => { setEditing(item); setForm({ name: item.name, type: item.type, deadline_type: item.deadline_type, target_value: item.target_value || '' }); setModalOpen(true); }} className="p-2 text-[#86868B] hover:text-[#0A84FF] rounded-full hover:bg-[#0A84FF]/10 transition-colors">
                         <Pencil size={15} />
@@ -175,8 +219,8 @@ export default function Goals() {
                     <div className="mt-6 relative z-10">
                       <div className="flex justify-between items-end mb-2.5">
                         <div className="space-y-0.5">
-                           <p className="text-[12px] font-medium text-[#86868B]">Progresso</p>
-                           <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {Number(item.saved_amount).toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ R$ {Number(item.target_value).toFixed(0)}</span></p>
+                          <p className="text-[12px] font-medium text-[#86868B]">Progresso</p>
+                          <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {saved.toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ R$ {target.toFixed(0)}</span></p>
                         </div>
                         <span className="text-[17px] font-bold text-[#F5F5F7] tracking-tight">{progress.toFixed(0)}%</span>
                       </div>
@@ -188,7 +232,7 @@ export default function Goals() {
                           className={`h-full rounded-full ${item.completed ? 'bg-[#30D158]' : 'bg-[#0A84FF]'} shadow-lg`}
                         />
                       </div>
-                      
+
                       {!item.completed && (
                         <div className="mt-4">
                           {addAmount.id === item.id ? (
@@ -266,9 +310,8 @@ export default function Goals() {
                         key={type}
                         type="button"
                         onClick={() => setForm({ ...form, type })}
-                        className={`relative flex-1 py-2.5 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${
-                          form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
-                        }`}
+                        className={`relative flex-1 py-2.5 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                          }`}
                       >
                         {form.type === type && (
                           <motion.div
@@ -284,18 +327,17 @@ export default function Goals() {
                 </div>
 
                 <div className="space-y-1.5">
-                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center justify-between ml-1 mb-1">
-                      <label className="text-[13px] font-medium text-[#86868B] uppercase tracking-wider">Prazo da Meta</label>
-                   </div>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center justify-between ml-1 mb-1">
+                    <label className="text-[13px] font-medium text-[#86868B] uppercase tracking-wider">Prazo da Meta</label>
+                  </div>
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
                     {['monthly', 'yearly', 'indefinite'].map((dType) => (
                       <button
                         key={dType}
                         type="button"
                         onClick={() => setForm({ ...form, deadline_type: dType })}
-                        className={`relative flex-1 py-2.5 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${
-                          form.deadline_type === dType ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
-                        }`}
+                        className={`relative flex-1 py-2.5 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${form.deadline_type === dType ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                          }`}
                       >
                         {form.deadline_type === dType && (
                           <motion.div
@@ -314,8 +356,8 @@ export default function Goals() {
                   <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Valor do Objetivo (R$)</label>
                     <div className="relative">
-                       <span className="absolute left-4 top-3.5 text-[#86868B] text-[16px]">R$</span>
-                       <input
+                      <span className="absolute left-4 top-3.5 text-[#86868B] text-[16px]">R$</span>
+                      <input
                         type="number"
                         step="0.01"
                         value={form.target_value}
@@ -329,8 +371,17 @@ export default function Goals() {
                 )}
 
                 <div className="pt-4">
-                  <button type="submit" className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all focus:ring-4 focus:ring-[#0A84FF]/30 active:scale-[0.98] shadow-lg shadow-[#0A84FF]/20">
-                    {editing ? 'Salvar Alterações' : 'Criar Objetivo'}
+                  <button
+                    type="submit"
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] shadow-lg shadow-[#0A84FF]/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Salvando...</span>
+                      </>
+                    ) : editing ? 'Salvar Alterações' : 'Criar Objetivo'}
                   </button>
                 </div>
               </form>
