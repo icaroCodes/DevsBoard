@@ -122,7 +122,14 @@ export default function Dashboard() {
   const displayName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário';
   const routineTypeTabs = ['daily', 'weekly', 'monthly'];
   const filteredRoutines = routines?.filter(r => r.visual_type === routineTab) || [];
-  const routineTasks = filteredRoutines.flatMap(r => (r.tasks || []).map(t => ({ ...t, routineId: r.id })));
+  const routineTasks = filteredRoutines
+    .flatMap(r => (r.tasks || []).map(t => ({ ...t, routineId: r.id })))
+    .sort((a, b) => {
+      if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time);
+      if (a.start_time) return -1;
+      if (b.start_time) return 1;
+      return 0;
+    });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -284,13 +291,32 @@ export default function Dashboard() {
               routineTasks.map((t) => (
                 <div
                   key={`${t.routineId}-${t.id}`}
-                  className="flex items-center gap-4 p-3.5 mx-2 my-1 bg-transparent hover:bg-white/[0.03] rounded-[16px] cursor-pointer transition-colors group"
+                  className="flex items-start gap-4 p-3.5 mx-2 my-1 bg-transparent hover:bg-white/[0.03] rounded-[16px] cursor-pointer transition-colors group"
                   onClick={() => toggleRoutineTaskComplete(t.routineId, t)}
                 >
-                  <TaskStatusCheck completed={t.completed} priority={t.priority} colorClass="bg-[#BF5AF2]" />
-                  <span className={`flex-1 text-[15px] font-medium transition-colors ${t.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
-                    {t.title}
-                  </span>
+                  <div className="mt-0.5">
+                    <TaskStatusCheck completed={t.completed} priority={t.priority} colorClass="bg-[#8E9C78]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[15px] font-medium truncate transition-colors ${t.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
+                        {t.title}
+                      </span>
+                      {t.start_time && !t.completed && (
+                        <span className="flex items-center gap-1 text-[11px] font-medium text-[#8E9C78]">
+                          <Clock size={10} /> {t.start_time.substring(0, 5)}
+                        </span>
+                      )}
+                      {t.priority === 'high' && !t.completed && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF453A] shrink-0" />
+                      )}
+                    </div>
+                    {t.description && (
+                      <p className={`text-[13px] line-clamp-1 transition-colors ${t.completed ? 'text-[#86868B]/50' : 'text-[#86868B]'}`}>
+                        {t.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))
             )}

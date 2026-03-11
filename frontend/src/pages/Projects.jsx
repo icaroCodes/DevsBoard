@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Trash2, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, FolderKanban, X, Layout, Target, HelpCircle, Users, ListFilter, Monitor } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 
 const FIELDS = [
-  { key: 'concept', label: 'Conceito' },
-  { key: 'objective', label: 'Objetivo' },
-  { key: 'problem', label: 'Problema que resolve' },
-  { key: 'target_audience', label: 'Público-alvo' },
-  { key: 'initial_scope', label: 'Escopo inicial' },
-  { key: 'functional_requirements', label: 'Requisitos funcionais' },
-  { key: 'interface_requirements', label: 'Requisitos de interface' },
+  { key: 'concept', label: 'Conceito', icon: <HelpCircle size={16} /> },
+  { key: 'objective', label: 'Objetivo', icon: <Target size={16} /> },
+  { key: 'problem', label: 'Problema que resolve', icon: <X size={16} /> },
+  { key: 'target_audience', label: 'Público-alvo', icon: <Users size={16} /> },
+  { key: 'initial_scope', label: 'Escopo inicial', icon: <Layout size={16} /> },
+  { key: 'functional_requirements', label: 'Requisitos funcionais', icon: <ListFilter size={16} /> },
+  { key: 'interface_requirements', label: 'Requisitos de interface', icon: <Monitor size={16} /> },
 ];
 
 export default function Projects() {
@@ -89,100 +89,180 @@ export default function Projects() {
     setModalOpen(true);
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
+  };
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold">Projetos</h1>
+    <motion.div 
+      initial="hidden" 
+      animate="show" 
+      variants={containerVariants} 
+      className="max-w-4xl mx-auto pb-12 font-sans"
+      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <div>
+          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Projetos</h1>
+          <p className="text-[17px] text-[#86868B] mt-1">Planeje e visualize suas grandes ideias</p>
+        </div>
+        
         <button
           onClick={() => { setEditing(null); setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '' }); setModalOpen(true); }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 text-zinc-950 font-medium hover:bg-cyan-400"
+          className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
         >
-          <Plus size={20} /> Novo projeto
+          <Plus size={18} strokeWidth={2.5} /> Novo Projeto
         </button>
       </div>
 
       {loading ? (
-        <div className="h-48 bg-zinc-800 rounded-xl animate-pulse" />
+        <div className="flex gap-2 items-center justify-center h-[40vh]">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (
-            <p className="text-zinc-500 text-center py-12">Nenhum projeto</p>
+            <div className="flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
+              <FolderKanban size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
+              <p className="text-[17px] font-medium text-[#F5F5F7]">Nenhum projeto no radar</p>
+              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-xs">Organize seus recursos e requisitos em um só lugar.</p>
+            </div>
           ) : (
             items.map((p) => (
-              <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+              <motion.div 
+                key={p.id} 
+                variants={itemVariants}
+                className="bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm hover:border-white/10 transition-all duration-300 group"
+              >
                 <div
-                  className="flex justify-between items-center p-4 cursor-pointer"
+                  className="flex justify-between items-center p-6 cursor-pointer select-none"
                   onClick={() => setExpanded({ ...expanded, [p.id]: !expanded[p.id] })}
                 >
-                  <div className="flex items-center gap-3">
-                    {expanded[p.id] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                    <p className="font-medium">{p.name}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#8E9C78]">
+                       <FolderKanban size={20} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[18px] text-[#F5F5F7] tracking-tight">{p.name}</p>
+                      <p className="text-[13px] text-[#86868B] mt-0.5">Planejamento detalhado</p>
+                    </div>
                   </div>
-                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => openEdit(p)} className="p-1 text-zinc-400 hover:text-cyan-400">
-                      <Pencil size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(p.id)} className="p-1 text-zinc-400 hover:text-red-400">
-                      <Trash2 size={16} />
-                    </button>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => openEdit(p)} className="p-2 text-[#86868B] hover:text-[#0A84FF] rounded-full hover:bg-[#0A84FF]/10 transition-colors">
+                        <Pencil size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(p.id)} className="p-2 text-[#86868B] hover:text-[#FF453A] rounded-full hover:bg-[#FF453A]/10 transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <motion.div
+                       animate={{ rotate: expanded[p.id] ? 180 : 0 }}
+                       className="text-[#86868B]"
+                    >
+                      <ChevronDown size={20} />
+                    </motion.div>
                   </div>
                 </div>
-                {expanded[p.id] && (
-                  <div className="border-t border-zinc-800 p-4 space-y-3 text-sm">
-                    {FIELDS.map(({ key, label }) => (
-                      p[key] && (
-                        <div key={key}>
-                          <p className="text-zinc-500 mb-1">{label}</p>
-                          <p className="text-zinc-300 whitespace-pre-wrap">{p[key]}</p>
-                        </div>
-                      )
-                    ))}
-                  </div>
-                )}
-              </div>
+                
+                <AnimatePresence>
+                  {expanded[p.id] && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="border-t border-white/[0.04] bg-[#161618]/50"
+                    >
+                      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {FIELDS.map(({ key, label, icon }) => (
+                          p[key] && (
+                            <div key={key} className="space-y-1.5">
+                              <div className="flex items-center gap-2 text-[#86868B]">
+                                {icon}
+                                <p className="text-[12px] font-bold uppercase tracking-wider">{label}</p>
+                              </div>
+                              <p className="text-[15px] text-[#F5F5F7] leading-relaxed whitespace-pre-wrap pl-1">{p[key]}</p>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ))
           )}
         </div>
       )}
 
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-2xl my-8"
-          >
-            <h2 className="text-xl font-bold mb-4">{editing ? 'Editar' : 'Novo'} projeto</h2>
-            <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Nome</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700"
-                  required
-                />
+      {/* Modal */}
+      <AnimatePresence>
+        {modalOpen && (
+          <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[32px] p-7 w-full max-w-2xl my-8 shadow-2xl relative"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
+                  {editing ? 'Editar Projeto' : 'Novo Projeto'}
+                </h2>
+                <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-full bg-white/[0.04] hover:bg-white/[0.08]">
+                  <X size={18} />
+                </button>
               </div>
-              {FIELDS.map(({ key, label }) => (
-                <div key={key}>
-                  <label className="block text-sm text-zinc-400 mb-1">{label}</label>
-                  <textarea
-                    value={form[key]}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700"
-                    rows={2}
+
+              <form onSubmit={handleSubmit} className="space-y-5 max-h-[70vh] overflow-y-auto pr-3 thin-scrollbar">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Nome do Projeto</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full px-5 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-transparent text-[16px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/50"
+                    placeholder="Ex: Meu SaaS, Aplicativo de Dieta..."
+                    required
                   />
                 </div>
-              ))}
-              <div className="flex gap-2 pt-4">
-                <button type="submit" className="flex-1 py-2 rounded-lg bg-cyan-500 text-zinc-950 font-medium">Salvar</button>
-                <button type="button" onClick={() => { setModalOpen(false); setEditing(null); }} className="px-4 py-2 rounded-lg bg-zinc-700">Cancelar</button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {FIELDS.map(({ key, label }) => (
+                    <div key={key} className="space-y-1.5">
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{label}</label>
+                      <textarea
+                        value={form[key]}
+                        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                        className="w-full px-4 py-3 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[14px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/30 resize-none"
+                        rows={3}
+                        placeholder="..."
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 sticky bottom-0 bg-[#1C1C1E] pb-2">
+                  <button type="submit" className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all focus:ring-4 focus:ring-[#0A84FF]/30 active:scale-[0.98]">
+                    {editing ? 'Salvar Planejamento' : 'Iniciar Projeto'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

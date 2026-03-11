@@ -397,15 +397,36 @@ export default function Finances() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Segmented Control */}
-                <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.02]">
-                  <button type="button" onClick={() => setForm({ ...form, type: 'income' })} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-all duration-200 ${form.type === 'income' ? 'bg-[#3A3A3C] shadow-sm text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}>
-                    <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
-                    Entrada
-                  </button>
-                  <button type="button" onClick={() => setForm({ ...form, type: 'expense' })} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-all duration-200 ${form.type === 'expense' ? 'bg-[#3A3A3C] shadow-sm text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}>
-                    <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
-                    Despesa
-                  </button>
+                <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
+                  {['income', 'expense'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setForm({ ...form, type })}
+                      className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${
+                        form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                      }`}
+                    >
+                      {form.type === type && (
+                        <motion.div
+                          layoutId="transactionTypeBg"
+                          className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      {type === 'income' ? (
+                        <>
+                          <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
+                          Entrada
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
+                          Despesa
+                        </>
+                      )}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="space-y-4">
@@ -428,12 +449,24 @@ export default function Finances() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1">Categoria</label>
-                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all appearance-none" required>
-                      <option value="" disabled className="text-[#86868B]">Selecione...</option>
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CATEGORIES.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setForm({ ...form, category: c })}
+                          className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${
+                            form.category === c 
+                              ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20' 
+                              : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
