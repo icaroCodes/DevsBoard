@@ -12,8 +12,11 @@ router.get('/', async (req, res) => {
     const results = await Promise.all([
       supabase.from('finances').select('type, amount').eq('user_id', userId),
       supabase.from('finances').select('*').eq('user_id', userId).order('transaction_date', { ascending: false }).order('id', { ascending: false }).limit(5),
-      supabase.from('tasks').select('completed').eq('user_id', userId),
-      supabase.from('goals').select('completed').eq('user_id', userId),
+      supabase.from('tasks').select('id, completed').eq('user_id', userId),
+      supabase.from('tasks').select('*').eq('user_id', userId).order('id', { ascending: false }).limit(6),
+      supabase.from('goals').select('id, completed').eq('user_id', userId),
+      supabase.from('goals').select('*').eq('user_id', userId).order('id', { ascending: false }).limit(5),
+      supabase.from('routines').select('*, routine_tasks(*)').eq('user_id', userId).order('id', { ascending: false }),
     ]);
 
     results.forEach((res, i) => {
@@ -22,8 +25,15 @@ router.get('/', async (req, res) => {
 
     const financeData = results[0].data || [];
     const transactions = results[1].data || [];
-    const tasks = results[2].data || [];
-    const goals = results[3].data || [];
+    const tasksAll = results[2].data || [];
+    const tasks = results[3].data || [];
+    const goalsAll = results[4].data || [];
+    const goals = results[5].data || [];
+    const routinesRaw = results[6].data || [];
+    const routines = routinesRaw.map(({ routine_tasks, ...r }) => ({
+      ...r,
+      tasks: routine_tasks || [],
+    }));
 
     const income = (financeData || []).filter(f => f.type === 'income').reduce((s, f) => s + Number(f.amount), 0);
     const expense = (financeData || []).filter(f => f.type === 'expense').reduce((s, f) => s + Number(f.amount), 0);
@@ -36,13 +46,16 @@ router.get('/', async (req, res) => {
         recentTransactions: transactions || [],
       },
       tasks: {
-        total: tasks?.length || 0,
-        completed: tasks?.filter(t => t.completed).length || 0,
+        total: tasksAll?.length || 0,
+        completed: tasksAll?.filter(t => t.completed).length || 0,
+        items: tasks || [],
       },
       goals: {
-        total: goals?.length || 0,
-        completed: goals?.filter(g => g.completed).length || 0,
+        total: goalsAll?.length || 0,
+        completed: goalsAll?.filter(g => g.completed).length || 0,
+        items: goals || [],
       },
+      routines: routines || [],
     });
   } catch (err) {
     console.error(err);
