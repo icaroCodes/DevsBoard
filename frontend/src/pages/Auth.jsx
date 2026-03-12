@@ -352,7 +352,7 @@ export default function Auth() {
 
               {/* GitHub */}
               <motion.a
-                href="http://localhost:3001/auth/github"
+                href={`${import.meta.env.VITE_API_URL || '/api'}/auth/github`}
                 id="btn-github"
                 style={s.btnGithub}
                 initial={{ opacity: 0, y: 10 }}
