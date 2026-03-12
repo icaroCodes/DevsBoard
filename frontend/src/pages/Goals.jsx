@@ -17,21 +17,27 @@ export default function Goals() {
 
   const load = () => {
     setLoading(true);
+    const timeoutId = setTimeout(() => setLoading(false), 8000);
+
     api('/goals')
-      .then(data => {
-        // Garantir que items seja sempre um array
-        const goalsArray = Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : []);
-        setItems(goalsArray);
+      .then((data) => {
+        const goalsArray = Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : (data?.items && Array.isArray(data.items) ? data.items : []));
+        setItems(goalsArray || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Erro ao buscar metas:', err);
         error(err.message);
         setItems([]);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,21 +116,13 @@ export default function Goals() {
 
   const deadlineLabels = { monthly: 'Mensal', yearly: 'Anual', indefinite: 'Livre' };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
-  };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
   };
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="show"
-      variants={containerVariants}
+    <div
       className="max-w-4xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
@@ -143,30 +141,24 @@ export default function Goals() {
       </div>
 
       {loading ? (
-        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
-          />
+        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4 py-12">
+          <div className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full animate-spin" />
           <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Buscando seus objetivos...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[100px]">
-          {(!items || items.length === 0) ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="col-span-full flex flex-col items-center justify-center py-24 bg-[#1C1C1E]/40 backdrop-blur-md rounded-[32px] border border-white/[0.04] border-dashed"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[200px]">
+          {(!items || !Array.isArray(items) || items.length === 0) ? (
+            <div
+              className="col-span-full flex flex-col items-center justify-center py-24 px-6 bg-[#1C1C1E] rounded-[32px] border border-white/[0.08]"
             >
-              <div className="w-16 h-16 rounded-2xl bg-white/[0.02] flex items-center justify-center mb-6">
-                <TargetIcon size={32} className="text-[#86868B] opacity-40" />
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mb-6">
+                <TargetIcon size={32} className="text-[#86868B]" />
               </div>
-              <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">Comece sua jornada</p>
+              <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">Você ainda não possui metas criadas</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-[280px] leading-relaxed">
-                Você ainda não tem metas definidas. Crie seu primeiro objetivo para começar a acompanhar seu progresso.
+                Crie sua primeira meta para começar a acompanhar seu progresso e alcançar seus objetivos.
               </p>
-            </motion.div>
+            </div>
           ) : (
             items.filter(Boolean).map((item) => {
               const saved = Number(item?.saved_amount) || 0;
@@ -389,6 +381,6 @@ export default function Goals() {
           </div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

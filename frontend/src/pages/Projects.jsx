@@ -107,10 +107,10 @@ export default function Projects() {
   };
 
   return (
-    <motion.div 
-      initial="hidden" 
-      animate="show" 
-      variants={containerVariants} 
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={containerVariants}
       className="max-w-4xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
@@ -119,7 +119,7 @@ export default function Projects() {
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Projetos</h1>
           <p className="text-[17px] text-[#86868B] mt-1">Planeje e visualize suas grandes ideias</p>
         </div>
-        
+
         <button
           onClick={() => { setEditing(null); setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
@@ -147,8 +147,8 @@ export default function Projects() {
             </div>
           ) : (
             items.map((p) => (
-              <motion.div 
-                key={p.id} 
+              <motion.div
+                key={p.id}
                 variants={itemVariants}
                 className="bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm hover:border-white/10 transition-all duration-300 group"
               >
@@ -158,14 +158,14 @@ export default function Projects() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#8E9C78]">
-                       <FolderKanban size={20} />
+                      <FolderKanban size={20} />
                     </div>
                     <div>
                       <p className="font-semibold text-[18px] text-[#F5F5F7] tracking-tight">{p.name}</p>
                       <p className="text-[13px] text-[#86868B] mt-0.5">Planejamento detalhado</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                       <button onClick={() => openEdit(p)} className="p-2 text-[#86868B] hover:text-[#0A84FF] rounded-full hover:bg-[#0A84FF]/10 transition-colors">
@@ -176,17 +176,17 @@ export default function Projects() {
                       </button>
                     </div>
                     <motion.div
-                       animate={{ rotate: expanded[p.id] ? 180 : 0 }}
-                       className="text-[#86868B]"
+                      animate={{ rotate: expanded[p.id] ? 180 : 0 }}
+                      className="text-[#86868B]"
                     >
                       <ChevronDown size={20} />
                     </motion.div>
                   </div>
                 </div>
-                
+
                 <AnimatePresence>
                   {expanded[p.id] && (
-                    <motion.div 
+                    <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -247,7 +247,7 @@ export default function Projects() {
                     required
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {FIELDS.map(({ key, label }) => (
                     <div key={key} className="space-y-1.5">
@@ -264,8 +264,8 @@ export default function Projects() {
                 </div>
 
                 <div className="pt-4 sticky bottom-0 bg-[#1C1C1E] pb-2">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={form.submitting}
                     className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
                   >
