@@ -7,7 +7,7 @@ Um painel completo, limpo e produtivo para organizar **finanças, tarefas, rotin
 # 1. Dados Básicos
 
 ## Nome do Projeto
-**DevsBoard**
+**DevsBoard** v1.1
 
 ## Conceito
 Plataforma web que consolida a rotina do desenvolvedor em uma experiência única e enxuta. O nome une **Dev** (desenvolvedor) + **Board** (quadro), reforçando a ideia de painel pessoal de comando.
