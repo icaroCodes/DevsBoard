@@ -11,6 +11,8 @@ import routinesRoutes from './routes/routines.js';
 import goalsRoutes from './routes/goals.js';
 import projectsRoutes from './routes/projects.js';
 import settingsRoutes from './routes/settings.js';
+import taskListsRoutes from './routes/task-lists.js';
+import taskCardsRoutes from './routes/task-cards.js';
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.use('/routines', routinesRoutes);
 app.use('/goals', goalsRoutes);
 app.use('/projects', projectsRoutes);
 app.use('/settings', settingsRoutes);
+app.use('/task-lists', taskListsRoutes);
+app.use('/task-cards', taskCardsRoutes);
 
 // 404
 app.use((req, res) => {

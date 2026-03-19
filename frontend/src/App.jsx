@@ -10,6 +10,7 @@ import Routines from './pages/Routines';
 import Goals from './pages/Goals';
 import Projects from './pages/Projects';
 import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmModalContext';
 
@@ -43,7 +44,7 @@ export default function App() {
               <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
               <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
         </ConfirmProvider>
