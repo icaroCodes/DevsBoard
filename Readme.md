@@ -35,11 +35,12 @@ Projetado para quem precisa manter **clareza, foco e controle da rotina de desen
 
 ### Tarefas
 
-* Criação e organização de tarefas
-* Sistema de prioridades
-* Controle de conclusão
-* Editar e excluir tarefas
-* Filtros
+* Organização em formato de **Quadro Kanban**, com interface inspirada no **Trello**
+* Separação de tarefas por listas (ex: A fazer, Em andamento, Concluído)
+* **Funcionalidade de Drag and drop** completa usando **Dnd kit**, permitindo mover cartões entre listas e reordená-los facilmente
+* Sistema de prioridades visual
+* Controle de conclusão intuitivo
+* Edição e exclusão rápida de tarefas e listas
 
 ### Rotinas
 
