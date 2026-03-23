@@ -82,11 +82,11 @@ function Field({ icon, id, label, rightElement, ...props }) {
     <motion.div variants={itemVariant} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <div style={{
         ...s.field,
-        borderColor: focused ? 'rgba(72,92,17,0.55)' : 'rgba(0,0,0,0.09)',
-        background: focused ? '#fff' : '#f5f5f3',
-        boxShadow: focused ? '0 0 0 3px rgba(72,92,17,0.10)' : 'none',
+        borderColor: focused ? '#8E9C78' : 'rgba(255,255,255,0.06)',
+        background: focused ? 'rgba(142,156,120,0.04)' : 'rgba(255,255,255,0.02)',
+        boxShadow: focused ? '0 0 0 3px rgba(142,156,120,0.12)' : 'none',
       }}>
-        <span style={{ ...s.fieldIcon, color: focused ? 'rgb(72 92 17)' : '#aaa' }}>{icon}</span>
+        <span style={{ ...s.fieldIcon, color: focused ? '#8E9C78' : '#666' }}>{icon}</span>
         <input
           id={id}
           style={s.fieldInput}
@@ -152,7 +152,18 @@ export default function Auth() {
 
   return (
     <div style={s.page}>
-
+      <style>{`
+        input::placeholder { color: #555 !important; }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #080808 inset !important;
+            -webkit-text-fill-color: #fff !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+      `}</style>
+      
       {/* ── Card ── */}
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 16 }}
@@ -169,10 +180,12 @@ export default function Auth() {
 
           {/* Back */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-            <Link to="/" style={s.back}>
-              <IconArrow />
-              <span>Voltar para Home</span>
-            </Link>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} style={{ display: 'inline-block', marginBottom: 32 }}>
+              <Link to="/" style={s.back}>
+                <IconArrow />
+                <span>Voltar para Home</span>
+              </Link>
+            </motion.div>
           </motion.div>
 
           {/* Logo */}
@@ -358,7 +371,7 @@ export default function Auth() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 }}
-                whileHover={{ scale: 1.015, background: '#222' }}
+                whileHover={{ scale: 1.015, background: 'rgba(255,255,255,0.06)' }}
                 whileTap={{ scale: 0.97 }}
               >
                 <IconGithub />
@@ -389,7 +402,7 @@ export default function Auth() {
 const s = {
   page: {
     minHeight: '100vh',
-    background: '#edecea',
+    background: '#020302',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -401,36 +414,42 @@ const s = {
   card: {
     display: 'flex',
     width: '100%',
-    maxWidth: 880,
-    minHeight: 540,
-    borderRadius: 28,
+    maxWidth: 900,
+    minHeight: 560,
+    borderRadius: 24,
     overflow: 'hidden',
-    boxShadow: '0 32px 80px rgba(0,0,0,0.13), 0 2px 12px rgba(0,0,0,0.07)',
+    boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 2px 14px rgba(0,0,0,0.4)',
+    border: '1px solid rgba(255,255,255,0.05)',
   },
 
   /* Left */
   left: {
-    flex: '0 0 40%',
-    background: 'rgb(72 92 17)',
+    flex: '0 0 42%',
+    background: 'linear-gradient(135deg, #101410 0%, #060806 100%)',
     display: 'flex',
     flexDirection: 'column',
-    padding: '32px 36px',
+    padding: '36px 40px',
     position: 'relative',
     overflow: 'hidden',
+    borderRight: '1px solid rgba(255,255,255,0.03)',
   },
   noise: {
     position: 'absolute', inset: 0, pointerEvents: 'none',
     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-    opacity: 0.04,
+    opacity: 0.05,
     zIndex: 0,
+    mixBlendMode: 'overlay',
   },
 
   back: {
     position: 'relative', zIndex: 1,
-    display: 'inline-flex', alignItems: 'center', gap: 6,
-    color: 'rgba(255,255,255,0.75)', textDecoration: 'none',
-    fontSize: 12.5, fontWeight: 500, letterSpacing: '0.01em',
-    marginBottom: 32, transition: 'color 0.2s',
+    display: 'inline-flex', alignItems: 'center', gap: 8,
+    color: '#0e0e0e', textDecoration: 'none',
+    fontSize: 12.5, fontWeight: 600, letterSpacing: '0.01em',
+    padding: '10px 18px',
+    background: '#8E9C78',
+    borderRadius: 14,
+    boxShadow: '0 4px 20px rgba(142,156,120,0.25)',
   },
 
   logoWrap: {
@@ -452,12 +471,12 @@ const s = {
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
   },
   leftH1: {
-    color: '#ffffff', fontSize: 32, fontWeight: 800,
+    color: '#ffffff', fontSize: 34, fontWeight: 800,
     lineHeight: 1.15, letterSpacing: '-0.8px',
     margin: '0 0 16px', whiteSpace: 'pre-line',
   },
   leftP: {
-    color: 'rgba(255,255,255,0.72)', fontSize: 13.5,
+    color: 'rgba(255,255,255,0.65)', fontSize: 13.5,
     lineHeight: 1.7, margin: 0, maxWidth: 240,
   },
 
@@ -467,13 +486,13 @@ const s = {
   },
   dot: {
     width: 7, height: 7, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.35)',
+    background: 'rgba(255,255,255,0.2)',
   },
-  dotActive: { background: '#ffffff' },
+  dotActive: { background: '#8E9C78' },
 
   /* Right */
   right: {
-    flex: 1, background: '#fafaf8',
+    flex: 1, background: '#080808',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '28px 44px',
   },
@@ -482,21 +501,21 @@ const s = {
     display: 'flex', flexDirection: 'column', gap: 0,
   },
 
-  formHeader: { marginBottom: 18 },
+  formHeader: { marginBottom: 24 },
   formTitle: {
-    fontSize: 22, fontWeight: 800, color: '#111',
-    margin: '0 0 5px', letterSpacing: '-0.5px',
+    fontSize: 24, fontWeight: 800, color: '#f5f5f5',
+    margin: '0 0 6px', letterSpacing: '-0.5px',
   },
-  formSub: { fontSize: 13, color: '#888', margin: 0 },
+  formSub: { fontSize: 13.5, color: '#777', margin: 0 },
 
   /* Form */
   form: {
-    display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 14,
+    display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16,
   },
   field: {
     display: 'flex', alignItems: 'center', gap: 10,
-    border: '1.5px solid rgba(0,0,0,0.09)', borderRadius: 11,
-    padding: '0 14px', height: 44,
+    border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12,
+    padding: '0 14px', height: 46,
     transition: 'border-color 0.2s, box-shadow 0.2s, background 0.2s',
   },
   fieldIcon: {
@@ -505,7 +524,7 @@ const s = {
   },
   fieldInput: {
     flex: 1, border: 'none', background: 'transparent', outline: 'none',
-    fontSize: 14, color: '#111', fontFamily: 'inherit',
+    fontSize: 14, color: '#ececec', fontFamily: 'inherit',
     width: '100%',
   },
   fieldRight: {
@@ -519,59 +538,62 @@ const s = {
     border: 'none',
     padding: 6,
     cursor: 'pointer',
-    color: '#aaa',
+    color: '#666',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
     transition: 'color 0.2s, background 0.2s',
     "&:hover": {
-      color: 'rgb(72 92 17)',
-      background: 'rgba(72,92,17,0.05)',
+      color: '#8E9C78',
+      background: 'rgba(142,156,120,0.1)',
     }
   },
 
   btnPrimary: {
-    width: '100%', height: 44,
-    background: '#0E363E', color: '#fff',
-    border: 'none', borderRadius: 11,
+    width: '100%', height: 46,
+    background: '#8E9C78', color: '#0a0a0a',
+    border: 'none', borderRadius: 12,
     fontSize: 14, fontWeight: 700,
     cursor: 'pointer', letterSpacing: '-0.1px',
-    fontFamily: 'inherit', marginTop: 2,
+    fontFamily: 'inherit', marginTop: 6,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    transition: 'background 0.2s',
+    transition: 'background 0.2s, transform 0.1s',
   },
 
   error: {
-    color: '#c0392b', fontSize: 12.5,
-    background: 'rgba(192,57,43,0.07)',
+    color: '#e74c3c', fontSize: 12.5,
+    background: 'rgba(231,76,60,0.1)',
     borderRadius: 8, padding: '9px 12px',
     margin: '0', textAlign: 'center',
+    border: '1px solid rgba(231,76,60,0.2)',
   },
 
   /* Divider */
   divider: {
-    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
+    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16,
   },
-  divLine: { flex: 1, height: 1, background: 'rgba(0,0,0,0.08)' },
-  divText: { fontSize: 11.5, color: '#aaa', fontWeight: 500, whiteSpace: 'nowrap' },
+  divLine: { flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' },
+  divText: { fontSize: 12, color: '#555', fontWeight: 500, whiteSpace: 'nowrap' },
 
   /* GitHub */
   btnGithub: {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-    width: '100%', height: 44, background: '#111', color: '#fff',
-    borderRadius: 11, fontSize: 14, fontWeight: 600,
+    width: '100%', height: 46, background: 'rgba(255,255,255,0.03)', color: '#eaeaea',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 12, fontSize: 14, fontWeight: 600,
     textDecoration: 'none', cursor: 'pointer',
-    fontFamily: 'inherit', marginBottom: 16,
-    transition: 'background 0.2s',
+    fontFamily: 'inherit', marginBottom: 20,
+    transition: 'all 0.2s',
   },
 
   switchRow: {
-    textAlign: 'center', fontSize: 13, color: '#777', margin: 0,
+    textAlign: 'center', fontSize: 13, color: '#666', margin: 0,
   },
   switchBtn: {
     background: 'none', border: 'none', padding: 0,
-    color: 'rgb(72 92 17)', fontWeight: 700, fontSize: 13,
+    color: '#8E9C78', fontWeight: 600, fontSize: 13,
     cursor: 'pointer', fontFamily: 'inherit',
+    transition: 'color 0.2s',
   },
 };
