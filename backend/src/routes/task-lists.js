@@ -6,24 +6,35 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-// GET all lists with their cards
+// GET all lists with their cards (optionally filtered by board_id)
 router.get('/', async (req, res) => {
   try {
-    const { data: lists, error: listErr } = await supabase
+    let query = supabase
       .from('task_lists')
       .select('*')
       .eq('user_id', req.userId)
       .order('position', { ascending: true });
 
+    if (req.query.board_id) {
+      query = query.eq('board_id', req.query.board_id);
+    }
+
+    const { data: lists, error: listErr } = await query;
     if (listErr) throw listErr;
 
-    const { data: cards, error: cardErr } = await supabase
-      .from('task_cards')
-      .select('*')
-      .eq('user_id', req.userId)
-      .order('position', { ascending: true });
-
-    if (cardErr) throw cardErr;
+    // Fetch cards for these lists
+    const listIds = lists.map(l => l.id);
+    let cards = [];
+    if (listIds.length > 0) {
+      const { data: cardData, error: cardErr } = await supabase
+        .from('task_cards')
+        .select('*')
+        .in('list_id', listIds)
+        .eq('user_id', req.userId)
+        .order('position', { ascending: true });
+      if (cardErr) throw cardErr;
+      cards = cardData || [];
+    }
 
     const result = lists.map(list => ({
       ...list,
@@ -50,6 +61,7 @@ router.post('/', [
       .from('task_lists')
       .select('position')
       .eq('user_id', req.userId)
+      .eq('board_id', req.body.board_id)
       .order('position', { ascending: false })
       .limit(1);
 
@@ -57,7 +69,7 @@ router.post('/', [
 
     const { data, error } = await supabase
       .from('task_lists')
-      .insert({ user_id: req.userId, name: req.body.name, position: nextPos })
+      .insert({ user_id: req.userId, name: req.body.name, position: nextPos, board_id: req.body.board_id })
       .select()
       .single();
 

@@ -67,6 +67,29 @@ body {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* Cinematic Board Scrollbar */
+.scrollbar-board::-webkit-scrollbar {
+  height: 12px;
+}
+
+.scrollbar-board::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0 40px;
+  border-radius: 20px;
+}
+
+.scrollbar-board::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.scrollbar-board::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+  background-clip: content-box;
+}
+
 /* Selection */
 ::selection {
   background: #4a601022;

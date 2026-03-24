@@ -411,9 +411,8 @@ export default function Finances() {
                       key={type}
                       type="button"
                       onClick={() => setForm({ ...form, type })}
-                      className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${
-                        form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
-                      }`}
+                      className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                        }`}
                     >
                       {form.type === type && (
                         <motion.div
@@ -465,11 +464,10 @@ export default function Finances() {
                           key={c}
                           type="button"
                           onClick={() => setForm({ ...form, category: c })}
-                          className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${
-                            form.category === c 
-                              ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20' 
+                          className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
+                              ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
                               : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
-                          }`}
+                            }`}
                         >
                           {c}
                         </button>
@@ -479,8 +477,8 @@ export default function Finances() {
                 </div>
 
                 <div className="pt-4">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={form.submitting}
                     className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
                   >

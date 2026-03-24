@@ -163,7 +163,7 @@ export default function Auth() {
             transition: background-color 5000s ease-in-out 0s;
         }
       `}</style>
-      
+
       {/* ── Card ── */}
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 16 }}

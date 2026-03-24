@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Pencil, X, Loader2, LayoutList,
-  GripVertical, Check, CheckSquare, ListTodo, Kanban, Circle
+  GripVertical, Check, CheckSquare, ListTodo, Kanban, Circle, Clock, MoreHorizontal, CopyPlus, CheckCircle2
 } from 'lucide-react';
 import {
   DndContext,
@@ -380,27 +380,57 @@ function ListView() {
 /* ──────────────────────────────────────────────────────
    BOARD VIEW — Kanban
 ────────────────────────────────────────────────────── */
-function SortableCard({ card, listId, onEdit, onDelete }) {
+function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     data: { type: 'card', card, listId },
   });
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr + 'T12:00:00'); // enforce local timezone parsing avoidance
+    return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 }}
-      className="group"
+      className="group outline-none pb-2"
+      {...attributes} {...listeners}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5 rounded-[12px] border border-white/[0.05] hover:border-white/[0.10] transition-all" style={{ background: '#2C2C2E' }}>
-        <button type="button" {...attributes} {...listeners}
-          className="text-[#48484A] hover:text-[#86868B] cursor-grab active:cursor-grabbing outline-none shrink-0 touch-none transition-colors">
-          <GripVertical size={14} strokeWidth={2} />
-        </button>
-        <span className="flex-1 text-[14px] font-medium text-[#E5E5EA] truncate min-w-0">{card.name}</span>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <button type="button" onClick={() => onEdit(card)} className="p-1.5 rounded-[6px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer"><Pencil size={13} /></button>
-          <button type="button" onClick={() => onDelete(card.id)} className="p-1.5 rounded-[6px] text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer"><Trash2 size={13} /></button>
+      <div className="flex flex-col relative rounded-[12px] transition-all overflow-hidden border border-transparent hover:border-white/80 touch-none shadow-[0_2px_4px_rgba(0,0,0,0.12)] cursor-grab active:cursor-grabbing" style={{ background: '#222224' }}>
+        {card.cover_url && (
+          <div className="w-full h-[120px] bg-[#1C1C1E] relative group/cover shrink-0 pointer-events-none">
+            <img src={card.cover_url} alt="Cover" className="w-full h-full object-cover" />
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1.5 px-3 py-3">
+          <div className="flex items-center gap-2">
+            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onToggle(card)} className="text-[#86868B] hover:text-[#32D74B] transition-colors outline-none shrink-0" title="Marcar como concluída">
+              {card.completed ? <CheckCircle2 size={16} className="text-[#32D74B]" /> : <Circle size={16} className="text-[#86868B]" />}
+            </button>
+            <div className="flex-1 flex flex-col min-w-0 pr-6">
+              <span className={`text-[14px] font-medium leading-tight truncate transition-colors ${card.completed ? 'line-through text-[#86868B]' : 'text-[#E5E5EA]'}`}>
+                {card.name}
+              </span>
+            </div>
+          </div>
+
+          {card.due_date && (
+            <div className="mt-1 flex pl-6">
+              <span className="flex items-center gap-1.5 text-[12px] px-2 py-0.5 rounded-[4px] font-medium" style={{ background: '#FACC15', color: '#111111' }}>
+                <Clock size={12} strokeWidth={2.5} /> {formatDate(card.due_date)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Edit Button matching Trello's hover icon on cards */}
+        <div className="absolute top-2.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onEdit(card)} className="p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none bg-black/40 backdrop-blur-sm" title="Editar"><Pencil size={13} /></button>
+          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(card.id)} className="p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none bg-black/40 backdrop-blur-sm" title="Excluir"><Trash2 size={13} /></button>
         </div>
       </div>
     </div>
@@ -409,14 +439,21 @@ function SortableCard({ card, listId, onEdit, onDelete }) {
 
 function CardOverlay({ card }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 rounded-[12px] border border-white/[0.15] cursor-grabbing shadow-2xl" style={{ background: '#3A3A3C' }}>
-      <GripVertical size={14} className="text-[#86868B] shrink-0" />
-      <span className="flex-1 text-[14px] font-medium text-[#F5F5F7] truncate">{card.name}</span>
+    <div className="flex flex-col relative rounded-[12px] overflow-hidden border border-white/80 shadow-2xl pb-2 rotate-2 opacity-90 cursor-grabbing" style={{ background: '#222224' }}>
+      {card.cover_url && (
+        <div className="w-full h-[120px] bg-[#1C1C1E] relative shrink-0">
+          <img src={card.cover_url} alt="Cover" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="flex items-center gap-2 px-3 py-3">
+        <Circle size={16} className="text-[#86868B] shrink-0" />
+        <span className="flex-1 text-[14px] font-medium leading-tight text-[#E5E5EA] truncate">{card.name}</span>
+      </div>
     </div>
   );
 }
 
-function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDeleteCard }) {
+function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDeleteCard, onToggleCard }) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleVal, setTitleVal] = useState(list.name);
   const [saving, setSaving] = useState(false);
@@ -466,62 +503,51 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
-      className="w-full flex-shrink-0"
+      className="w-[300px] flex-shrink-0"
     >
-      <div className="rounded-[18px] border border-white/[0.06] flex flex-col shadow-lg" style={{ background: 'rgba(28,28,30,0.92)', maxHeight: '60vh' }}>
-        <div className="flex items-center gap-2 px-4 pt-3.5 pb-3 border-b border-white/[0.05]">
-          <button type="button" {...attributes} {...listeners}
-            className="text-[#48484A] hover:text-[#86868B] cursor-grab active:cursor-grabbing outline-none shrink-0 touch-none transition-colors">
-            <GripVertical size={15} strokeWidth={2} />
-          </button>
-
+      <div className="rounded-[16px] flex flex-col pt-3 shadow-xl backdrop-blur-sm border border-transparent ring-1 ring-white/[0.03]" style={{ background: '#111111', maxHeight: '75vh' }}>
+        <div className="flex items-center justify-between px-4 pb-3" {...attributes} {...listeners}>
           {editingTitle ? (
-            <div className="flex-1 flex items-center gap-1">
+            <div className="flex-1 flex items-center gap-2">
               <input ref={titleRef} value={titleVal} onChange={e => setTitleVal(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setTitleVal(list.name); setEditingTitle(false); } }}
-                onBlur={saveTitle}
+                onBlur={saveTitle} onPointerDown={e => e.stopPropagation()}
                 className="flex-1 rounded-[8px] px-2 py-1 text-[14px] font-semibold text-[#F5F5F7] outline-none border border-[#0A84FF]/60 min-w-0"
-                style={{ background: '#2C2C2E' }} />
+                style={{ background: '#222224' }} />
               {saving && <Loader2 size={13} className="animate-spin text-[#86868B] shrink-0" />}
             </div>
           ) : (
             <h3 onDoubleClick={() => setEditingTitle(true)}
-              className="flex-1 text-[14px] font-semibold text-[#F5F5F7] truncate select-none cursor-default">
+              className="text-[14px] font-semibold text-[#F5F5F7] truncate cursor-default select-none pointer-events-auto">
               {list.name}
             </h3>
           )}
 
-          <span className="text-[11px] font-medium text-[#48484A] px-1.5 py-0.5 rounded-full shrink-0" style={{ background: '#2C2C2E' }}>
-            {list.cards.length}
-          </span>
-          <button type="button" onClick={() => setEditingTitle(true)} className="p-1 rounded-[6px] text-[#48484A] hover:text-[#86868B] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer"><Pencil size={12} /></button>
-          <button type="button" onClick={() => onDelete(list.id)} className="p-1 rounded-[6px] text-[#48484A] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer"><Trash2 size={12} /></button>
+          <div className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
+            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(list.id)} className="p-1 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none cursor-pointer group/options tooltip" title="Deletar Lista">
+              <MoreHorizontal size={16} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+        <div className="flex-1 overflow-y-auto px-2 space-y-0 scrollbar-hide pb-2">
           <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
             {list.cards.map(card => (
-              <SortableCard key={card.id} card={card} listId={list.id} onEdit={onEditCard} onDelete={onDeleteCard} />
+              <SortableCard key={card.id} card={card} listId={list.id} onEdit={onEditCard} onDelete={onDeleteCard} onToggle={onToggleCard} />
             ))}
           </SortableContext>
 
-          {list.cards.length === 0 && !showAdd && (
-            <div className="py-5 flex items-center justify-center rounded-[10px] border border-dashed border-white/[0.06]">
-              <p className="text-[12px] text-[#48484A]">Sem cartões</p>
-            </div>
-          )}
-
-          {showAdd && (
-            <div className="mt-1">
-              <div className="px-3 py-2.5 rounded-[12px] border border-[#0A84FF]/50" style={{ background: '#2C2C2E' }}>
+          {showAdd ? (
+            <div className="mt-1 pb-2 px-1">
+              <div className="p-2 py-2 rounded-[12px] border border-[#0A84FF]/50" style={{ background: '#222224' }}>
                 <input ref={cardRef} value={cardName} onChange={e => setCardName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') addCard(); if (e.key === 'Escape') { setShowAdd(false); setCardName(''); } }}
                   placeholder="Nome do cartão..."
-                  className="w-full bg-transparent text-[14px] text-[#E5E5EA] placeholder:text-[#48484A] outline-none" />
+                  className="w-full bg-transparent text-[14px] text-[#E5E5EA] placeholder:text-[#86868B] outline-none" />
               </div>
               <div className="flex gap-2 mt-2">
                 <button type="button" onClick={addCard} disabled={addingCard || !cardName.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-medium text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-medium text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:bg-opacity-80"
                   style={{ background: '#0A84FF' }}>
                   {addingCard ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={2.5} />}
                   Adicionar
@@ -532,24 +558,25 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
                 </button>
               </div>
             </div>
+          ) : (
+            <div className="pt-1 pb-2">
+              <button type="button" onClick={() => setShowAdd(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-[12px] text-[14px] font-medium text-[#A1A1AA] hover:text-[#F5F5F7] hover:bg-white/5 transition-colors outline-none cursor-pointer group/add">
+                <span className="flex items-center gap-2"><Plus size={16} strokeWidth={2} className="opacity-80 group-hover/add:opacity-100 transition-opacity" /> Adicionar um cartão</span>
+                <CopyPlus size={15} strokeWidth={1.5} className="opacity-60 group-hover/add:opacity-100 transition-opacity" />
+              </button>
+            </div>
           )}
         </div>
-
-        {!showAdd && (
-          <div className="px-3 pb-3 pt-1">
-            <button type="button" onClick={() => setShowAdd(true)}
-              className="w-full flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-medium text-[#48484A] hover:text-[#86868B] hover:bg-white/[0.04] transition-colors outline-none cursor-pointer">
-              <Plus size={14} strokeWidth={2.5} /> Adicionar cartão
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
 function EditCardModal({ card, onSave, onClose }) {
-  const [name, setName] = useState(card.name);
+  const [name, setName] = useState(card.name || '');
+  const [coverUrl, setCoverUrl] = useState(card.cover_url || '');
+  const [dueDate, setDueDate] = useState(card.due_date || '');
   const [saving, setSaving] = useState(false);
   const { error: showError } = useToast();
 
@@ -559,7 +586,13 @@ function EditCardModal({ card, onSave, onClose }) {
     if (!v) return;
     setSaving(true);
     try {
-      const upd = await api(`/task-cards/${card.id}`, { method: 'PUT', body: JSON.stringify({ name: v }) });
+      const payload = { name: v };
+      if (coverUrl.trim()) payload.cover_url = coverUrl.trim();
+      else payload.cover_url = null;
+      if (dueDate) payload.due_date = dueDate;
+      else payload.due_date = null;
+
+      const upd = await api(`/task-cards/${card.id}`, { method: 'PUT', body: JSON.stringify(payload) });
       onSave(upd);
     } catch (err) { showError(err.message); }
     finally { setSaving(false); }
@@ -577,10 +610,55 @@ function EditCardModal({ card, onSave, onClose }) {
           <button type="button" onClick={onClose} className="p-1.5 rounded-[8px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer"><X size={16} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input autoFocus value={name} onChange={e => setName(e.target.value)} required
-            className="w-full px-4 py-3 rounded-[14px] text-[15px] text-[#F5F5F7] outline-none border border-transparent focus:border-[#0A84FF] transition-all"
-            style={{ background: '#2C2C2E' }}
-            placeholder="Nome do cartão" />
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-[#86868B] ml-1">Nome do cartão</label>
+            <input autoFocus value={name} onChange={e => setName(e.target.value)} required
+              className="w-full px-4 py-3 rounded-[14px] text-[15px] text-[#F5F5F7] outline-none border border-transparent focus:border-[#0A84FF] transition-all"
+              style={{ background: '#2C2C2E' }}
+              placeholder="Nome do cartão" />
+          </div>
+
+          <div className="space-y-1.5 flex flex-col">
+            <label className="text-[13px] font-medium text-[#86868B] ml-1">Imagem de Capa</label>
+            {coverUrl && (
+              <div className="relative w-full h-24 rounded-[12px] border border-white/[0.05] overflow-hidden mb-2 group">
+                <img src={coverUrl} alt="Capa" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => setCoverUrl('')} className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-md text-white opacity-0 group-hover:opacity-100 transition-opacity outline-none cursor-pointer"><X size={14} /></button>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setCoverUrl(reader.result);
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full text-[13px] text-[#86868B] file:mr-3 file:py-2 file:px-4 file:rounded-[8px] file:border-0 file:text-[13px] file:font-semibold file:bg-[#0A84FF]/10 file:text-[#0A84FF] hover:file:bg-[#0A84FF]/20 cursor-pointer outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-4 pt-1">
+            <h3 className="text-[14px] font-semibold text-[#86868B] uppercase tracking-wider mb-0">Datas</h3>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[13px] font-medium text-[#86868B]">Data de entrega</label>
+              <div className="flex items-center gap-3">
+                <input type="checkbox" checked={!!dueDate} onChange={(e) => {
+                  if (!e.target.checked) setDueDate('');
+                  else setDueDate(new Date().toISOString().slice(0, 10));
+                }} className="w-4 h-4 rounded-sm border-white/20 accent-[#0A84FF] cursor-pointer" />
+                <div className="flex items-center gap-2">
+                  <input value={dueDate} onChange={e => setDueDate(e.target.value)} type="date" disabled={!dueDate} className={`px-3 py-1.5 text-[#F5F5F7] text-[14px] outline-none border transition-all w-[140px] [color-scheme:dark] ${dueDate ? 'border-[#0A84FF]' : 'border-transparent opacity-50 cursor-not-allowed'}`} style={{ background: '#2C2C2E', borderRadius: '4px' }} />
+                  <input type="time" defaultValue="20:59" disabled={!dueDate} className={`px-3 py-1.5 text-[#F5F5F7] text-[14px] outline-none border border-transparent focus:border-[#0A84FF] transition-all w-[90px] [color-scheme:dark] ${!dueDate && 'opacity-50 cursor-not-allowed'}`} style={{ background: '#2C2C2E', borderRadius: '4px' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button type="submit" disabled={saving || !name.trim()}
             className="w-full py-3 rounded-[14px] text-white text-[15px] font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
             style={{ background: '#0A84FF' }}>
@@ -593,7 +671,160 @@ function EditCardModal({ card, onSave, onClose }) {
   );
 }
 
-function BoardView() {
+/* ──────────────────────────────────────────────────────
+   BOARD GALLERY — shows all boards, click to enter
+────────────────────────────────────────────────────── */
+const BOARD_COLORS = [
+  '#2C2C2E', '#1A3A2A', '#2A1A3A', '#3A2A1A', '#1A2A3A', '#3A1A2A',
+  '#0A84FF', '#32D74B', '#FF9F0A', '#FF453A', '#BF5AF2', '#AC8E68',
+];
+
+function BoardGallery({ onOpenBoard }) {
+  const [boards, setBoards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [boardName, setBoardName] = useState('');
+  const [boardColor, setBoardColor] = useState('#2C2C2E');
+  const [adding, setAdding] = useState(false);
+  const inputRef = useRef(null);
+  const { success, error: showError } = useToast();
+  const { confirm } = useConfirm();
+
+  useEffect(() => {
+    api('/task-boards')
+      .then(data => { setBoards(data); setLoading(false); })
+      .catch(err => { showError(err.message); setLoading(false); });
+  }, []); // eslint-disable-line
+
+  useEffect(() => { if (showAdd) inputRef.current?.focus(); }, [showAdd]);
+
+  async function addBoard() {
+    const v = boardName.trim();
+    if (!v) return;
+    setAdding(true);
+    try {
+      const board = await api('/task-boards', { method: 'POST', body: JSON.stringify({ name: v, color: boardColor }) });
+      setBoards(prev => [...prev, board]);
+      setBoardName('');
+      setBoardColor('#2C2C2E');
+      setShowAdd(false);
+      success('Quadro criado');
+    } catch (err) { showError(err.message); }
+    finally { setAdding(false); }
+  }
+
+  function deleteBoard(id) {
+    confirm({
+      title: 'Excluir quadro?',
+      message: 'Todas as listas e cartões deste quadro serão removidos permanentemente.',
+      onConfirm: async () => {
+        try {
+          await api(`/task-boards/${id}`, { method: 'DELETE' });
+          setBoards(prev => prev.filter(b => b.id !== id));
+          success('Quadro excluído');
+        } catch (err) { showError(err.message); }
+      },
+    });
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full" />
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Carregando quadros...</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
+        <div className="space-y-1">
+          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Quadros</h1>
+          <p className="text-[17px] text-[#86868B]">{boards.length} quadro{boards.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button type="button" onClick={() => setShowAdd(true)}
+          className="flex items-center gap-1.5 px-5 py-2 rounded-[12px] bg-[#F5F5F7] text-[#000000] text-[14px] font-medium hover:bg-white transition-colors cursor-pointer shadow-sm">
+          <Plus size={16} strokeWidth={2.5} /> Novo Quadro
+        </button>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {boards.map(board => (
+          <motion.div key={board.id} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}
+            className="group relative rounded-[16px] overflow-hidden cursor-pointer shadow-lg border border-white/[0.04] hover:border-white/[0.12] transition-all"
+            style={{ background: board.color || '#2C2C2E', minHeight: 120 }}
+            onClick={() => onOpenBoard(board)}>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+            <div className="relative z-10 p-4 flex flex-col justify-end h-full" style={{ minHeight: 120 }}>
+              <h3 className="text-[16px] font-bold text-white truncate drop-shadow-md">{board.name}</h3>
+            </div>
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
+              <button type="button" onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); }}
+                className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-[#FF453A] hover:bg-black/70 transition-colors outline-none cursor-pointer">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </motion.div>
+        ))}
+
+        {/* Add board card */}
+        {showAdd ? (
+          <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg flex flex-col gap-3" style={{ background: '#111111' }}>
+            <input ref={inputRef} value={boardName} onChange={e => setBoardName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addBoard(); if (e.key === 'Escape') { setShowAdd(false); setBoardName(''); } }}
+              placeholder="Nome do quadro..."
+              className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
+              style={{ background: '#222224' }} />
+            <div className="flex flex-wrap gap-2">
+              {BOARD_COLORS.map(c => (
+                <button key={c} type="button" onClick={() => setBoardColor(c)}
+                  className={`w-6 h-6 rounded-full transition-all outline-none cursor-pointer ${boardColor === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#111111] scale-110' : 'hover:scale-110'}`}
+                  style={{ background: c }} />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={addBoard} disabled={adding || !boardName.trim()}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
+                style={{ background: '#0A84FF' }}>
+                {adding && <Loader2 size={14} className="animate-spin" />}
+                Criar Quadro
+              </button>
+              <button type="button" onClick={() => { setShowAdd(false); setBoardName(''); }}
+                className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setShowAdd(true)}
+            className="flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-[16px] text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.02] transition-all cursor-pointer outline-none"
+            style={{ minHeight: 120 }}>
+            <Plus size={20} strokeWidth={1.5} />
+            Criar novo quadro
+          </button>
+        )}
+      </motion.div>
+
+      {boards.length === 0 && !showAdd && (
+        <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-60">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <Kanban size={28} strokeWidth={1.2} className="text-[#86868B]" />
+          </div>
+          <p className="text-[15px] text-[#86868B]">Crie seu primeiro quadro para começar.</p>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ──────────────────────────────────────────────────────
+   BOARD KANBAN — lists & cards inside a specific board
+────────────────────────────────────────────────────── */
+function BoardKanban({ board, onBack }) {
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddList, setShowAddList] = useState(false);
@@ -603,20 +834,53 @@ function BoardView() {
   const [activeCard, setActiveCard] = useState(null);
   const [activeList, setActiveList] = useState(null);
   const listInputRef = useRef(null);
-  const dragOriginListId = useRef(null); // captures listId at drag-start, immune to re-renders
+  const dragOriginListId = useRef(null);
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
+
+  const scrollRef = useRef(null);
+  const animationFrameId = useRef(null);
+  const mousePos = useRef({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    mousePos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    const autoScroll = () => {
+      const { x } = mousePos.current;
+      const rect = scrollContainer.getBoundingClientRect();
+      const edgeSize = 150; // Distance from edge to start scrolling
+      const speed = 10; // Scroll speed multiplier
+
+      if (x < rect.left + edgeSize) {
+        const intensity = (rect.left + edgeSize - x) / edgeSize;
+        scrollContainer.scrollLeft -= speed * intensity;
+      } else if (x > rect.right - edgeSize) {
+        const intensity = (x - (rect.right - edgeSize)) / edgeSize;
+        scrollContainer.scrollLeft += speed * intensity;
+      }
+
+      animationFrameId.current = requestAnimationFrame(autoScroll);
+    };
+
+    animationFrameId.current = requestAnimationFrame(autoScroll);
+    return () => cancelAnimationFrame(animationFrameId.current);
+  }, []);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   function load() {
     setLoading(true);
-    api('/task-lists')
+    api(`/task-lists?board_id=${board.id}`)
       .then(data => { setLists(data); setLoading(false); })
       .catch(err => { showError(err.message); setLoading(false); });
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line
+  useEffect(() => { load(); }, [board.id]); // eslint-disable-line
   useEffect(() => { if (showAddList) listInputRef.current?.focus(); }, [showAddList]);
 
   async function addList() {
@@ -624,7 +888,7 @@ function BoardView() {
     if (!v) return;
     setAddingList(true);
     try {
-      const list = await api('/task-lists', { method: 'POST', body: JSON.stringify({ name: v }) });
+      const list = await api('/task-lists', { method: 'POST', body: JSON.stringify({ name: v, board_id: board.id }) });
       setLists(prev => [...prev, list]);
       setListName('');
       setShowAddList(false);
@@ -657,7 +921,7 @@ function BoardView() {
   }
 
   function handleCardSaved(upd) {
-    setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === upd.id ? { ...c, name: upd.name } : c) })));
+    setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === upd.id ? { ...c, ...upd } : c) })));
     setEditingCard(null);
     success('Cartão atualizado');
   }
@@ -676,6 +940,18 @@ function BoardView() {
     });
   }
 
+  async function handleToggleCard(card) {
+    const newStatus = !card.completed;
+    setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === card.id ? { ...c, completed: newStatus } : c) })));
+    try {
+      await api(`/task-cards/${card.id}`, { method: 'PUT', body: JSON.stringify({ completed: newStatus }) });
+      success(newStatus ? 'Cartão concluído' : 'Cartão pendente');
+    } catch (err) {
+      showError(err.message);
+      load();
+    }
+  }
+
   function findListByCard(cardId) {
     return lists.find(l => l.cards.some(c => c.id === cardId));
   }
@@ -684,7 +960,7 @@ function BoardView() {
     const d = active.data.current;
     if (d?.type === 'card') {
       setActiveCard(d.card);
-      dragOriginListId.current = d.listId; // snapshot BEFORE any re-render
+      dragOriginListId.current = d.listId;
     }
     if (d?.type === 'list') setActiveList(d.list);
   }
@@ -700,8 +976,17 @@ function BoardView() {
     if (!aList) return;
 
     let targetId = null;
-    if (oData?.type === 'card') targetId = Number(oData.listId);
-    else if (oData?.type === 'list') targetId = Number(oData.list.id);
+    let overIndex = -1;
+
+    if (oData?.type === 'card') {
+      targetId = Number(oData.listId);
+      const targetList = lists.find(l => Number(l.id) === targetId);
+      if (targetList) {
+        overIndex = targetList.cards.findIndex(c => Number(c.id) === Number(over.id));
+      }
+    } else if (oData?.type === 'list') {
+      targetId = Number(oData.list.id);
+    }
 
     if (!targetId || targetId === Number(aList.id)) return;
 
@@ -709,13 +994,24 @@ function BoardView() {
       const card = aList.cards.find(c => Number(c.id) === cardId);
       if (!card) return prev;
       return prev.map(l => {
-        if (Number(l.id) === Number(aList.id)) return { ...l, cards: l.cards.filter(c => Number(c.id) !== cardId) };
-        if (Number(l.id) === targetId) return { ...l, cards: [...l.cards, card] };
+        if (Number(l.id) === Number(aList.id)) {
+          return { ...l, cards: l.cards.filter(c => Number(c.id) !== cardId) };
+        }
+        if (Number(l.id) === targetId) {
+          const newCards = [...l.cards];
+          const isBelowOverItem =
+            over &&
+            active.rect.current.translated &&
+            active.rect.current.translated.top > over.rect.top + over.rect.height;
+          const modifier = isBelowOverItem ? 1 : 0;
+          const insertIndex = overIndex >= 0 ? overIndex + modifier : newCards.length;
+          newCards.splice(insertIndex, 0, card);
+          return { ...l, cards: newCards };
+        }
         return l;
       });
     });
   }
-
 
   async function onDragEnd({ active, over }) {
     setActiveCard(null);
@@ -724,7 +1020,6 @@ function BoardView() {
     const aData = active.data.current;
     const oData = over?.data.current;
 
-    // --- List reorder ---
     if (aData?.type === 'list') {
       dragOriginListId.current = null;
       if (!over) return;
@@ -736,17 +1031,13 @@ function BoardView() {
       return;
     }
 
-    // --- Card move ---
     if (aData?.type === 'card') {
-      // Use ref (captured at drag-start) — always the ORIGINAL list ID
-      // Coerce to Number to avoid string/number === mismatch
       const originalListId = Number(dragOriginListId.current);
       dragOriginListId.current = null;
       const cardId = Number(active.id);
 
       if (!originalListId || !over) return;
 
-      // Determine target list — coerce to Number
       let targetListId = originalListId;
       let overCardId = null;
 
@@ -758,49 +1049,36 @@ function BoardView() {
       }
 
       const isMove = targetListId !== originalListId;
+      const targetList = lists.find(l => Number(l.id) === targetListId);
+      if (!targetList) return;
+
+      const oldIdx = targetList.cards.findIndex(c => Number(c.id) === cardId);
+      const newIdx = overCardId ? targetList.cards.findIndex(c => Number(c.id) === overCardId) : targetList.cards.length - 1;
+
+      const reordered = arrayMove(targetList.cards, oldIdx < 0 ? 0 : oldIdx, newIdx < 0 ? 0 : newIdx);
+      setLists(prev => prev.map(l => Number(l.id) === targetListId ? { ...l, cards: reordered } : l));
 
       if (isMove) {
-        // Cross-list move: send list_id to the database
-        const targetList = lists.find(l => Number(l.id) === targetListId);
-        const newPos = targetList ? Math.max(0, targetList.cards.length - 1) : 0;
         try {
           await api(`/task-cards/${cardId}`, {
             method: 'PUT',
-            body: JSON.stringify({ list_id: targetListId, position: newPos }),
+            body: JSON.stringify({ list_id: targetListId, position: newIdx }),
           });
+          const items = reordered.map((c, i) => ({ id: c.id, position: i }));
+          await api('/task-cards/reorder', { method: 'POST', body: JSON.stringify({ items }) });
         } catch (err) {
           showError(err.message);
-          load(); // revert UI on failure
+          load();
         }
       } else {
-        // Same-list reorder: update ALL card positions so refresh preserves order
-        const targetList = lists.find(l => Number(l.id) === targetListId);
-        if (!targetList) return;
-        const oldIdx = targetList.cards.findIndex(c => Number(c.id) === cardId);
-        const newIdx = overCardId
-          ? targetList.cards.findIndex(c => Number(c.id) === overCardId)
-          : targetList.cards.length - 1;
-
         if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return;
-
-        // Update local state immediately
-        const reordered = arrayMove(targetList.cards, oldIdx, newIdx);
-        setLists(prev => prev.map(l =>
-          Number(l.id) === targetListId ? { ...l, cards: reordered } : l
-        ));
-
-        // Persist ALL positions to the database
-        const items = reordered.map((c, i) => ({ id: c.id, position: i }));
         try {
-          await api('/task-cards/reorder', {
-            method: 'POST',
-            body: JSON.stringify({ items }),
-          });
-        } catch { /* silent — UI already updated */ }
+          const items = reordered.map((c, i) => ({ id: c.id, position: i }));
+          await api('/task-cards/reorder', { method: 'POST', body: JSON.stringify({ items }) });
+        } catch { /* suppress */ }
       }
     }
   }
-
 
   const listIds = lists.map(l => `list-${l.id}`);
   const dropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) };
@@ -808,11 +1086,8 @@ function BoardView() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
-        />
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full" />
         <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Carregando quadro...</p>
       </div>
     );
@@ -821,9 +1096,18 @@ function BoardView() {
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
-        <div className="space-y-1">
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">O Quadro</h1>
-          <p className="text-[17px] text-[#86868B]">{lists.length} lista{lists.length !== 1 ? 's' : ''} · {lists.reduce((a, l) => a + l.cards.length, 0)} cartão/cartões</p>
+        <div className="flex items-center gap-4">
+          <button type="button" onClick={onBack}
+            className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+          </button>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded-[4px] shrink-0" style={{ background: board.color || '#2C2C2E' }} />
+              <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{board.name}</h1>
+            </div>
+            <p className="text-[17px] text-[#86868B] pl-7">{lists.length} lista{lists.length !== 1 ? 's' : ''} · {lists.reduce((a, l) => a + l.cards.length, 0)} cartões</p>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -836,56 +1120,61 @@ function BoardView() {
 
       <DndContext sensors={sensors} collisionDetection={closestCorners}
         onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd}>
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 pb-6 items-start"
+        <div
+          ref={scrollRef}
+          onMouseMove={handleMouseMove}
+          className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-6 pb-20 scrollbar-board cursor-default"
         >
-          <SortableContext items={listIds} strategy={rectSortingStrategy}>
-            {lists.map(list => (
-              <KanbanList key={list.id} list={list}
-                onRename={handleRenameList}
-                onDelete={handleDeleteList}
-                onCardAdded={handleCardAdded}
-                onEditCard={setEditingCard}
-                onDeleteCard={handleDeleteCard} />
-            ))}
-          </SortableContext>
+          <div className="flex gap-6 items-start min-w-full">
+            <SortableContext items={listIds} strategy={rectSortingStrategy}>
+              {lists.map(list => (
+                <KanbanList key={list.id} list={list}
+                  onRename={handleRenameList}
+                  onDelete={handleDeleteList}
+                  onCardAdded={handleCardAdded}
+                  onEditCard={setEditingCard}
+                  onDeleteCard={handleDeleteCard}
+                  onToggleCard={handleToggleCard} />
+              ))}
+            </SortableContext>
 
-          {showAddList ? (
-            <div className="w-full">
-              <div className="rounded-[18px] border border-[#0A84FF]/40 p-4 shadow-lg" style={{ background: 'rgba(28,28,30,0.92)' }}>
-                <input ref={listInputRef} value={listName} onChange={e => setListName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') addList(); if (e.key === 'Escape') { setShowAddList(false); setListName(''); } }}
-                  placeholder="Nome da lista..."
-                  className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#48484A] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
-                  style={{ background: '#2C2C2E' }} />
-                <div className="flex gap-2 mt-3">
-                  <button type="button" onClick={addList} disabled={addingList || !listName.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
-                    style={{ background: '#0A84FF' }}>
-                    {addingList && <Loader2 size={14} className="animate-spin" />}
-                    Adicionar Lista
-                  </button>
-                  <button type="button" onClick={() => { setShowAddList(false); setListName(''); }}
-                    className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
-                    <X size={16} />
-                  </button>
+            {showAddList ? (
+              <div className="w-[300px] shrink-0">
+                <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg" style={{ background: '#111111' }}>
+                  <input ref={listInputRef} value={listName} onChange={e => setListName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') addList(); if (e.key === 'Escape') { setShowAddList(false); setListName(''); } }}
+                    placeholder="Nome da lista..."
+                    className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
+                    style={{ background: '#222224' }} />
+                  <div className="flex gap-2 mt-3">
+                    <button type="button" onClick={addList} disabled={addingList || !listName.trim()}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
+                      style={{ background: '#0A84FF' }}>
+                      {addingList && <Loader2 size={14} className="animate-spin" />}
+                      Adicionar Lista
+                    </button>
+                    <button type="button" onClick={() => { setShowAddList(false); setListName(''); }}
+                      className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+                      <X size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setShowAddList(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-[16px] text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.04] transition-all cursor-pointer outline-none self-start"
-              style={{ background: 'transparent' }}>
-              <Plus size={16} strokeWidth={2} /> Adicionar lista
-            </button>
-          )}
-        </motion.div>
+            ) : (
+              <button type="button" onClick={() => setShowAddList(true)}
+                className="w-[300px] shrink-0 flex items-center justify-center gap-2 px-4 py-4 rounded-[16px] text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.04] transition-all cursor-pointer outline-none self-start"
+                style={{ background: 'transparent' }}>
+                <Plus size={16} strokeWidth={2} /> Adicionar lista
+              </button>
+            )}
+          </div>
+        </div>
 
         <DragOverlay dropAnimation={dropAnimation}>
           {activeCard ? <div style={{ width: 256 }}><CardOverlay card={activeCard} /></div> : null}
           {activeList ? (
             <div style={{ width: 280 }}>
-              <div className="rounded-[18px] p-4 border border-white/[0.10] shadow-2xl" style={{ background: '#1C1C1E' }}>
+              <div className="rounded-[16px] p-4 border border-white/[0.10] shadow-2xl" style={{ background: '#111111' }}>
                 <span className="text-[14px] font-semibold text-[#F5F5F7]">{activeList.name}</span>
               </div>
             </div>
@@ -909,6 +1198,21 @@ function BoardView() {
       </AnimatePresence>
     </>
   );
+}
+
+/* ──────────────────────────────────────────────────────
+   BOARD VIEW — router between gallery and kanban
+────────────────────────────────────────────────────── */
+function BoardView() {
+  const [activeBoard, setActiveBoard] = useState(null);
+
+  if (activeBoard) {
+    return (
+      <BoardKanban board={activeBoard} onBack={() => setActiveBoard(null)} />
+    );
+  }
+
+  return <BoardGallery onOpenBoard={setActiveBoard} />;
 }
 
 /* ──────────────────────────────────────────────────────
