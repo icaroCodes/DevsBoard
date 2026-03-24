@@ -708,6 +708,7 @@ function BoardGallery({ onOpenBoard }) {
   const [boardName, setBoardName] = useState('');
   const [boardColor, setBoardColor] = useState('#2C2C2E');
   const [adding, setAdding] = useState(false);
+  const [editingBoard, setEditingBoard] = useState(null);
   const inputRef = useRef(null);
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
@@ -749,6 +750,12 @@ function BoardGallery({ onOpenBoard }) {
     });
   }
 
+  async function handleUpdateBoard(updatedBoard) {
+    setBoards(prev => prev.map(b => b.id === updatedBoard.id ? updatedBoard : b));
+    setEditingBoard(null);
+    success('Quadro atualizado');
+  }
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
@@ -785,6 +792,10 @@ function BoardGallery({ onOpenBoard }) {
               <h3 className="text-[16px] font-bold text-white truncate drop-shadow-md">{board.name}</h3>
             </div>
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
+              <button type="button" onClick={(e) => { e.stopPropagation(); setEditingBoard(board); }}
+                className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/70 transition-colors outline-none cursor-pointer">
+                <Pencil size={14} />
+              </button>
               <button type="button" onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); }}
                 className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-[#FF453A] hover:bg-black/70 transition-colors outline-none cursor-pointer">
                 <Trash2 size={14} />
@@ -807,6 +818,20 @@ function BoardGallery({ onOpenBoard }) {
                   className={`w-6 h-6 rounded-full transition-all outline-none cursor-pointer ${boardColor === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#111111] scale-110' : 'hover:scale-110'}`}
                   style={{ background: c }} />
               ))}
+              <div className="flex items-center gap-2 ml-1">
+                <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/20 group cursor-pointer" style={{ background: boardColor }}>
+                  <input type="color" value={boardColor} onChange={e => setBoardColor(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[2]" title="Escolher cor personalizada" />
+                </div>
+                <input type="text" value={boardColor} 
+                  onChange={e => {
+                    let val = e.target.value;
+                    if (val && !val.startsWith('#')) val = '#' + val;
+                    setBoardColor(val.substring(0, 7));
+                  }}
+                  placeholder="#000000"
+                  className="w-[75px] bg-[#222224] text-[11px] text-[#F5F5F7] px-2 py-1 rounded-[6px] border border-white/10 outline-none focus:border-[#0A84FF]/50 transition-colors uppercase font-mono" />
+              </div>
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={addBoard} disabled={adding || !boardName.trim()}
@@ -839,7 +864,78 @@ function BoardGallery({ onOpenBoard }) {
           <p className="text-[15px] text-[#86868B]">Crie seu primeiro quadro para começar.</p>
         </div>
       )}
+
+      <AnimatePresence>
+        {editingBoard && (
+          <EditBoardModal board={editingBoard} onSave={handleUpdateBoard} onClose={() => setEditingBoard(null)} />
+        )}
+      </AnimatePresence>
     </>
+  );
+}
+
+function EditBoardModal({ board, onSave, onClose }) {
+  const [name, setName] = useState(board.name);
+  const [color, setColor] = useState(board.color || '#2C2C2E');
+  const [saving, setSaving] = useState(false);
+  const { error: showError } = useToast();
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (saving || !name.trim()) return;
+    setSaving(true);
+    try {
+      const resp = await api(`/task-boards/${board.id}`, { method: 'PUT', body: JSON.stringify({ name, color }) });
+      onSave(resp);
+    } catch (err) { showError(err.message); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4" style={{ fontFamily: FONT }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-[20px] font-semibold text-[#F5F5F7]">Editar Quadro</h2>
+          <button onClick={onClose} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] transition-colors outline-none cursor-pointer"><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-[#86868B] ml-1">Nome do quadro</label>
+            <input autoFocus value={name} onChange={e => setName(e.target.value)}
+              className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-[#86868B] ml-1">Cor do quadro</label>
+            <div className="flex flex-wrap gap-2.5 p-1 items-center">
+              {BOARD_COLORS.map(c => (
+                <button key={c} type="button" onClick={() => setColor(c)}
+                  className={`w-8 h-8 rounded-full transition-all outline-none cursor-pointer ${color === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#1C1C1E] scale-110' : 'hover:scale-110'}`}
+                  style={{ background: c }} />
+              ))}
+              <div className="flex items-center gap-3 ml-2 bg-[#2C2C2E] px-3 py-1.5 rounded-[12px] border border-white/5">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-inner" style={{ background: color }}>
+                  <input type="color" value={color} onChange={e => setColor(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[3]" title="Paleta de cores" />
+                </div>
+                <input type="text" value={color} 
+                  onChange={e => {
+                    let val = e.target.value;
+                    if (val && !val.startsWith('#')) val = '#' + val;
+                    setColor(val.substring(0, 7));
+                  }}
+                  placeholder="#HEX"
+                  className="w-[90px] bg-transparent text-[13px] text-[#F5F5F7] outline-none uppercase font-mono tracking-tighter" />
+              </div>
+            </div>
+          </div>
+          <button type="submit" disabled={saving || !name.trim()}
+            className="w-full py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+            {saving ? <Loader2 size={20} className="animate-spin" /> : 'Salvar Alterações'}
+          </button>
+        </form>
+      </motion.div>
+    </div>
   );
 }
 
