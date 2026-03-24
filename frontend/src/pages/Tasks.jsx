@@ -18,6 +18,7 @@ import {
   useSortable,
   rectSortingStrategy,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -405,7 +406,6 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
             <img src={card.cover_url} alt="Cover" className="w-full h-full object-cover" />
           </div>
         )}
-
         <div className="flex flex-col gap-1.5 px-3 py-3">
           <div className="flex items-center gap-2">
             <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onToggle(card)} className="text-[#86868B] hover:text-[#32D74B] transition-colors outline-none shrink-0" title="Marcar como concluída">
@@ -437,20 +437,42 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
   );
 }
 
-function CardOverlay({ card }) {
+function CardPreview({ card, isOverlay = false }) {
   return (
-    <div className="flex flex-col relative rounded-[12px] overflow-hidden border border-white/80 shadow-2xl pb-2 rotate-2 opacity-90 cursor-grabbing" style={{ background: '#222224' }}>
+    <div className={`flex flex-col relative rounded-[12px] overflow-hidden border border-white/20 shadow-xl pb-2 ${isOverlay ? 'rotate-2 opacity-95 scale-[1.02]' : ''}`} style={{ background: '#222224' }}>
       {card.cover_url && (
-        <div className="w-full h-[120px] bg-[#1C1C1E] relative shrink-0">
+        <div className="w-full h-[100px] bg-[#1C1C1E] relative shrink-0">
           <img src={card.cover_url} alt="Cover" className="w-full h-full object-cover" />
         </div>
       )}
-      <div className="flex items-center gap-2 px-3 py-3">
-        <Circle size={16} className="text-[#86868B] shrink-0" />
-        <span className="flex-1 text-[14px] font-medium leading-tight text-[#E5E5EA] truncate">{card.name}</span>
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <Circle size={14} className="text-[#86868B] shrink-0" />
+        <span className="flex-1 text-[13px] font-medium leading-tight text-[#E5E5EA] truncate">{card.name}</span>
       </div>
     </div>
   );
+}
+
+function ListOverlay({ list }) {
+  return (
+    <div className="w-[280px] flex-shrink-0 rotate-1 opacity-95 shadow-2xl scale-[1.05] cursor-grabbing">
+      <div className="rounded-[16px] flex flex-col pt-3 border border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)]" style={{ background: '#111111', maxHeight: '60vh' }}>
+        <div className="flex items-center justify-between px-4 pb-3">
+          <h3 className="text-[14px] font-semibold text-[#F5F5F7] truncate">{list.name}</h3>
+          <MoreHorizontal size={16} className="text-[#A1A1AA] opacity-70" />
+        </div>
+        <div className="flex-1 overflow-y-auto px-2 space-y-2 pb-3 scrollbar-hide">
+          {list.cards?.map(card => (
+            <CardPreview key={card.id} card={card} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardOverlay({ card }) {
+  return <CardPreview card={card} isOverlay />;
 }
 
 function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDeleteCard, onToggleCard }) {
@@ -506,7 +528,7 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
       className="w-[300px] flex-shrink-0"
     >
       <div className="rounded-[16px] flex flex-col pt-3 shadow-xl backdrop-blur-sm border border-transparent ring-1 ring-white/[0.03]" style={{ background: '#111111', maxHeight: '75vh' }}>
-        <div className="flex items-center justify-between px-4 pb-3" {...attributes} {...listeners}>
+        <div className="flex items-center justify-between px-4 pb-3 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
           {editingTitle ? (
             <div className="flex-1 flex items-center gap-2">
               <input ref={titleRef} value={titleVal} onChange={e => setTitleVal(e.target.value)}
@@ -969,7 +991,24 @@ function BoardKanban({ board, onBack }) {
     if (!over) return;
     const aData = active.data.current;
     const oData = over.data.current;
-    if (!aData || aData.type !== 'card') return;
+    if (!aData) return;
+
+    if (aData.type === 'list') {
+      let overListId = null;
+      if (oData?.type === 'list') overListId = over.id;
+      else if (oData?.type === 'card') overListId = `list-${oData.listId}`;
+
+      if (overListId && active.id !== overListId) {
+        const ai = lists.findIndex(l => `list-${l.id}` === active.id);
+        const oi = lists.findIndex(l => `list-${l.id}` === overListId);
+        if (ai !== -1 && oi !== -1) {
+          setLists(prev => arrayMove(prev, ai, oi));
+        }
+      }
+      return;
+    }
+
+    if (aData.type !== 'card') return;
 
     const cardId = Number(active.id);
     const aList = lists.find(l => l.cards.some(c => Number(c.id) === cardId));
@@ -1022,11 +1061,13 @@ function BoardKanban({ board, onBack }) {
 
     if (aData?.type === 'list') {
       dragOriginListId.current = null;
-      if (!over) return;
-      const ai = lists.findIndex(l => `list-${l.id}` === active.id);
-      const oi = lists.findIndex(l => `list-${l.id}` === over.id);
-      if (ai !== -1 && oi !== -1 && ai !== oi) {
-        setLists(prev => arrayMove(prev, ai, oi));
+      // Since sorting happened in onDragOver, we just persist the current state
+      try {
+        const items = lists.map((l, i) => ({ id: l.id, position: i }));
+        await api('/task-lists/reorder', { method: 'POST', body: JSON.stringify({ items }) });
+      } catch (err) {
+        showError(err.message);
+        load();
       }
       return;
     }
@@ -1126,7 +1167,7 @@ function BoardKanban({ board, onBack }) {
           className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-6 pb-20 scrollbar-board cursor-default"
         >
           <div className="flex gap-6 items-start min-w-full">
-            <SortableContext items={listIds} strategy={rectSortingStrategy}>
+            <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
               {lists.map(list => (
                 <KanbanList key={list.id} list={list}
                   onRename={handleRenameList}
@@ -1171,14 +1212,8 @@ function BoardKanban({ board, onBack }) {
         </div>
 
         <DragOverlay dropAnimation={dropAnimation}>
-          {activeCard ? <div style={{ width: 256 }}><CardOverlay card={activeCard} /></div> : null}
-          {activeList ? (
-            <div style={{ width: 280 }}>
-              <div className="rounded-[16px] p-4 border border-white/[0.10] shadow-2xl" style={{ background: '#111111' }}>
-                <span className="text-[14px] font-semibold text-[#F5F5F7]">{activeList.name}</span>
-              </div>
-            </div>
-          ) : null}
+          {activeCard ? <CardOverlay card={lists.flatMap(l => l.cards).find(c => c.id === activeCard.id) || activeCard} /> : null}
+          {activeList ? <ListOverlay list={lists.find(l => l.id === activeList.id) || activeList} /> : null}
         </DragOverlay>
       </DndContext>
 
@@ -1204,15 +1239,28 @@ function BoardKanban({ board, onBack }) {
    BOARD VIEW — router between gallery and kanban
 ────────────────────────────────────────────────────── */
 function BoardView() {
-  const [activeBoard, setActiveBoard] = useState(null);
+  const [activeBoard, setActiveBoard] = useState(() => {
+    const saved = localStorage.getItem('active_board');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const handleOpenBoard = (board) => {
+    localStorage.setItem('active_board', JSON.stringify(board));
+    setActiveBoard(board);
+  };
+
+  const handleBack = () => {
+    localStorage.removeItem('active_board');
+    setActiveBoard(null);
+  };
 
   if (activeBoard) {
     return (
-      <BoardKanban board={activeBoard} onBack={() => setActiveBoard(null)} />
+      <BoardKanban board={activeBoard} onBack={handleBack} />
     );
   }
 
-  return <BoardGallery onOpenBoard={setActiveBoard} />;
+  return <BoardGallery onOpenBoard={handleOpenBoard} />;
 }
 
 /* ──────────────────────────────────────────────────────

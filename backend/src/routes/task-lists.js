@@ -139,4 +139,36 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// POST reorder lists in bulk
+// Body: { items: [{id, position}] }
+router.post('/reorder', [
+  body('items').isArray({ min: 1 }).withMessage('items deve ser um array'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { items } = req.body;
+
+    // Update each list sequentially
+    const updates = await Promise.all(
+      items.map(({ id, position }) =>
+        supabase
+          .from('task_lists')
+          .update({ position })
+          .eq('id', id)
+          .eq('user_id', req.userId)
+      )
+    );
+
+    const failed = updates.find(({ error }) => error);
+    if (failed) throw failed.error;
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao reordenar listas' });
+  }
+});
+
 export default router;
