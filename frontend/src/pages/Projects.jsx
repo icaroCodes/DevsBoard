@@ -4,6 +4,7 @@ import { Plus, Trash2, Pencil, ChevronDown, ChevronUp, FolderKanban, X, Layout, 
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -61,9 +62,8 @@ function ImageUploadField({ label, icon, value, preview, onChange, onRemove }) {
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`flex flex-col items-center justify-center gap-2 py-8 rounded-[16px] border-2 border-dashed cursor-pointer transition-all ${
-            dragOver ? 'border-[#0A84FF] bg-[#0A84FF]/10' : 'border-white/[0.08] hover:border-white/20 bg-[#2C2C2E]/50 hover:bg-[#2C2C2E]'
-          }`}
+          className={`flex flex-col items-center justify-center gap-2 py-8 rounded-[16px] border-2 border-dashed cursor-pointer transition-all ${dragOver ? 'border-[#0A84FF] bg-[#0A84FF]/10' : 'border-white/[0.08] hover:border-white/20 bg-[#2C2C2E]/50 hover:bg-[#2C2C2E]'
+            }`}
         >
           <Upload size={24} className="text-[#86868B]" strokeWidth={1.5} />
           <span className="text-[13px] text-[#86868B]">Arraste ou clique para adicionar</span>
@@ -96,12 +96,25 @@ export default function Projects() {
   });
   const { success, error } = useToast();
   const { confirm } = useConfirm();
+  const { activeTeam } = useAuth();
 
   const load = () => {
     api('/projects').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, [activeTeam]);
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      if (e.detail.table === 'projects' || e.detail.table === 'project_assets') {
+        load();
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
+  }, []);
 
   const resetForm = () => {
     setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '', submitting: false });
@@ -300,12 +313,12 @@ export default function Projects() {
                         {(p.logo_url || p.figma_url) && (
                           <div className="flex flex-col gap-6 p-1">
                             {p.logo_url && (
-                              <motion.div 
+                              <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-white/[0.04]"
                               >
-                                <div 
+                                <div
                                   className="w-24 h-24 rounded-[20px] overflow-hidden border border-white/[0.08] bg-[#1A1A1C] shadow-2xl cursor-pointer hover:border-white/20 transition-all flex items-center justify-center p-2 group"
                                   onClick={() => setLightbox(p.logo_url)}
                                 >
@@ -323,7 +336,7 @@ export default function Projects() {
                             )}
 
                             {p.figma_url && (
-                              <motion.div 
+                              <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
@@ -333,7 +346,7 @@ export default function Projects() {
                                   <Figma size={14} className="opacity-60" />
                                   <p className="text-[11px] font-bold uppercase tracking-[0.1em]">Interface & Prototype</p>
                                 </div>
-                                <div 
+                                <div
                                   className="rounded-[24px] overflow-hidden border border-white/[0.08] bg-[#1A1A1C] shadow-2xl cursor-pointer hover:border-white/20 hover:bg-[#212124] transition-all group relative aspect-video"
                                   onClick={() => setLightbox(p.figma_url)}
                                 >

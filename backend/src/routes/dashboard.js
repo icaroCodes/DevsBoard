@@ -7,16 +7,25 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    const { userId } = req;
+    const { userId, teamId } = req;
+
+    const baseQuery = (table) => {
+      let q = supabase.from(table).select('*');
+      if (teamId) {
+        return q.eq('team_id', teamId);
+      } else {
+        return q.eq('user_id', userId).is('team_id', null);
+      }
+    };
 
     const results = await Promise.all([
-      supabase.from('finances').select('type, amount').eq('user_id', userId),
-      supabase.from('finances').select('*').eq('user_id', userId).order('transaction_date', { ascending: false }).order('id', { ascending: false }).limit(5),
-      supabase.from('tasks').select('id, completed').eq('user_id', userId),
-      supabase.from('tasks').select('*').eq('user_id', userId).order('id', { ascending: false }).limit(6),
-      supabase.from('goals').select('id, completed').eq('user_id', userId),
-      supabase.from('goals').select('*').eq('user_id', userId).order('id', { ascending: false }).limit(5),
-      supabase.from('routines').select('*, routine_tasks(*)').eq('user_id', userId).order('id', { ascending: false }),
+      baseQuery('finances').select('type, amount'),
+      baseQuery('finances').order('transaction_date', { ascending: false }).order('id', { ascending: false }).limit(5),
+      baseQuery('tasks').select('id, completed'),
+      baseQuery('tasks').order('id', { ascending: false }).limit(6),
+      baseQuery('goals').select('id, completed'),
+      baseQuery('goals').order('id', { ascending: false }).limit(5),
+      baseQuery('routines').select('*, routine_tasks(*)').order('id', { ascending: false }),
     ]);
 
     results.forEach((res, i) => {

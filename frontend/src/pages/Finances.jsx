@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const CATEGORIES = ['Salário', 'Freelance', 'Investimentos', 'Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Outros'];
 
@@ -24,12 +25,25 @@ export default function Finances() {
   });
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
+  const { activeTeam } = useAuth();
 
   const load = () => {
     api('/finances').then(setItems).catch(err => showError(err.message)).finally(() => setLoading(false));
   };
 
-  useEffect(() => load(), []);
+  useEffect(() => {
+    load();
+  }, [activeTeam]);
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      if (e.detail.table === 'finances') {
+        load();
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
+  }, []);
 
   const filtered = items.filter((i) => {
     if (filter === 'all') return true;
@@ -465,8 +479,8 @@ export default function Finances() {
                           type="button"
                           onClick={() => setForm({ ...form, category: c })}
                           className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
-                              ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
-                              : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
+                            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
+                            : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
                             }`}
                         >
                           {c}

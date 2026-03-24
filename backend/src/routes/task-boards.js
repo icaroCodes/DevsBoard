@@ -6,13 +6,19 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-// GET all boards for user
+// GET all boards for user/team
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('task_boards')
-      .select('*')
-      .eq('user_id', req.userId)
+    let query = supabase.from('task_boards').select('*');
+    
+    // ISOLAMENTO ESTRITO - Evita misturar quadros pessoais com de equipe
+    if (req.teamId) {
+      query = query.eq('team_id', req.teamId);
+    } else {
+      query = query.eq('user_id', req.userId).is('team_id', null);
+    }
+    
+    const { data, error } = await query
       .order('created_at', { ascending: true });
 
     if (error) throw error;
@@ -32,9 +38,19 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name, color } = req.body;
+    const insertData = { 
+      user_id: req.userId, 
+      name, 
+      color: color || '#2C2C2E' 
+    };
+
+    if (req.teamId) {
+      insertData.team_id = req.teamId;
+    }
+
     const { data, error } = await supabase
       .from('task_boards')
-      .insert({ user_id: req.userId, name, color: color || '#2C2C2E' })
+      .insert(insertData)
       .select()
       .single();
 

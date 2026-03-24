@@ -8,7 +8,15 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    let query = supabase.from('finances').select('*').eq('user_id', req.userId);
+    let query = supabase.from('finances').select('*');
+    
+    // ISOLAMENTO ESTRITO - Evita misturar pessoal com equipe
+    if (req.teamId) {
+      query = query.eq('team_id', req.teamId);
+    } else {
+      query = query.eq('user_id', req.userId).is('team_id', null);
+    }
+    
     if (req.query.type && ['income', 'expense'].includes(req.query.type)) {
       query = query.eq('type', req.query.type);
     }
@@ -33,9 +41,22 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { category, description, amount, type, transaction_date } = req.body;
+    const insertData = { 
+      user_id: req.userId, 
+      category, 
+      description: description || null, 
+      amount, 
+      type, 
+      transaction_date 
+    };
+    
+    if (req.teamId) {
+      insertData.team_id = req.teamId;
+    }
+    
     const { data, error } = await supabase
       .from('finances')
-      .insert({ user_id: req.userId, category, description: description || null, amount, type, transaction_date })
+      .insert(insertData)
       .select()
       .single();
     if (error) throw error;

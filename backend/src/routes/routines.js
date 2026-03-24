@@ -8,21 +8,27 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('routines')
-      .select('*, routine_tasks(*)')
-      .eq('user_id', req.userId)
+    let query = supabase.from('routines').select('*, routine_tasks(*)');
+    
+    if (req.teamId) {
+      query = query.eq('team_id', req.teamId);
+    } else {
+      query = query.eq('user_id', req.userId).is('team_id', null);
+    }
+
+    const { data, error } = await query
       .order('position', { ascending: true })
       .order('id', { ascending: false });
+      
     if (error) throw error;
-    res.json(data.map(r => ({ 
-      ...r, 
+    res.json(data.map(r => ({
+      ...r,
       tasks: (r.routine_tasks || []).sort((a, b) => {
         if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time);
         if (a.start_time) return -1;
         if (b.start_time) return 1;
         return a.position - b.position || a.id - b.id;
-      }) 
+      })
     })));
   } catch (err) {
     console.error(err);
@@ -39,8 +45,14 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name, visual_type } = req.body;
+    const insertData = { user_id: req.userId, name, visual_type };
+    
+    if (req.teamId) {
+      insertData.team_id = req.teamId;
+    }
+
     const { data, error } = await supabase
-      .from('routines').insert({ user_id: req.userId, name, visual_type }).select().single();
+      .from('routines').insert(insertData).select().single();
     if (error) throw error;
     res.status(201).json({ ...data, tasks: [] });
   } catch (err) {
@@ -99,10 +111,10 @@ router.post('/:id/tasks', [
     const { title, description, priority = 'medium', start_time, day_of_week } = req.body;
     const { data, error } = await supabase
       .from('routine_tasks')
-      .insert({ 
-        routine_id: req.params.id, 
-        title, 
-        description: description || null, 
+      .insert({
+        routine_id: req.params.id,
+        title,
+        description: description || null,
         priority,
         start_time: start_time || null,
         day_of_week: day_of_week !== undefined ? day_of_week : null

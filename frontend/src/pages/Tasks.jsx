@@ -25,6 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -111,13 +112,26 @@ function ListView() {
   const [formParams, setFormParams] = useState({ title: '', description: '', priority: 'medium', submitting: false });
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
+  const { activeTeam } = useAuth();
 
   const load = () => {
     setLoading(true);
     api('/tasks').then(data => { setItems(data); setLoading(false); }).catch(err => { showError(err.message); setLoading(false); });
   };
 
-  useEffect(() => load(), []); // eslint-disable-line
+  useEffect(() => {
+    load();
+  }, [activeTeam]);
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      if (e.detail.table === 'tasks') {
+        load();
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
+  }, []);
 
   const filteredItems = items.filter(i => {
     if (filter === 'completed') return i.completed;
@@ -713,11 +727,23 @@ function BoardGallery({ onOpenBoard }) {
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
 
+  const { activeTeam } = useAuth();
+
   useEffect(() => {
     api('/task-boards')
       .then(data => { setBoards(data); setLoading(false); })
       .catch(err => { showError(err.message); setLoading(false); });
-  }, []); // eslint-disable-line
+  }, [activeTeam]); // eslint-disable-line
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      if (e.detail.table === 'task_boards') {
+        api('/task-boards').then(setBoards).catch(console.error);
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
+  }, []);
 
   useEffect(() => { if (showAdd) inputRef.current?.focus(); }, [showAdd]);
 
@@ -823,7 +849,7 @@ function BoardGallery({ onOpenBoard }) {
                   <input type="color" value={boardColor} onChange={e => setBoardColor(e.target.value)}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[2]" title="Escolher cor personalizada" />
                 </div>
-                <input type="text" value={boardColor} 
+                <input type="text" value={boardColor}
                   onChange={e => {
                     let val = e.target.value;
                     if (val && !val.startsWith('#')) val = '#' + val;
@@ -918,7 +944,7 @@ function EditBoardModal({ board, onSave, onClose }) {
                   <input type="color" value={color} onChange={e => setColor(e.target.value)}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[3]" title="Paleta de cores" />
                 </div>
-                <input type="text" value={color} 
+                <input type="text" value={color}
                   onChange={e => {
                     let val = e.target.value;
                     if (val && !val.startsWith('#')) val = '#' + val;
@@ -955,6 +981,7 @@ function BoardKanban({ board, onBack }) {
   const dragOriginListId = useRef(null);
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
+  const { activeTeam } = useAuth();
 
   const scrollRef = useRef(null);
   const animationFrameId = useRef(null);
@@ -998,7 +1025,22 @@ function BoardKanban({ board, onBack }) {
       .catch(err => { showError(err.message); setLoading(false); });
   }
 
-  useEffect(() => { load(); }, [board.id]); // eslint-disable-line
+  useEffect(() => { load(); }, [board.id, activeTeam]); // eslint-disable-line
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      const { table, payload } = e.detail;
+      if (['task_lists', 'task_cards'].includes(table)) {
+        load();
+      }
+      if (table === 'task_boards' && payload.eventType === 'DELETE' && payload.old.id === board.id) {
+        success('Este quadro foi excluído.');
+        onBack();
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
+  }, [board.id, onBack]);
   useEffect(() => { if (showAddList) listInputRef.current?.focus(); }, [showAddList]);
 
   async function addList() {

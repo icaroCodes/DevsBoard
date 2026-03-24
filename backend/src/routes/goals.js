@@ -8,11 +8,16 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('goals').select('*').eq('user_id', req.userId).order('id', { ascending: false });
-    if (error) {
-      console.error('Supabase error in GET /goals:', error);
-      throw error;
+    let query = supabase.from('goals').select('*');
+    
+    if (req.teamId) {
+      query = query.eq('team_id', req.teamId);
+    } else {
+      query = query.eq('user_id', req.userId).is('team_id', null);
     }
+
+    const { data, error } = await query.order('id', { ascending: false });
+    if (error) throw error;
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -32,9 +37,22 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name, type, deadline_type = 'indefinite', deadline_date, target_value } = req.body;
+    const insertData = { 
+      user_id: req.userId, 
+      name, 
+      type, 
+      deadline_type, 
+      deadline_date: deadline_date || null, 
+      target_value: target_value || 0 
+    };
+
+    if (req.teamId) {
+      insertData.team_id = req.teamId;
+    }
+
     const { data, error } = await supabase
       .from('goals')
-      .insert({ user_id: req.userId, name, type, deadline_type, deadline_date: deadline_date || null, target_value: target_value || 0 })
+      .insert(insertData)
       .select()
       .single();
     if (error) throw error;
@@ -55,8 +73,13 @@ router.put('/:id', [
   body('remove_amount').optional().isFloat({ min: 0.01 }),
 ], async (req, res) => {
   try {
+    const { userId, teamId } = req;
     const { data: goal, error: goalError } = await supabase
-      .from('goals').select('*').eq('id', req.params.id).eq('user_id', req.userId).single();
+      .from('goals')
+      .select('*')
+      .eq('id', req.params.id)
+      .eq(teamId ? 'team_id' : 'user_id', teamId ? teamId : userId)
+      .single();
 
     if (goalError) {
       console.error('Supabase error in PUT /goals (select goal):', goalError);
@@ -70,8 +93,11 @@ router.put('/:id', [
     // Calcular saldo atual do usuário no sistema financeiro se necessário
     let currentBalance = null;
     if (req.body.add_amount !== undefined && goal.type === 'financial') {
-      const { data: financeData, error: financeError } = await supabase
-        .from('finances').select('type, amount').eq('user_id', req.userId);
+      let finQuery = supabase.from('finances').select('type, amount');
+      if (teamId) finQuery = finQuery.eq('team_id', teamId);
+      else finQuery = finQuery.eq('user_id', userId).is('team_id', null);
+      
+      const { data: financeData, error: financeError } = await finQuery;
 
       if (financeError) {
         console.error('Supabase error in PUT /goals (select finances):', financeError);
@@ -91,14 +117,16 @@ router.put('/:id', [
 
       updates.saved_amount = Number(goal.saved_amount || 0) + amountToAdd;
 
-      transactions.push({
-        user_id: req.userId,
+      const tx = {
+        user_id: userId,
         type: 'expense',
         category: 'Outros',
         description: `Transferência para meta: ${goal.name}`,
         amount: amountToAdd,
         transaction_date: new Date().toISOString().split('T')[0]
-      });
+      };
+      if (teamId) tx.team_id = teamId;
+      transactions.push(tx);
     }
 
     if (req.body.remove_amount !== undefined && goal.type === 'financial') {
@@ -107,14 +135,16 @@ router.put('/:id', [
       if (amountToRemove > 0) {
         updates.saved_amount = Number(goal.saved_amount) - amountToRemove;
 
-        transactions.push({
-          user_id: req.userId,
+        const tx = {
+          user_id: userId,
           type: 'income',
           category: 'Outros',
           description: `Resgate da meta: ${goal.name}`,
           amount: amountToRemove,
           transaction_date: new Date().toISOString().split('T')[0]
-        });
+        };
+        if (teamId) tx.team_id = teamId;
+        transactions.push(tx);
       }
     }
 
@@ -142,20 +172,29 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const { userId, teamId } = req;
     const { data: goal } = await supabase
-      .from('goals').select('*').eq('id', req.params.id).eq('user_id', req.userId).single();
+      .from('goals')
+      .select('*')
+      .eq('id', req.params.id)
+      .eq(teamId ? 'team_id' : 'user_id', teamId ? teamId : userId)
+      .single();
+      
     if (!goal) return res.status(404).json({ error: 'Meta não encontrada' });
 
     // Se a meta é financeira e tem saldo guardado, devolve para a conta antes de excluir
     if (goal.type === 'financial' && Number(goal.saved_amount) > 0) {
-      const { error: txError } = await supabase.from('finances').insert({
-        user_id: req.userId,
+      const txData = {
+        user_id: userId,
         type: 'income',
         category: 'Outros',
         description: `Saldo retornado da meta excluída: ${goal.name}`,
         amount: Number(goal.saved_amount),
         transaction_date: new Date().toISOString().split('T')[0]
-      });
+      };
+      if (teamId) txData.team_id = teamId;
+      
+      const { error: txError } = await supabase.from('finances').insert(txData);
       if (txError) throw txError;
     }
 

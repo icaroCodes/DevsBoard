@@ -14,6 +14,7 @@ import settingsRoutes from './routes/settings.js';
 import taskListsRoutes from './routes/task-lists.js';
 import taskCardsRoutes from './routes/task-cards.js';
 import taskBoardsRoutes from './routes/task-boards.js';
+import teamsRoutes from './routes/teams.js';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/settings', settingsRoutes);
 app.use('/task-lists', taskListsRoutes);
 app.use('/task-cards', taskCardsRoutes);
 app.use('/task-boards', taskBoardsRoutes);
+app.use('/teams', teamsRoutes);
 
 // 404
 app.use((req, res) => {

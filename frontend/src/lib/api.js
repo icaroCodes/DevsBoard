@@ -8,6 +8,10 @@ function getHeaders() {
   const headers = { 'Content-Type': 'application/json' };
   const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  const activeTeam = JSON.parse(localStorage.getItem('activeTeam'));
+  if (activeTeam) headers['X-Team-Id'] = activeTeam.id;
+  
   return headers;
 }
 

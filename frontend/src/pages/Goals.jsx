@@ -4,6 +4,7 @@ import { Plus, Trash2, Pencil, Target, Check, X, Target as TargetIcon, Loader2 }
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Goals() {
   const [items, setItems] = useState([]);
@@ -14,6 +15,7 @@ export default function Goals() {
   const [addAmount, setAddAmount] = useState({ id: null, value: '' });
   const { success, error } = useToast();
   const { confirm } = useConfirm();
+  const { activeTeam } = useAuth();
 
   const load = () => {
     setLoading(true);
@@ -37,6 +39,16 @@ export default function Goals() {
 
   useEffect(() => {
     load();
+  }, [activeTeam]);
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      if (e.detail.table === 'goals') {
+        load();
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
   }, []);
 
   const handleSubmit = async (e) => {

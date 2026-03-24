@@ -13,6 +13,15 @@ export const authenticate = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, config.jwt.secret);
     req.userId = decoded.userId;
+    
+    // Suporte a Contexto de Equipe
+    const teamIdStr = req.headers['x-team-id'];
+    if (teamIdStr && teamIdStr !== 'null' && teamIdStr !== 'undefined') {
+      req.teamId = parseInt(teamIdStr); // Converter para Number para bater com BIGINT no Banco
+    } else {
+      req.teamId = null;
+    }
+    
     next();
   } catch {
     return res.status(401).json({ error: 'Token inválido ou expirado' });

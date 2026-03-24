@@ -8,10 +8,15 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('user_id', req.userId)
+    let query = supabase.from('tasks').select('*');
+    
+    if (req.teamId) {
+      query = query.eq('team_id', req.teamId);
+    } else {
+      query = query.eq('user_id', req.userId).is('team_id', null);
+    }
+
+    const { data, error } = await query
       .order('id', { ascending: false });
     if (error) throw error;
     res.json(data);
@@ -31,9 +36,20 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { title, description, priority = 'medium' } = req.body;
+    const insertData = { 
+      user_id: req.userId, 
+      title, 
+      description: description || null, 
+      priority 
+    };
+
+    if (req.teamId) {
+      insertData.team_id = req.teamId;
+    }
+
     const { data, error } = await supabase
       .from('tasks')
-      .insert({ user_id: req.userId, title, description: description || null, priority })
+      .insert(insertData)
       .select()
       .single();
     if (error) throw error;

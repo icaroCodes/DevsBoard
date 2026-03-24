@@ -4,6 +4,7 @@ import { Plus, Trash2, Pencil, ChevronDown, CheckSquare, GripVertical, Repeat, X
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useAuth } from '../contexts/AuthContext';
 import {
   DndContext,
   closestCenter,
@@ -86,9 +87,9 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
       className={`group flex items-start justify-between p-3.5 bg-transparent hover:bg-white/[0.03] rounded-[16px] transition-colors ${isDragging ? 'bg-white/[0.05] shadow-lg opacity-50' : ''}`}
     >
       <div className="flex items-start gap-3 flex-1 min-w-0">
-        <div 
-          {...attributes} 
-          {...listeners} 
+        <div
+          {...attributes}
+          {...listeners}
           className="p-1 mt-0.5 cursor-grab active:cursor-grabbing text-[#86868B] opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <GripVertical size={16} />
@@ -117,8 +118,8 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
                 </div>
               )}
               {task.priority && task.priority !== 'none' && !task.completed && (
-                <div 
-                  className="w-1.5 h-1.5 rounded-full shrink-0" 
+                <div
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: priorityColors[task.priority] }}
                   title={`Prioridade ${task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}`}
                 />
@@ -150,22 +151,22 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
   );
 }
 
-function SortableRoutine({ 
-  r, 
-  expanded, 
-  setExpanded, 
-  setEditing, 
-  setModalOpen, 
-  setForm, 
-  handleDelete, 
-  taskForm, 
-  setTaskForm, 
-  handleTaskSubmit, 
-  toggleTask, 
-  deleteTask, 
-  onTaskDragEnd, 
+function SortableRoutine({
+  r,
+  expanded,
+  setExpanded,
+  setEditing,
+  setModalOpen,
+  setForm,
+  handleDelete,
+  taskForm,
+  setTaskForm,
+  handleTaskSubmit,
+  toggleTask,
+  deleteTask,
+  onTaskDragEnd,
   sensors,
-  visualLabels 
+  visualLabels
 }) {
   const {
     attributes,
@@ -185,7 +186,7 @@ function SortableRoutine({
   const isExpanded = expanded[r.id];
 
   return (
-    <motion.div 
+    <motion.div
       ref={setNodeRef}
       style={style}
       initial={{ opacity: 0, y: 15 }}
@@ -198,16 +199,16 @@ function SortableRoutine({
         onClick={() => setExpanded(prev => ({ ...prev, [r.id]: !prev[r.id] }))}
       >
         <div className="flex items-center gap-4">
-          <div 
-            {...attributes} 
-            {...listeners} 
+          <div
+            {...attributes}
+            {...listeners}
             onClick={(e) => e.stopPropagation()}
             className="p-1 cursor-grab active:cursor-grabbing text-[#86868B] opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <GripVertical size={20} />
           </div>
           <div className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center shrink-0">
-             <Repeat size={18} className="text-[#8E9C78]" />
+            <Repeat size={18} className="text-[#8E9C78]" />
           </div>
           <div>
             <div className="flex items-center gap-3">
@@ -221,36 +222,36 @@ function SortableRoutine({
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mr-2" onClick={(e) => e.stopPropagation()}>
-             <button 
-               onClick={() => { setEditing(r); setForm({ name: r.name, visual_type: r.visual_type }); setModalOpen(true); }} 
-               className="p-2 text-[#86868B] hover:text-[#0A84FF] hover:bg-[#0A84FF]/10 rounded-full transition-colors"
-             >
-               <Pencil size={16} />
-             </button>
-             <button 
-               onClick={() => handleDelete(r.id)} 
-               className="p-2 text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 rounded-full transition-colors"
-             >
-               <Trash2 size={16} />
-             </button>
+            <button
+              onClick={() => { setEditing(r); setForm({ name: r.name, visual_type: r.visual_type }); setModalOpen(true); }}
+              className="p-2 text-[#86868B] hover:text-[#0A84FF] hover:bg-[#0A84FF]/10 rounded-full transition-colors"
+            >
+              <Pencil size={16} />
+            </button>
+            <button
+              onClick={() => handleDelete(r.id)}
+              className="p-2 text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 rounded-full transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
-          
+
           <motion.div
-             animate={{ rotate: isExpanded ? 180 : 0 }}
-             transition={{ duration: 0.2 }}
-             className="text-[#86868B] p-1.5 hover:bg-white/5 rounded-full"
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-[#86868B] p-1.5 hover:bg-white/5 rounded-full"
           >
             <ChevronDown size={20} />
           </motion.div>
         </div>
       </div>
-      
+
       <AnimatePresence>
         {isExpanded && (
-          <motion.div 
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -268,31 +269,31 @@ function SortableRoutine({
                   strategy={verticalListSortingStrategy}
                 >
                   {(r.tasks || []).map((t) => (
-                    <SortableTask 
-                      key={t.id} 
-                      routineId={r.id} 
-                      task={t} 
-                      onToggle={toggleTask} 
-                      onEdit={(rid, task) => setTaskForm({ 
-                        routineId: rid, 
+                    <SortableTask
+                      key={t.id}
+                      routineId={r.id}
+                      task={t}
+                      onToggle={toggleTask}
+                      onEdit={(rid, task) => setTaskForm({
+                        routineId: rid,
                         id: task.id,
-                        title: task.title, 
-                        description: task.description || '', 
-                        priority: task.priority || 'medium', 
-                        start_time: task.start_time || '', 
-                        day_of_week: task.day_of_week 
+                        title: task.title,
+                        description: task.description || '',
+                        priority: task.priority || 'medium',
+                        start_time: task.start_time || '',
+                        day_of_week: task.day_of_week
                       })}
-                      onDelete={deleteTask} 
+                      onDelete={deleteTask}
                     />
                   ))}
                 </SortableContext>
               </DndContext>
-              
+
               {taskForm.routineId === r.id ? (
-                <motion.form 
+                <motion.form
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  onSubmit={handleTaskSubmit} 
+                  onSubmit={handleTaskSubmit}
                   className="flex flex-col gap-4 p-5 bg-[#2C2C2E] border border-white/[0.08] rounded-[24px] mt-2 shadow-2xl relative z-20"
                 >
                   <div className="space-y-3">
@@ -312,11 +313,11 @@ function SortableRoutine({
                       className="w-full bg-transparent border-none outline-none text-[15px] text-[#86868B] placeholder:text-[#86868B]/50 resize-none h-16"
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-1.5 ml-1">Horário</label>
-                      <input 
+                      <input
                         type="time"
                         value={taskForm.start_time || ''}
                         onChange={(e) => setTaskForm({ ...taskForm, start_time: e.target.value })}
@@ -332,11 +333,10 @@ function SortableRoutine({
                               key={idx}
                               type="button"
                               onClick={() => setTaskForm({ ...taskForm, day_of_week: taskForm.day_of_week === idx ? null : idx })}
-                              className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-200 border ${
-                                taskForm.day_of_week === idx 
-                                  ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-110' 
+                              className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-200 border ${taskForm.day_of_week === idx
+                                  ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-110'
                                   : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
-                              }`}
+                                }`}
                             >
                               {day}
                             </button>
@@ -353,27 +353,26 @@ function SortableRoutine({
                           key={p}
                           type="button"
                           onClick={() => setTaskForm({ ...taskForm, priority: p })}
-                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${
-                            taskForm.priority === p 
+                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${taskForm.priority === p
                               ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
                               : 'bg-white/5 text-[#86868B] hover:bg-white/10'
-                          }`}
+                            }`}
                         >
                           {p === 'high' ? 'Alta' : p === 'medium' ? 'Média' : p === 'low' ? 'Baixa' : 'Nenhuma'}
                         </button>
                       ))}
                     </div>
-                    
+
                     <div className="flex gap-2">
-                       <button 
-                        type="button" 
-                        onClick={() => setTaskForm({ routineId: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null })} 
+                      <button
+                        type="button"
+                        onClick={() => setTaskForm({ routineId: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null })}
                         className="px-4 py-2 rounded-full text-[14px] font-medium text-[#86868B] hover:bg-white/5 transition-colors"
                       >
                         Cancelar
                       </button>
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         disabled={taskForm.submitting}
                         className={`px-6 py-2 rounded-full bg-[#8E9C78] text-white text-[14px] font-bold hover:bg-[#9EAC88] transition-all shadow-lg shadow-[#8E9C78]/10 disabled:opacity-50 flex items-center justify-center gap-2 min-w-[100px]`}
                       >
@@ -414,6 +413,7 @@ export default function Routines() {
   const [activeId, setActiveId] = useState(null);
   const { success, error } = useToast();
   const { confirm } = useConfirm();
+  const { activeTeam } = useAuth();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -430,7 +430,19 @@ export default function Routines() {
     api('/routines').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, [activeTeam]);
+
+  useEffect(() => {
+    const handleRemoteChange = (e) => {
+      if (e.detail.table === 'routines') {
+        load();
+      }
+    };
+    window.addEventListener('team-data-changed', handleRemoteChange);
+    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -458,9 +470,9 @@ export default function Routines() {
     if (!taskForm.title.trim() || taskForm.submitting) return;
     setTaskForm(prev => ({ ...prev, submitting: true }));
     try {
-      const payload = { 
-        title: taskForm.title, 
-        description: taskForm.description, 
+      const payload = {
+        title: taskForm.title,
+        description: taskForm.description,
         priority: taskForm.priority,
         start_time: taskForm.start_time || null,
         day_of_week: taskForm.day_of_week ?? null
@@ -477,7 +489,7 @@ export default function Routines() {
           body: JSON.stringify(payload),
         });
       }
-      
+
       setTaskForm({ routineId: null, id: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null, submitting: false });
       success(taskForm.id ? 'Tarefa atualizada!' : 'Tarefa adicionada à rotina!');
       load();
@@ -493,7 +505,7 @@ export default function Routines() {
         ...r,
         tasks: r.tasks.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t)
       } : r));
-      
+
       await api(`/routines/${routineId}/tasks/${task.id}`, {
         method: 'PUT',
         body: JSON.stringify({ completed: !task.completed }),
@@ -515,7 +527,7 @@ export default function Routines() {
     const newIndex = routine.tasks.findIndex(t => `task-${t.id}` === over.id);
 
     const newTasks = arrayMove(routine.tasks, oldIndex, newIndex);
-    
+
     // Check if we should auto-sort by time instead
     const sortedTasks = [...newTasks].sort((a, b) => {
       if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time);
@@ -525,7 +537,7 @@ export default function Routines() {
     });
 
     const reorderedTasks = sortedTasks.map((t, idx) => ({ ...t, position: idx }));
-    
+
     setItems(prev => prev.map(r => r.id === routineId ? { ...r, tasks: reorderedTasks } : r));
 
     try {
@@ -549,7 +561,7 @@ export default function Routines() {
 
     const newItems = arrayMove(items, oldIndex, newIndex);
     const reorderedItems = newItems.map((item, idx) => ({ ...item, position: idx }));
-    
+
     setItems(reorderedItems);
 
     try {
@@ -596,28 +608,28 @@ export default function Routines() {
   };
 
   const visualLabels = { daily: 'Diária', weekly: 'Semanal' };
-  
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.05 } }
   };
 
   return (
-    <motion.div 
-      initial="hidden" 
-      animate="show" 
-      variants={containerVariants} 
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={containerVariants}
       className="max-w-4xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">
-             Rotinas
+            Rotinas
           </h1>
           <p className="text-[15px] text-[#86868B] mt-1">Gerencie seus hábitos recorrentes</p>
         </div>
-        
+
         <button
           onClick={() => { setEditing(null); setForm({ name: '', visual_type: 'daily' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#5E94FF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm"
@@ -653,7 +665,7 @@ export default function Routines() {
                 strategy={verticalListSortingStrategy}
               >
                 {items.map((r, i) => (
-                  <SortableRoutine 
+                  <SortableRoutine
                     key={r.id}
                     r={r}
                     expanded={expanded}
@@ -673,7 +685,7 @@ export default function Routines() {
                   />
                 ))}
               </SortableContext>
-              
+
               <DragOverlay dropAnimation={dropAnimation}>
                 {activeId && activeId.toString().startsWith('routine-') ? (
                   <div className="bg-[#1C1C1E] border border-[#8E9C78]/50 rounded-[24px] overflow-hidden shadow-2xl opacity-90 p-5 flex items-center gap-4">
@@ -692,14 +704,14 @@ export default function Routines() {
       <AnimatePresence>
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               className="absolute inset-0 bg-black/40 backdrop-blur-md"
-               onClick={() => { setModalOpen(false); setEditing(null); }}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-md"
+              onClick={() => { setModalOpen(false); setEditing(null); }}
             />
-            
+
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -708,12 +720,12 @@ export default function Routines() {
               className="relative w-full max-w-[400px] bg-[#1C1C1E] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
             >
               <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
-                 <h2 className="text-[17px] font-semibold text-[#F5F5F7]">
-                    {editing ? 'Editar Rotina' : 'Nova Rotina'}
-                 </h2>
-                 <button onClick={() => { setModalOpen(false); setEditing(null); }} className="text-[#86868B] hover:text-[#F5F5F7] transition-colors">
-                    <X size={20} />
-                 </button>
+                <h2 className="text-[17px] font-semibold text-[#F5F5F7]">
+                  {editing ? 'Editar Rotina' : 'Nova Rotina'}
+                </h2>
+                <button onClick={() => { setModalOpen(false); setEditing(null); }} className="text-[#86868B] hover:text-[#F5F5F7] transition-colors">
+                  <X size={20} />
+                </button>
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -728,7 +740,7 @@ export default function Routines() {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-[13px] font-medium text-[#86868B] mb-3 uppercase tracking-wider">Frequência</label>
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
@@ -737,9 +749,8 @@ export default function Routines() {
                         key={type}
                         type="button"
                         onClick={() => setForm({ ...form, visual_type: type })}
-                        className={`relative flex-1 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${
-                          form.visual_type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
-                        }`}
+                        className={`relative flex-1 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.visual_type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                          }`}
                       >
                         {form.visual_type === type && (
                           <motion.div
@@ -753,10 +764,10 @@ export default function Routines() {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="pt-2">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={form.submitting}
                     className="w-full py-4 rounded-[16px] bg-[#0A84FF] hover:bg-[#007AFF] text-white text-[16px] font-semibold transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                   >
