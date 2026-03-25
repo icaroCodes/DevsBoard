@@ -44,7 +44,7 @@ export async function api(endpoint, options = {}, isRetry = false) {
     // Se falhar no refresh ou não for erro de expiração, limpa e desloga
     localStorage.removeItem('user');
     localStorage.removeItem('activeTeam');
-    if (!window.location.pathname.includes('/auth')) {
+    if (!window.location.pathname.includes('/auth') && window.location.pathname !== '/') {
       window.location.href = '/auth';
     }
     throw new Error('Sessão expirada. Faça login novamente.');

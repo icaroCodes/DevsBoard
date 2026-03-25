@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { ReactLenis } from 'lenis/react';
 import { ArrowRight, Code, Zap, Shield, Sparkles, Server, CheckCircle2 } from 'lucide-react';
@@ -178,6 +179,7 @@ export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const lenisRef = useRef(null);
+  const { user } = useAuth();
 
   const scrollToSection = (e, id) => {
     e.preventDefault();
@@ -273,22 +275,36 @@ export default function Landing() {
 
             {/* ACTIONS AREA */}
             <div className="flex items-center gap-3">
-              <Link
-                to="/auth"
-                className="hidden sm:block px-4 py-2 text-[13px] font-medium text-zinc-400 hover:text-white transition-colors"
-              >
-                Entrar
-              </Link>
+              {user ? (
+                <Link to="/dashboard">
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: "rgba(142,156,120,0.1)" }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative px-6 py-2 rounded-full border border-[#8E9C78]/30 bg-[#8E9C78]/10 text-[#8E9C78] text-[13px] font-bold transition-colors hover:border-[#8E9C78]/50"
+                  >
+                    Ir para o Painel
+                  </motion.button>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/auth"
+                    className="hidden sm:block px-4 py-2 text-[13px] font-medium text-zinc-400 hover:text-white transition-colors"
+                  >
+                    Entrar
+                  </Link>
 
-              <Link to="/auth">
-                <motion.button
-                  whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.03)" }}
-                  whileTap={{ scale: 0.98 }}
-                  className="relative px-5 py-2 rounded-full border border-white/10 text-zinc-300 text-[13px] font-medium transition-colors hover:border-white/30 hover:text-white"
-                >
-                  Começar Agora
-                </motion.button>
-              </Link>
+                  <Link to="/auth">
+                    <motion.button
+                      whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.03)" }}
+                      whileTap={{ scale: 0.98 }}
+                      className="relative px-5 py-2 rounded-full border border-white/10 text-zinc-300 text-[13px] font-medium transition-colors hover:border-white/30 hover:text-white"
+                    >
+                      Começar Agora
+                    </motion.button>
+                  </Link>
+                </>
+              )}
 
               {/* MOBILE TOGGLE (Opcional, mas profissional) */}
               <button
@@ -419,10 +435,10 @@ export default function Landing() {
 
             <motion.div variants={fadeIn} className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full px-4 sm:px-0">
               <Link
-                to="/auth"
+                to={user ? "/dashboard" : "/auth"}
                 className="group flex items-center justify-center gap-1.5 sm:gap-2 bg-white text-black px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-sm font-medium hover:scale-[1.02] transition-transform whitespace-nowrap"
               >
-                Inicie sua jornada
+                {user ? "Ir para o painel" : "Inicie sua jornada"}
                 <ArrowRight className="w-[14px] h-[14px] sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a href="#features" onClick={(e) => scrollToSection(e, '#features')} className="text-[12px] sm:text-sm font-medium text-zinc-400 hover:text-white px-3 sm:px-6 py-2.5 sm:py-3 transition-colors whitespace-nowrap">
