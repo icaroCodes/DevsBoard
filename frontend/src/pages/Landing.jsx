@@ -221,12 +221,21 @@ export default function Landing() {
   }, []);
 
   const { scrollY } = useScroll();
-  const rotateX = useTransform(scrollY, [0, 500], [25, 0]);
-  const scale = useTransform(scrollY, [0, 500], [0.9, 1]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const rotateX = useTransform(scrollY, [0, 500], isMobile ? [0, 0] : [25, 0]);
+  const scale = useTransform(scrollY, [0, 500], isMobile ? [1, 1] : [0.9, 1]);
 
 
   return (
-    <ReactLenis root ref={lenisRef}>
+    <ReactLenis root ref={lenisRef} options={{ lerp: 0.1, duration: 1.5, smoothTouch: true }}>
       <div className="min-h-screen bg-[#0A0A0A] text-zinc-300 font-sans selection:bg-[#8E9C78]/30 selection:text-white">
 
         {/* Navigation */}
@@ -417,14 +426,17 @@ export default function Landing() {
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="max-w-4xl mx-auto text-center relative z-10"
+            className="max-w-4xl mx-auto text-center relative z-10 motion-gpu"
           >
             <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-xs font-medium text-[#8E9C78] mb-6 md:mb-8">
               <Sparkles size={12} />
               <span>100% Gratuito</span>
             </motion.div>
 
-            <motion.h1 variants={fadeIn} className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-white mb-4 md:mb-6 leading-[1.1] px-2">
+            <motion.h1 
+              variants={fadeIn} 
+              className="text-fluid-h1 font-bold tracking-tight text-white mb-4 md:mb-6 leading-[1.1] px-2"
+            >
               Organize sua vida <br className="hidden md:block" />
               com o <span className="text-[#8E9C78]">DevsBoard</span>.
             </motion.h1>
@@ -472,7 +484,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative preserve-3d"
+               className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu"
             >
               <div className="rounded-lg bg-[#0A0A0A] border border-white/5 overflow-hidden flex flex-col">
                 <img
@@ -584,7 +596,7 @@ export default function Landing() {
         <section id="philosophy" className="py-24 md:py-40 px-4 sm:px-6 bg-[#000000] relative overflow-hidden border-y border-white/5">
           <div className="absolute inset-0 z-0 pointer-events-none opacity-15" style={{ backgroundImage: 'url("/banner.png")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', filter: 'contrast(1.2)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#000000]/60 to-[#000000] z-0 pointer-events-none" />
-          <div className="max-w-4xl mx-auto relative z-10 text-center drop-shadow-2xl">
+           <div className="max-w-4xl mx-auto relative z-10 text-center drop-shadow-2xl motion-gpu">
             <motion.p
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 1 }}
               className="text-xs sm:text-sm md:text-base text-zinc-400 font-medium mb-6 md:mb-8 tracking-wide drop-shadow-md px-2"
@@ -596,7 +608,7 @@ export default function Landing() {
               className="text-3xl sm:text-4xl md:text-6xl font-medium text-white leading-tight drop-shadow-lg flex flex-col gap-1 md:gap-3"
             >
               <span>Nosso sistema agrupa:</span>
-              <span className="font-serif italic text-4xl sm:text-5xl md:text-7xl text-[#8E9C78] drop-shadow-[0_0_15px_rgba(142,156,120,0.2)]">tudo em uma só tela.</span>
+              <span className="text-fluid-drama font-serif italic text-[#8E9C78] drop-shadow-[0_0_15px_rgba(142,156,120,0.2)]">tudo em uma só tela.</span>
             </motion.h2>
           </div>
         </section>
@@ -648,8 +660,8 @@ export default function Landing() {
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-20%" }}
-                  transition={{ duration: 0.8 }}
-                  className="sticky top-24 md:top-32 bg-[#0A0A0A] p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8 md:gap-12 group hover:border-[#8E9C78]/20 transition-colors"
+                   transition={{ duration: isMobile ? 0.5 : 0.8 }}
+                   className="sticky top-16 md:top-32 bg-[#0A0A0A] p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8 md:gap-12 group hover:border-[#8E9C78]/20 transition-colors motion-gpu"
                   style={{ zIndex: 10 + i }}
                 >
                   <div className="flex-1 space-y-4 md:space-y-6 w-full">

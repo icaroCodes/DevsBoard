@@ -155,10 +155,50 @@ export default function Auth() {
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active{
+        input:-webkit-autofill:active {
             -webkit-box-shadow: 0 0 0 30px #080808 inset !important;
             -webkit-text-fill-color: #fff !important;
             transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Mobile Overrides - Final Compact Version (Zero Scroll) */
+        @media (max-width: 768px) {
+          #auth-card {
+            flex-direction: column !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            max-width: 100% !important;
+            background: transparent !important;
+            overflow: hidden !important; /* Force no scroll */
+          }
+          #auth-left {
+            display: none !important;
+          }
+          #auth-right {
+            padding: 0 24px !important;
+            background: transparent !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            position: relative !important;
+          }
+          #auth-logo-mobile {
+            display: flex !important;
+            justify-content: center !important;
+            margin-bottom: 24px !important;
+            position: absolute !important;
+            top: 40px !important;
+            left: 0 !important;
+            right: 0 !important;
+          }
+          #auth-form-area {
+            margin-top: 40px !important;
+          }
         }
       `}</style>
 
@@ -168,10 +208,11 @@ export default function Auth() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         style={s.card}
+        id="auth-card"
       >
 
         {/* ══ LEFT PANEL ══════════════════════════════════════════ */}
-        <motion.div variants={panelVariant} initial="initial" animate="animate" style={s.left}>
+        <motion.div id="auth-left" variants={panelVariant} initial="initial" animate="animate" style={s.left}>
 
           {/* Noise texture overlay */}
           <div style={s.noise} />
@@ -179,9 +220,9 @@ export default function Auth() {
           {/* Back */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} style={{ display: 'inline-block', marginBottom: 32 }}>
-              <Link to="/" style={s.back}>
+              <Link to="/" style={s.back} id="auth-back-btn">
                 <IconArrow />
-                <span>Voltar para Home</span>
+                <span id="auth-back-text">Voltar para Home</span>
               </Link>
             </motion.div>
           </motion.div>
@@ -192,6 +233,7 @@ export default function Auth() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5, ease: 'backOut' }}
             style={s.logoWrap}
+            id="auth-logo-wrap"
           >
             <img src="/devsboard2.png" alt="DevsBoard" style={s.logoImg} />
             <span style={s.logoLabel}>DevsBoard</span>
@@ -215,7 +257,7 @@ export default function Auth() {
           </motion.div>
 
           {/* Bottom dots */}
-          <div style={s.dots}>
+          <div style={s.dots} id="auth-dots">
             {[0, 1, 2, 3].map(i => (
               <motion.div
                 key={i}
@@ -229,12 +271,33 @@ export default function Auth() {
         </motion.div>
 
         {/* ══ RIGHT PANEL ═════════════════════════════════════════ */}
-        <div style={s.right}>
+        <div style={s.right} id="auth-right">
+          
+          {/* Mobile Back Button (Top Left Highlighted) */}
+          <div id="auth-logo-mobile" style={{ display: 'none', position: 'absolute', top: 24, left: 24, zIndex: 100 }}>
+            <Link to="/" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              color: '#0e0e0e', 
+              textDecoration: 'none', 
+              fontSize: 12, 
+              fontWeight: 700,
+              background: '#8E9C78',
+              padding: '10px 16px',
+              borderRadius: 14,
+              boxShadow: '0 8px 16px rgba(142,156,120,0.2)'
+            }}>
+              <IconArrow /> Voltar
+            </Link>
+          </div>
+
           <AnimatePresence mode="wait">
             <motion.div
               key={isLogin ? 'login' : 'register'}
               {...fadeUp}
               style={s.formArea}
+              id="auth-form-area"
             >
 
               {/* Header */}

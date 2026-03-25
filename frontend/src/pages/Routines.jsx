@@ -11,6 +11,8 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -91,7 +93,7 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
         <div
           {...attributes}
           {...listeners}
-          className="p-1 mt-0.5 cursor-grab active:cursor-grabbing text-[#86868B] opacity-0 group-hover:opacity-100 transition-opacity"
+          className="p-1 mt-0.5 cursor-grab active:cursor-grabbing text-[#86868B] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
         >
           <GripVertical size={16} />
         </div>
@@ -134,18 +136,18 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+      <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all">
         <button
           onClick={() => onEdit(routineId, task)}
-          className="p-1.5 text-[#86868B] hover:text-[#0A84FF] rounded-md"
+          className="p-2 lg:p-1.5 text-[#86868B] hover:text-[#0A84FF] rounded-md active:bg-[#0A84FF]/10 transition-colors"
         >
-          <Pencil size={16} />
+          <Pencil size={18} className="lg:size-4" />
         </button>
         <button
           onClick={() => onDelete(routineId, task.id)}
-          className="p-1.5 text-[#86868B] hover:text-[#FF453A] rounded-md"
+          className="p-2 lg:p-1.5 text-[#86868B] hover:text-[#FF453A] rounded-md active:bg-[#FF453A]/10 transition-colors"
         >
-          <Trash2 size={16} />
+          <Trash2 size={18} className="lg:size-4" />
         </button>
       </div>
     </div>
@@ -196,25 +198,25 @@ function SortableRoutine({
       className={`bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm transition-all duration-300 hover:border-white/10 ${isDragging ? 'opacity-50 ring-2 ring-[#8E9C78]/50' : ''}`}
     >
       <div
-        className="flex justify-between items-center p-5 sm:px-6 cursor-pointer select-none group"
+        className="flex justify-between items-center p-4 sm:p-5 lg:px-6 cursor-pointer select-none group gap-2 sm:gap-4"
         onClick={() => setExpanded(prev => ({ ...prev, [r.id]: !prev[r.id] }))}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           <div
             {...attributes}
             {...listeners}
             onClick={(e) => e.stopPropagation()}
-            className="p-1 cursor-grab active:cursor-grabbing text-[#86868B] opacity-0 group-hover:opacity-100 transition-opacity"
+            className="p-1 cursor-grab active:cursor-grabbing text-[#86868B] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0"
           >
-            <GripVertical size={20} />
+            <GripVertical size={18} className="sm:size-5" />
           </div>
-          <div className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center shrink-0">
-            <Repeat size={18} className="text-[#8E9C78]" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center shrink-0">
+            <Repeat size={14} className="sm:size-[18px] text-[#8E9C78]" />
           </div>
           <div>
-            <div className="flex items-center gap-3">
-              <p className="font-semibold text-[17px] text-[#F5F5F7] tracking-tight">{r.name}</p>
-              <span className="px-2 py-0.5 rounded-[6px] bg-[#8E9C78]/10 text-[#8E9C78] text-[12px] font-medium tracking-wide">
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="font-semibold text-[15px] sm:text-[17px] text-[#F5F5F7] tracking-tight truncate flex-1 min-w-0">{r.name}</p>
+              <span className="shrink-0 px-1.5 py-0.5 rounded-[6px] bg-[#8E9C78]/10 text-[#8E9C78] text-[10px] sm:text-[12px] font-medium tracking-wide">
                 {visualLabels[r.visual_type]}
               </span>
             </div>
@@ -224,28 +226,28 @@ function SortableRoutine({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity mr-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          <div className="flex gap-0.5 sm:gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity mr-1 sm:mr-2" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => { setEditing(r); setForm({ name: r.name, visual_type: r.visual_type }); setModalOpen(true); }}
-              className="p-2 text-[#86868B] hover:text-[#0A84FF] hover:bg-[#0A84FF]/10 rounded-full transition-colors"
+              className="p-1.5 text-[#86868B] hover:text-[#0A84FF] hover:bg-[#0A84FF]/10 rounded-full transition-colors active:scale-95"
             >
-              <Pencil size={16} />
+              <Pencil size={15} className="sm:size-4" />
             </button>
             <button
               onClick={() => handleDelete(r.id)}
-              className="p-2 text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 rounded-full transition-colors"
+              className="p-1.5 text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 rounded-full transition-colors active:scale-95"
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} className="sm:size-4" />
             </button>
           </div>
 
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="text-[#86868B] p-1.5 hover:bg-white/5 rounded-full"
+            className="text-[#86868B] p-1 hover:bg-white/5 rounded-full shrink-0"
           >
-            <ChevronDown size={20} />
+            <ChevronDown size={18} className="sm:size-5" />
           </motion.div>
         </div>
       </div>
@@ -328,14 +330,14 @@ function SortableRoutine({
                     {r.visual_type === 'weekly' && (
                       <div className="col-span-2">
                         <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2.5 ml-1">Dia da Semana</label>
-                        <div className="flex justify-between items-center gap-1.5">
+                        <div className="flex justify-between items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
                           {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, idx) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={() => setTaskForm({ ...taskForm, day_of_week: taskForm.day_of_week === idx ? null : idx })}
-                              className={`w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-200 border ${taskForm.day_of_week === idx
-                                  ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-110'
+                              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-[12px] sm:text-[13px] font-bold transition-all duration-200 border ${taskForm.day_of_week === idx
+                                  ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-105 sm:scale-110'
                                   : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
                                 }`}
                             >
@@ -417,10 +419,11 @@ export default function Routines() {
   const { activeTeam } = useAuth();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 10 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -615,19 +618,19 @@ export default function Routines() {
       className="max-w-4xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8 lg:mb-10 px-1 sm:px-0">
+        <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">
             Rotinas
           </h1>
-          <p className="text-[15px] text-[#86868B] mt-1">Gerencie seus hábitos recorrentes</p>
+          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Gerencie seus hábitos recorrentes</p>
         </div>
 
         <button
           onClick={() => { setEditing(null); setForm({ name: '', visual_type: 'daily' }); setModalOpen(true); }}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#5E94FF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm"
+          className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#0A84FF] text-white text-[12px] sm:text-[14px] font-bold sm:font-medium hover:bg-[#5E94FF] transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-95 self-start sm:self-auto"
         >
-          <Plus size={18} strokeWidth={2.5} /> Nova Rotina
+          <Plus size={16} strokeWidth={3} className="sm:size-[18px] sm:stroke-[2.5]" /> Nova Rotina
         </button>
       </div>
 

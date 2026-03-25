@@ -75,19 +75,44 @@ export default function Layout({ children }) {
     setIsExpanded(!isExpanded);
   };
 
-  const sidebarWidth = isMobile ? 240 : (isExpanded ? 224 : 84);
-  const sidebarX = isMobile ? (sidebarOpen ? 0 : -240) : 0;
+  const sidebarWidth = isMobile 
+    ? (window.innerWidth < 640 ? 'calc(100vw - 48px)' : '340px') 
+    : (isExpanded ? 224 : 84);
+  const sidebarX = isMobile ? (sidebarOpen ? 24 : -500) : 0;
   const contentMargin = isMobile ? 0 : (isExpanded ? 224 : 84);
+
+  // Animation variants for nav items
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0 }
+  };
 
   const Sidebar = () => (
     <motion.aside
       initial={false}
       animate={{
-        width: sidebarWidth,
-        x: sidebarX
+        width: isMobile ? sidebarWidth : sidebarWidth,
+        x: sidebarX,
+        y: isMobile ? (sidebarOpen ? 24 : -20) : 0,
+        height: isMobile ? 'calc(100dvh - 48px)' : '100dvh',
       }}
-      transition={{ type: 'spring', stiffness: 350, damping: 35, mass: 1 }}
-      className="fixed inset-y-0 left-0 z-40 bg-[#161717] border-r border-[#2C2C2C] flex flex-col shadow-2xl lg:shadow-none overflow-visible"
+      transition={{ type: 'spring', stiffness: 400, damping: 40, mass: 1 }}
+      className={`fixed z-40 flex flex-col overflow-visible ${
+        isMobile 
+          ? 'bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.6)]' 
+          : 'inset-y-0 left-0 bg-[#161717] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
+      }`}
     >
       <div className="p-6 border-b border-transparent flex items-center justify-start h-[88px] shrink-0 min-w-[240px]">
         <div className="flex items-center gap-4 w-full">
@@ -136,22 +161,36 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden min-w-[224px]">
+      <motion.nav 
+        variants={isMobile ? containerVariants : {}}
+        initial="hidden"
+        animate="show"
+        className="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden min-w-[224px]"
+      >
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname === to;
-          return (
+          const content = (
             <Link
               key={to}
               to={to}
               onClick={() => isMobile && setSidebarOpen(false)}
-              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-colors duration-200 group relative ${isActive
-                ? 'bg-white/5 text-white'
-                : 'text-[#A1A1A1] hover:text-white hover:bg-white/5'
-                }`}
+              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
+                isMobile 
+                  ? (isActive ? 'bg-white text-zinc-950 shadow-[0_8px_20px_rgba(255,255,255,0.1)]' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
+                  : (isActive ? 'bg-white/5 text-white' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
+              }`}
               title={(!isExpanded && !isMobile) ? label : ''}
               style={{ width: isExpanded || isMobile ? '100%' : '60px' }}
             >
-              <Icon size={22} className={`shrink-0 ${isActive ? 'text-white' : 'text-[#A1A1A1] group-hover:text-white'}`} strokeWidth={isActive ? 2 : 1.5} />
+              <Icon 
+                size={22} 
+                className={`shrink-0 ${
+                  isActive 
+                    ? (isMobile ? 'text-zinc-950' : 'text-white') 
+                    : 'text-[#A1A1A1] group-hover:text-white'
+                }`} 
+                strokeWidth={isActive ? 2 : 1.5} 
+              />
               <AnimatePresence initial={false}>
                 {(isExpanded || isMobile) && (
                   <motion.span
@@ -166,14 +205,18 @@ export default function Layout({ children }) {
                 )}
               </AnimatePresence>
               {to === '/teams' && (notifications?.length > 0) && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF453A] text-[10px] font-bold text-white shadow-lg animate-pulse">
+                <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF453A] text-[10px] font-bold text-white shadow-lg animate-pulse`}>
                   {notifications.length}
                 </div>
               )}
             </Link>
           );
+
+          return isMobile ? (
+            <motion.div key={to} variants={itemVariants}>{content}</motion.div>
+          ) : content;
         })}
-      </nav>
+      </motion.nav>
 
       {user && (
         <div className="relative border-t border-[#2C2C2C] mx-3 mb-3 mt-4">
@@ -352,13 +395,40 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-zinc-900/80 backdrop-blur border border-white/10 text-zinc-300 lg:hidden shadow-lg"
-      >
-        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {/* Mobile float menu button */}
+      <AnimatePresence>
+        {!sidebarOpen && isMobile && (
+          <motion.button
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            onClick={() => setSidebarOpen(true)}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3.5 rounded-full bg-zinc-950/80 backdrop-blur-xl border border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 group active:scale-95 transition-all duration-300"
+          >
+            <div className="flex flex-col gap-1 w-5">
+              <span className="w-5 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
+              <span className="w-3 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
+              <span className="w-4 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
+            </div>
+            <span className="font-bold text-[13px] tracking-widest uppercase ml-1">Menu</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Close Button (on top when open) */}
+      <AnimatePresence>
+        {sidebarOpen && isMobile && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => setSidebarOpen(false)}
+            className="fixed top-8 right-8 z-[60] w-12 h-12 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl active:scale-90 transition-transform"
+          >
+            <X size={24} strokeWidth={2.5} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Overlay */}
       <AnimatePresence>

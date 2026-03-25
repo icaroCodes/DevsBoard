@@ -8,6 +8,8 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -206,24 +208,24 @@ function ListView() {
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 lg:mb-10">
         <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Tarefas</h1>
-          <p className="text-[17px] text-[#86868B]">Você tem {pendingCount} tarefa{pendingCount !== 1 && 's'} pendente{pendingCount !== 1 && 's'}.</p>
+          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Você tem {pendingCount} tarefa{pendingCount !== 1 && 's'} pendente{pendingCount !== 1 && 's'}.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex p-1 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
             {['all', 'pending', 'completed'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`relative px-5 py-1.5 rounded-[8px] text-[13px] font-medium transition-colors z-10 outline-none ${filter === f ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
+                className={`relative flex-1 sm:flex-none px-4 sm:px-5 py-1.5 rounded-[8px] text-[13px] font-medium transition-colors z-10 outline-none ${filter === f ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
               >
                 {filter === f && (
                   <motion.div layoutId="activeTaskFilter" className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
                 )}
-                {f === 'all' ? 'Todas' : f === 'pending' ? 'Pendentes' : 'Concluídas'}
+                <span className="whitespace-nowrap">{f === 'all' ? 'Todas' : f === 'pending' ? 'Pendentes' : 'Concluídas'}</span>
               </button>
             ))}
           </div>
@@ -233,31 +235,33 @@ function ListView() {
               setFormParams({ title: '', description: '', priority: 'medium', submitting: false });
               setModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-[12px] bg-[#F5F5F7] text-[#000000] text-[14px] font-medium hover:bg-white transition-colors cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto"
           >
-            <Plus size={16} strokeWidth={2.5} /> Nova Tarefa
+            <Plus size={14} strokeWidth={3} /> Nova Tarefa
           </button>
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-        <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex items-center justify-between shadow-sm relative overflow-hidden group h-[120px]">
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-5 mb-8">
+        <div className="bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
-            <span className="text-[14px] font-medium text-[#86868B]">Pendentes</span>
-            <p className="text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-1">{pendingCount}</p>
+            <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Pendentes</span>
+            <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{pendingCount}</p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] z-10">
-            <ListTodo size={24} strokeWidth={2} />
+          <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] z-10 transition-transform group-hover:scale-110">
+            <ListTodo size={18} className="sm:hidden" strokeWidth={2} />
+            <ListTodo size={24} className="hidden sm:block" strokeWidth={2} />
           </div>
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
         </div>
-        <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex items-center justify-between shadow-sm relative overflow-hidden group h-[120px]">
+        <div className="bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
-            <span className="text-[14px] font-medium text-[#86868B]">Concluídas</span>
-            <p className="text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-1">{items.length - pendingCount}</p>
+            <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Concluídas</span>
+            <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{items.length - pendingCount}</p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#30D158]/10 flex items-center justify-center text-[#30D158] z-10">
-            <CheckSquare size={24} strokeWidth={2} />
+          <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#30D158]/10 flex items-center justify-center text-[#30D158] z-10 transition-transform group-hover:scale-110">
+            <CheckSquare size={18} className="sm:hidden" strokeWidth={2} />
+            <CheckSquare size={24} className="hidden sm:block" strokeWidth={2} />
           </div>
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#30D158] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
         </div>
@@ -301,12 +305,12 @@ function ListView() {
                     {priorityLabels[item.priority] || item.priority}
                   </span>
 
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(item)} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
-                      <Pencil size={16} />
+                  <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => openEdit(item)} className="p-2.5 sm:p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
+                      <Pencil size={18} className="sm:size-4" />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
-                      <Trash2 size={16} />
+                    <button onClick={() => handleDelete(item.id)} className="p-2.5 sm:p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
+                      <Trash2 size={18} className="sm:size-4" />
                     </button>
                   </div>
                 </div>
@@ -435,9 +439,9 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
         </div>
 
         {/* Edit Button matching Trello's hover icon on cards */}
-        <div className="absolute top-2.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onEdit(card)} className="p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none bg-black/40 backdrop-blur-sm" title="Editar"><Pencil size={13} /></button>
-          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(card.id)} className="p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none bg-black/40 backdrop-blur-sm" title="Excluir"><Trash2 size={13} /></button>
+        <div className="absolute top-2.5 right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onEdit(card)} className="p-2 sm:p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none bg-black/40 backdrop-blur-sm shadow-lg" title="Editar"><Pencil size={14} /></button>
+          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(card.id)} className="p-2 sm:p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none bg-black/40 backdrop-blur-sm shadow-lg" title="Excluir"><Trash2 size={14} /></button>
         </div>
       </div>
     </div>
@@ -532,10 +536,10 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
-      className="w-[300px] flex-shrink-0"
+      className="w-[280px] sm:w-[300px] flex-shrink-0 snap-center sm:snap-align-none"
     >
       <div className="rounded-[16px] flex flex-col pt-3 shadow-xl backdrop-blur-sm border border-transparent ring-1 ring-white/[0.03]" style={{ background: '#111111', maxHeight: '75vh' }}>
-        <div className="flex items-center justify-between px-4 pb-3 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+        <div className="flex items-center justify-between px-4 pb-3 cursor-grab active:cursor-grabbing touch-none" {...attributes} {...listeners}>
           {editingTitle ? (
             <div className="flex-1 flex items-center gap-2">
               <input ref={titleRef} value={titleVal} onChange={e => setTitleVal(e.target.value)}
@@ -783,27 +787,27 @@ function BoardGallery({ onOpenBoard }) {
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
+        className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 lg:mb-10">
         <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Quadros</h1>
-          <p className="text-[17px] text-[#86868B]">{boards.length} quadro{boards.length !== 1 ? 's' : ''}</p>
+          <p className="text-[15px] sm:text-[17px] text-[#86868B]">{boards.length} quadro{boards.length !== 1 ? 's' : ''}</p>
         </div>
         <button type="button" onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 px-5 py-2 rounded-[12px] bg-[#F5F5F7] text-[#000000] text-[14px] font-medium hover:bg-white transition-colors cursor-pointer shadow-sm">
-          <Plus size={16} strokeWidth={2.5} /> Novo Quadro
+          className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
+          <Plus size={14} strokeWidth={3} /> Novo Quadro
         </button>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {boards.map(board => (
           <motion.div key={board.id} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}
             className="group relative rounded-[16px] overflow-hidden cursor-pointer shadow-lg border border-white/[0.04] hover:border-white/[0.12] transition-all"
-            style={{ background: board.color || '#2C2C2E', minHeight: 120 }}
+            style={{ background: board.color || '#2C2C2E', minHeight: 84 }}
             onClick={() => onOpenBoard(board)}>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-            <div className="relative z-10 p-4 flex flex-col justify-end h-full" style={{ minHeight: 120 }}>
-              <h3 className="text-[16px] font-bold text-white truncate drop-shadow-md">{board.name}</h3>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+            <div className="relative z-10 p-3 flex flex-col justify-end h-full" style={{ minHeight: 84 }}>
+              <h3 className="text-[14px] sm:text-[16px] font-bold text-white truncate drop-shadow-md tracking-tight">{board.name}</h3>
             </div>
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
               <button type="button" onClick={(e) => { e.stopPropagation(); setEditingBoard(board); }}
@@ -862,10 +866,10 @@ function BoardGallery({ onOpenBoard }) {
           </div>
         ) : (
           <button type="button" onClick={() => setShowAdd(true)}
-            className="flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-[16px] text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.02] transition-all cursor-pointer outline-none"
-            style={{ minHeight: 120 }}>
-            <Plus size={20} strokeWidth={1.5} />
-            Criar novo quadro
+            className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 rounded-[16px] text-[12px] sm:text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.02] transition-all cursor-pointer outline-none"
+            style={{ minHeight: 84 }}>
+            <Plus size={18} strokeWidth={1.5} />
+            <span className="text-center line-clamp-1 px-2">Novo quadro</span>
           </button>
         )}
       </motion.div>
@@ -1004,7 +1008,16 @@ function BoardKanban({ board, onBack }) {
     return () => cancelAnimationFrame(animationFrameId.current);
   }, []);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: { distance: 10 },
+  });
+  
+  const touchSensor = useSensor(TouchSensor, {
+    // Delay of 250ms and 5px tolerance allows for scrolling before drag starts
+    activationConstraint: { delay: 250, tolerance: 5 },
+  });
+
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   function load() {
     setLoading(true);
@@ -1277,10 +1290,10 @@ function BoardKanban({ board, onBack }) {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <button type="button" onClick={() => setShowAddList(true)}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-[12px] bg-[#F5F5F7] text-[#000000] text-[14px] font-medium hover:bg-white transition-colors cursor-pointer shadow-sm">
-            <Plus size={16} strokeWidth={2.5} /> Nova Lista
+            className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
+            <Plus size={14} strokeWidth={3} /> Nova Lista
           </button>
         </div>
       </motion.div>
@@ -1290,7 +1303,7 @@ function BoardKanban({ board, onBack }) {
         <div
           ref={scrollRef}
           onMouseMove={handleMouseMove}
-          className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-6 pb-20 scrollbar-board cursor-default"
+          className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-4 sm:gap-6 pb-20 scrollbar-board cursor-default snap-x snap-mandatory sm:snap-none px-4 sm:px-0"
         >
           <div className="flex gap-6 items-start min-w-full">
             <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
