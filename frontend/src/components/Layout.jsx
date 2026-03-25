@@ -57,7 +57,7 @@ export default function Layout({ children }) {
     if (user) {
       const recent = JSON.parse(localStorage.getItem('recentAccounts') || '[]');
       setRecentAccounts(recent);
-      
+
       api('/teams').then(setTeams).catch(console.error);
     }
   }, [user]);
@@ -126,7 +126,7 @@ export default function Layout({ children }) {
                     transition={{ duration: 0.2 }}
                   >
                     <Link to="/dashboard" className="text-[16px] font-bold text-white tracking-wider whitespace-nowrap block">
-                      DEVS<span className="text-[#0A84FF]">BOARD</span>
+                      Devs<span className="text-[#8E9C78]">Board</span>
                     </Link>
                   </motion.div>
                 )
@@ -145,8 +145,8 @@ export default function Layout({ children }) {
               to={to}
               onClick={() => isMobile && setSidebarOpen(false)}
               className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-colors duration-200 group relative ${isActive
-                  ? 'bg-white/5 text-white'
-                  : 'text-[#A1A1A1] hover:text-white hover:bg-white/5'
+                ? 'bg-white/5 text-white'
+                : 'text-[#A1A1A1] hover:text-white hover:bg-white/5'
                 }`}
               title={(!isExpanded && !isMobile) ? label : ''}
               style={{ width: isExpanded || isMobile ? '100%' : '60px' }}
@@ -232,15 +232,15 @@ export default function Layout({ children }) {
                 {/* Section: Accounts */}
                 <div className="px-3 pt-3 pb-2 flex items-center justify-between">
                   <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.05em]">Perfis Disponíveis</span>
-                  <Link 
-                    to="/auth" 
+                  <Link
+                    to="/auth"
                     className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90"
                     title="Adicionar Conta"
                   >
                     <Plus size={14} />
                   </Link>
                 </div>
-                
+
                 <div className="space-y-1 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
                   {recentAccounts.map((acc) => {
                     const isSelected = acc.user.id === user.id && !activeTeam;
@@ -282,7 +282,7 @@ export default function Layout({ children }) {
                   <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
                     {teams.length === 0 ? (
                       <div className="px-3 py-4 text-center">
-                         <p className="text-[12px] text-zinc-600 italic">Nenhum time disponível</p>
+                        <p className="text-[12px] text-zinc-600 italic">Nenhum time disponível</p>
                       </div>
                     ) : (
                       teams.map((team) => {
@@ -312,7 +312,7 @@ export default function Layout({ children }) {
                         );
                       })
                     )}
-                    
+
                     {activeTeam && (
                       <button
                         onClick={() => {
