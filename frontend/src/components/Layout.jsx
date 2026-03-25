@@ -248,7 +248,7 @@ export default function Layout({ children }) {
                       <button
                         key={acc.user.id}
                         onClick={() => {
-                          switchAccount(acc.token, acc.user);
+                          switchAccount();
                           setShowSwitcher(false);
                         }}
                         className={`w-full p-2.5 flex items-center gap-3 rounded-[16px] transition-all relative group ${isSelected ? 'bg-white/[0.06] border border-white/10' : 'hover:bg-white/[0.03] border border-transparent'}`}

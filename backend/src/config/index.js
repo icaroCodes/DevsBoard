@@ -44,8 +44,14 @@ const config = {
     serviceKey: process.env.SUPABASE_SERVICE_KEY || fileEnv.SUPABASE_SERVICE_KEY,
   },
   jwt: {
-    secret: process.env.JWT_SECRET || fileEnv.JWT_SECRET || 'devsboard-secret-change-in-production',
-    expiresIn: process.env.JWT_EXPIRES_IN || fileEnv.JWT_EXPIRES_IN || '7d',
+    accessSecret: process.env.JWT_ACCESS_SECRET || fileEnv.JWT_ACCESS_SECRET || process.env.JWT_SECRET || fileEnv.JWT_SECRET || 'strong-access-secret-mandatory',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || fileEnv.JWT_REFRESH_SECRET || 'strong-refresh-secret-mandatory',
+    accessExpires: '15m',
+    refreshExpires: '7d',
+  },
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Permite Cross-site para Vercel
   },
   server: {
     port: parseInt(process.env.PORT || fileEnv.PORT || '3001', 10),

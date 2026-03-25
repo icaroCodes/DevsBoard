@@ -10,6 +10,24 @@ const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:3001/auth/github/callback';
 
+const generateTokens = (userId) => {
+  const accessToken = jwt.sign({ userId }, config.jwt.accessSecret, { expiresIn: config.jwt.accessExpires });
+  const refreshToken = jwt.sign({ userId }, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpires });
+  return { accessToken, refreshToken };
+};
+
+const setAuthCookies = (res, { accessToken, refreshToken }) => {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: config.cookie.secure,
+    sameSite: config.cookie.sameSite,
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
+  };
+  
+  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); 
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+};
+
 // GET /auth/github — redireciona para o GitHub
 router.get('/', (req, res) => {
   const params = new URLSearchParams({
@@ -26,7 +44,6 @@ router.get('/callback', async (req, res) => {
   if (!code) return res.redirect(`${FRONTEND_URL}/auth?error=codigo_invalido`);
 
   try {
-    // Troca o code pelo access token
     const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -39,8 +56,6 @@ router.get('/callback', async (req, res) => {
     }
 
     const ghHeaders = { Authorization: `Bearer ${tokenData.access_token}`, 'User-Agent': 'DevsBoard' };
-
-    // Busca dados do usuário no GitHub
     const [userRes, emailsRes] = await Promise.all([
       fetch('https://api.github.com/user', { headers: ghHeaders }),
       fetch('https://api.github.com/user/emails', { headers: ghHeaders }),
@@ -48,16 +63,13 @@ router.get('/callback', async (req, res) => {
     const githubUser = await userRes.json();
     const emails = await emailsRes.json();
 
-    // Pega o email primário verificado
     const primaryEmail = Array.isArray(emails)
       ? emails.find(e => e.primary && e.verified)?.email
       : null;
     const email = githubUser.email || primaryEmail || `${githubUser.login}@github.noemail.com`;
     const name = githubUser.name || githubUser.login;
-
     const avatar_url = githubUser.avatar_url || null;
 
-    // Busca ou cria o usuário no banco
     let { data: user } = await supabase.from('users').select('id, name, email, avatar_url').eq('email', email).single();
 
     if (!user) {
@@ -69,20 +81,20 @@ router.get('/callback', async (req, res) => {
       if (error) return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
       user = newUser;
     } else {
-      // Se o usuário JÁ TIiver um avatar no banco, não sobrescrevemos com o do GitHub.
-      // Isso preserva a foto personalizada que ele alterou manualmente.
       if (!user.avatar_url) {
         await supabase.from('users').update({ avatar_url }).eq('id', user.id);
         user.avatar_url = avatar_url;
       }
     }
 
-    // Emite o JWT e redireciona para o frontend
-    const token = jwt.sign({ userId: user.id }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
-    const params = new URLSearchParams({ token, id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url || '' });
-    res.redirect(`${FRONTEND_URL}/auth?${params}`);
+    // Emissão segura via Cookies
+    const { accessToken, refreshToken } = generateTokens(user.id);
+    setAuthCookies(res, { accessToken, refreshToken });
+
+    // Redireciona APENAS com flag de sucesso, sem o token na URL!
+    res.redirect(`${FRONTEND_URL}/auth?success=true`);
   } catch (err) {
-    console.error(err);
+    console.error('[GitHub Auth Error]', err);
     res.redirect(`${FRONTEND_URL}/auth?error=erro_interno`);
   }
 });

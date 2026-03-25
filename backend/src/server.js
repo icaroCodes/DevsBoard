@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import config from './config/index.js';
 
 import authRoutes from './routes/auth.js';
@@ -16,12 +17,21 @@ import taskCardsRoutes from './routes/task-cards.js';
 import taskBoardsRoutes from './routes/task-boards.js';
 import teamsRoutes from './routes/teams.js';
 import { interceptMembers } from './middleware/interceptMembers.js';
-import { authenticate } from './middleware/auth.js';
+import { authenticate, checksOwnership } from './middleware/auth.js';
+import { securityHeaders, apiRateLimiter } from './middleware/security.js';
 
 const app = express();
 
-app.use(cors({ origin: ['http://localhost:5173', 'https://mydevsboard.vercel.app'] }));
-app.use(express.json({ limit: '5mb' }));
+app.use(securityHeaders);
+app.use(cookieParser());
+app.use(cors({ 
+  origin: ['http://localhost:5173', 'https://mydevsboard.vercel.app'],
+  credentials: true, // Obrigatório para cookies em ambientes reais
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-team-id']
+}));
+app.use(express.json({ limit: '10kb' })); // Reduzido Payload para evitar DoS
+app.use(apiRateLimiter);
 
 // Rotas públicas
 app.use('/auth', authRoutes);
@@ -29,6 +39,7 @@ app.use('/auth/github', githubRoutes);
 
 // Rotas protegidas (Pass through authenticate first)
 app.use(authenticate);
+app.use(checksOwnership); // Anti-IDOR Centralizado
 
 app.use('/dashboard', dashboardRoutes);
 app.use('/finances', interceptMembers('finances'), financesRoutes);
@@ -49,11 +60,14 @@ app.use((req, res) => {
 
 // Erro global
 app.use((err, req, res, next) => {
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ error: 'Sessão inválida ou expirada.' });
+  }
   console.error(err);
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
 const PORT = config.server.port;
 app.listen(PORT, () => {
-  console.log(`DevsBoard API rodando em http://localhost:${PORT}`);
+  console.log(`DevsBoard API Segura rodando em http://localhost:${PORT}`);
 });

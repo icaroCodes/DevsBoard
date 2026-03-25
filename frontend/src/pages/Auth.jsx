@@ -113,25 +113,23 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, loginWithToken, refreshUser } = useAuth();
+  const { user, login, register } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const err = params.get('error');
-    if (err) { setError('Erro ao autenticar com GitHub. Tente novamente.'); window.history.replaceState({}, '', '/auth'); return; }
-    if (token) {
-      loginWithToken(token, {
-        id: params.get('id'),
-        name: params.get('name'),
-        email: params.get('email'),
-        avatar_url: params.get('avatar_url')
-      });
-      refreshUser(); // Garante que temos todos os dados frescos
+    // Se o usuário já estiver logado (via cookie), redireciona
+    if (user) {
       navigate('/dashboard');
     }
-  }, []);
+
+    // Verifica erros de OAuth vindo da URL sem expor tokens
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err) {
+      setError('Erro ao autenticar com GitHub. Tente novamente.');
+      window.history.replaceState({}, '', '/auth');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

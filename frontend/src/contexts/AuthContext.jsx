@@ -18,43 +18,26 @@ export function AuthProvider({ children }) {
   }, [activeTeam]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && user) {
-      setLoading(false);
-      return;
-    }
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-    } else {
-      api('/settings')
-        .then((data) => {
-          setUser(data);
-          // Atualizar o registro do usuário atual nos recentes
-          saveRecentAccount(localStorage.getItem('token'), data);
-        })
-        .catch(() => setUser(null))
-        .finally(() => setLoading(false));
-    }
+    // Agora não verificamos 'token' no localStorage, apenas tentamos pegar os dados
+    // Se o cookie existir, o fetch /settings irá funcionar.
+    api('/settings')
+      .then((data) => {
+        setUser(data);
+        localStorage.setItem('user', JSON.stringify(data));
+      })
+      .catch((err) => {
+        console.warn('[Session Verify Failed]', err.message);
+        setUser(null);
+        localStorage.removeItem('user');
+      })
+      .finally(() => setLoading(false));
   }, []);
-
-  const saveRecentAccount = (token, user) => {
-    if (!token || !user) return;
-    const recent = JSON.parse(localStorage.getItem('recentAccounts') || '[]');
-    // Filter out if already exists
-    const updated = [
-      { token, user, lastUsed: new Date().getTime() },
-      ...recent.filter(acc => acc.user.id !== user.id)
-    ].slice(0, 3); // Keep only 3
-    localStorage.setItem('recentAccounts', JSON.stringify(updated));
-  };
 
   const refreshUser = async () => {
     try {
       const data = await api('/settings');
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
-      saveRecentAccount(localStorage.getItem('token'), data);
       return data;
     } catch (err) {
       console.error('Erro ao atualizar usuário:', err);
@@ -66,11 +49,10 @@ export function AuthProvider({ children }) {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    localStorage.setItem('token', data.token);
+    // O token é setado via Cookie HttpOnly no backend.
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
-    setActiveTeam(null); // Clear team context on new login
-    saveRecentAccount(data.token, data.user);
+    setActiveTeam(null);
     return data;
   };
 
@@ -79,46 +61,33 @@ export function AuthProvider({ children }) {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
     });
-    localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     setActiveTeam(null);
-    saveRecentAccount(data.token, data.user);
     return data;
   };
 
-  const switchAccount = (token, userData) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-    setActiveTeam(null); // Clear team context on switch
-    saveRecentAccount(token, userData);
-    window.location.reload(); // Reload to refresh all contexts
-  };
-
-  const loginWithToken = (token, user) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    setUser(user);
-    saveRecentAccount(token, user);
+  const switchAccount = () => {
+    logout();
+    window.location.href = '/auth';
   };
 
   const switchTeam = (team) => {
     setActiveTeam(team);
-    // Reload can be avoid if we handle it in context providers, 
-    // but for consistency with data filtering, a reload/reset might be safer.
-    // However, let's try just updating the context state first.
   };
 
   const updateUser = (data) => {
     const newUser = { ...user, ...data };
     localStorage.setItem('user', JSON.stringify(newUser));
     setUser(newUser);
-    saveRecentAccount(localStorage.getItem('token'), newUser);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await api('/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Erro no logout remoto:', err);
+    }
     localStorage.removeItem('user');
     localStorage.removeItem('activeTeam');
     setUser(null);
@@ -132,7 +101,6 @@ export function AuthProvider({ children }) {
       loading, 
       login, 
       register, 
-      loginWithToken, 
       switchAccount,
       switchTeam,
       logout, 
