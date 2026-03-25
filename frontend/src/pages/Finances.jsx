@@ -6,6 +6,7 @@ import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 const CATEGORIES = ['Salário', 'Freelance', 'Investimentos', 'Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Outros'];
 
@@ -35,15 +36,7 @@ export default function Finances() {
     load();
   }, [activeTeam]);
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      if (e.detail.table === 'finances') {
-        load();
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(['finances'], () => { load(); });
 
   const filtered = items.filter((i) => {
     if (filter === 'all') return true;

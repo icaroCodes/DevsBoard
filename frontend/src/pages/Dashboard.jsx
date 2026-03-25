@@ -15,6 +15,7 @@ import {
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 const ROUTINE_TYPE_LABELS = {
   daily: 'Diária',
@@ -67,17 +68,10 @@ export default function Dashboard() {
     load();
   }, [activeTeam]);
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      // O Dashboard exibe tudo, então qualquer mudança nas tabelas principais deve atualizar ele
-      const dashboardTables = ['finances', 'tasks', 'goals', 'routines'];
-      if (dashboardTables.includes(e.detail.table)) {
-        load();
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(
+    ['finances', 'tasks', 'goals', 'routines', 'routine_tasks', 'task_boards', 'task_lists', 'task_cards', 'projects'],
+    () => { load(); }
+  );
 
   const toggleTaskComplete = async (task) => {
     try {

@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 export default function Goals() {
   const [items, setItems] = useState([]);
@@ -41,15 +42,7 @@ export default function Goals() {
     load();
   }, [activeTeam]);
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      if (e.detail.table === 'goals') {
-        load();
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(['goals'], () => { load(); });
 
   const handleSubmit = async (e) => {
     e.preventDefault();

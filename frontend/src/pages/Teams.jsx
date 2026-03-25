@@ -7,10 +7,10 @@ import {
   Heart, Briefcase, MailPlus, ArrowLeft
 } from 'lucide-react';
 import { api } from '../lib/api';
-import supabase from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useRealtime, useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 // ============================================
 // TEAMS PAGE — Times & Família com WebSocket
@@ -31,9 +31,9 @@ export default function Teams() {
   const [inviting, setInviting] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newTeam, setNewTeam] = useState({ name: '', type: 'team' });
-  const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const channelRef = useRef(null);
+  const [selectedTeamData, setSelectedTeamData] = useState(null);
+  const { connected: realtimeConnected } = useRealtime() || {};
 
   // ============================================
   // FETCH DATA
@@ -65,6 +65,21 @@ export default function Teams() {
     }
   }, []);
 
+  // Carregar detalhes do time selecionado
+  const fetchTeamDetail = useCallback(async (teamId) => {
+    if (!teamId) return;
+    try {
+      const data = await api('/teams');
+      const team = (data || []).find(t => t.id === teamId);
+      if (team) {
+        setSelectedTeamData(team);
+        setTeams(data || []);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar detalhes do time:', err);
+    }
+  }, []);
+
   // ============================================
   // INITIAL LOAD
   // ============================================
@@ -78,68 +93,27 @@ export default function Teams() {
   }, [fetchTeams, fetchInbox, fetchSentInvites]);
 
   // ============================================
-  // SUPABASE REALTIME (WebSocket)
+  // SUPABASE REALTIME via centralized RealtimeContext
   // ============================================
-  useEffect(() => {
-    if (!supabase || !user) return;
+  useRealtimeSubscription(
+    ['teams', 'team_members', 'team_invitations', 'team_invitations_sent'],
+    (detail) => {
+      console.log('🔔 [Teams] Realtime event:', detail.table, detail.payload?.eventType);
 
-    const channel = supabase
-      .channel('teams-realtime')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'team_invitations',
-      }, (payload) => {
-        console.log('🔔 WebSocket — team_invitations:', payload.eventType, payload);
-
-        if (payload.eventType === 'INSERT') {
-          // Novo convite recebido
-          if (payload.new.invited_user_id === user.id || payload.new.invited_email === user.email) {
-            fetchInbox();
-            success('📩 Novo convite de time recebido!');
-          }
-          // Convite que eu enviei
-          if (payload.new.invited_by === user.id) {
-            fetchSentInvites();
-          }
-        }
-
-        if (payload.eventType === 'UPDATE') {
-          // Convite aceito/rejeitado
-          fetchInbox();
-          fetchSentInvites();
-          fetchTeams();
-        }
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'team_members',
-      }, (payload) => {
-        console.log('🔔 WebSocket — team_members:', payload.eventType, payload);
+      if (detail.table === 'team_invitations' || detail.table === 'team_invitations_sent') {
+        fetchInbox();
+        fetchSentInvites();
         fetchTeams();
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'teams',
-      }, (payload) => {
-        console.log('🔔 WebSocket — teams:', payload.eventType, payload);
-        fetchTeams();
-      })
-      .subscribe((status) => {
-        console.log('📡 Realtime status:', status);
-        setRealtimeConnected(status === 'SUBSCRIBED');
-      });
-
-    channelRef.current = channel;
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
       }
-    };
-  }, [user, fetchTeams, fetchInbox, fetchSentInvites, success]);
+      if (detail.table === 'team_members' || detail.table === 'teams') {
+        fetchTeams();
+        // Se estiver vendo detalhes de um time, atualizar também
+        if (selectedTeam) {
+          fetchTeamDetail(selectedTeam);
+        }
+      }
+    }
+  );
 
   // ============================================
   // ACTIONS
@@ -220,6 +194,7 @@ export default function Teams() {
           await api(`/teams/${teamId}`, { method: 'DELETE' });
           success('Time excluído.');
           setSelectedTeam(null);
+          setSelectedTeamData(null);
           fetchTeams();
         } catch (err) {
           toastError(err.message);
@@ -237,6 +212,7 @@ export default function Teams() {
           await api(`/teams/${teamId}/members/${user.id}`, { method: 'DELETE' });
           success('Você saiu do time.');
           setSelectedTeam(null);
+          setSelectedTeamData(null);
           fetchTeams();
         } catch (err) {
           toastError(err.message);
@@ -308,9 +284,10 @@ export default function Teams() {
   // TEAM DETAIL VIEW
   // ============================================
   if (selectedTeam) {
-    const team = teams.find(t => t.id === selectedTeam);
+    const team = selectedTeamData || teams.find(t => t.id === selectedTeam);
     if (!team) {
       setSelectedTeam(null);
+      setSelectedTeamData(null);
       return null;
     }
 
@@ -319,7 +296,7 @@ export default function Teams() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => setSelectedTeam(null)}
+            onClick={() => { setSelectedTeam(null); setSelectedTeamData(null); }}
             className="flex items-center gap-2 text-[#86868B] hover:text-white transition-colors mb-4 group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
@@ -513,7 +490,7 @@ export default function Teams() {
                   <motion.div
                     key={team.id}
                     layout
-                    onClick={() => setSelectedTeam(team.id)}
+                    onClick={() => { setSelectedTeam(team.id); fetchTeamDetail(team.id); }}
                     className="bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] p-6 hover:border-white/[0.08] transition-all cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import supabase from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
@@ -6,93 +6,325 @@ import { api } from '../lib/api';
 
 const RealtimeContext = createContext(null);
 
+// ═══════════════════════════════════════════════════════
+// REALTIME PROVIDER — WebSocket em tempo real robusto
+// ═══════════════════════════════════════════════════════
+// Arquitetura:
+//   1) Canal global do usuário   → convites de time
+//   2) Canal pessoal do usuário  → dados sem time (modo pessoal)
+//   3) Canal do time ativo       → dados do time
+//   4) Canal do time management  → membros, times, convites
+//
+// Cada canal emite CustomEvents no window que os componentes
+// escutam para re-fetch dos dados — sem page refresh.
+// ═══════════════════════════════════════════════════════
+
+// Tabelas que são rastreadas para dados de time/pessoal
+const DATA_TABLES = [
+  'finances',
+  'task_boards',
+  'task_lists',
+  'task_cards',
+  'tasks',
+  'goals',
+  'routines',
+  'routine_tasks',
+  'projects',
+];
+
+// Tabelas de gerenciamento de times
+const TEAM_MGMT_TABLES = [
+  'teams',
+  'team_members',
+  'team_invitations',
+];
+
+// Labels amigáveis para notificações
+const TABLE_LABELS = {
+  finances: 'finanças',
+  task_boards: 'quadros',
+  task_lists: 'listas',
+  task_cards: 'cartões',
+  tasks: 'tarefas',
+  goals: 'metas',
+  routines: 'rotinas',
+  routine_tasks: 'rotinas',
+  projects: 'projetos',
+  teams: 'times',
+  team_members: 'membros',
+  team_invitations: 'convites',
+};
+
+/**
+ * Debounce helper - agrupa disparos rápidos em um só
+ */
+function createDebouncedDispatcher(delayMs = 300) {
+  const pending = new Map();
+
+  return (table, payload) => {
+    const key = table;
+
+    if (pending.has(key)) {
+      clearTimeout(pending.get(key));
+    }
+
+    pending.set(key, setTimeout(() => {
+      pending.delete(key);
+      window.dispatchEvent(
+        new CustomEvent('team-data-changed', {
+          detail: { table, payload, timestamp: Date.now() },
+        })
+      );
+    }, delayMs));
+  };
+}
+
 export function RealtimeProvider({ children }) {
   const { user, activeTeam } = useAuth();
   const { success } = useToast();
   const [notifications, setNotifications] = useState([]);
   const [connected, setConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected | connecting | connected | error
+  const [lastEvent, setLastEvent] = useState(null);
 
+  // Refs para evitar stale closures
+  const activeTeamRef = useRef(activeTeam);
+  const userRef = useRef(user);
+  const dispatcherRef = useRef(createDebouncedDispatcher(250));
+
+  useEffect(() => { activeTeamRef.current = activeTeam; }, [activeTeam]);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  // ─── CANAL GLOBAL: convites de time para o usuário ───
   useEffect(() => {
     if (!supabase || !user) return;
 
-    // Conectar ao canal global de notificações/convites
+    setConnectionStatus('connecting');
+
     const globalChannel = supabase
-      .channel('global-realtime')
+      .channel('global-user-notifications', {
+        config: { broadcast: { self: false } },
+      })
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'team_invitations',
-        filter: `invited_user_id=eq.${user.id}`
       }, (payload) => {
-        console.log('🔔 Convite recebido em tempo real:', payload);
+        if (payload.new?.invited_user_id !== user.id) return;
+        console.log('🔔 [GLOBAL] Novo convite recebido:', payload.new?.id);
         success('📩 Você recebeu um novo convite de time!');
-        api(`/teams/invitations/inbox`).then(setNotifications);
+        api('/teams/invitations/inbox').then(setNotifications).catch(console.error);
+        dispatcherRef.current('team_invitations', payload);
       })
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'team_invitations',
-        filter: `invited_user_id=eq.${user.id}`
       }, (payload) => {
-        api(`/teams/invitations/inbox`).then(setNotifications);
+        if (payload.new?.invited_user_id !== user.id) return;
+        console.log('🔔 [GLOBAL] Convite atualizado:', payload.new?.id, payload.new?.status);
+        api('/teams/invitations/inbox').then(setNotifications).catch(console.error);
+        dispatcherRef.current('team_invitations', payload);
       })
-      .subscribe((status) => {
-        setConnected(status === 'SUBSCRIBED');
-        console.log(`📡 WebSocket Principal: ${status}`);
-      });
-
-    let teamChannel = null;
-    if (activeTeam) {
-      console.log(`📡 Conectando ao canal da equipe: ${activeTeam.name}`);
-      teamChannel = supabase.channel(`team-${activeTeam.id}`);
-      
-      const tables = [
-        'finances', 
-        'task_boards', 
-        'task_lists', 
-        'task_cards', 
-        'tasks', 
-        'goals', 
-        'routines', 
-        'projects',
-        'project_assets'
-      ];
-      
-      tables.forEach(table => {
-        teamChannel.on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: table,
-          filter: `team_id=eq.${activeTeam.id}`
-        }, (payload) => {
-          console.log(`📡 REALTIME [${activeTeam.name}] - Mudança em ${table}:`, payload.eventType, payload.new?.id || payload.old?.id);
-          window.dispatchEvent(new CustomEvent('team-data-changed', { detail: { table, payload } }));
-          
-          if (payload.eventType === 'INSERT' && payload.new.user_id !== user.id) {
-            success(`✨ Nova atualização em ${table} da equipe!`);
-          }
-        });
-      });
-
-      teamChannel.subscribe((status) => {
-        console.log(`📡 WebSocket Equipe (${activeTeam.name}): STATUS = ${status}`);
-        if (status === 'CHANNEL_ERROR') {
-          console.error(`❌ Erro no canal da equipe. Verifique se o filtro team_id=eq.${activeTeam.id} é válido ou se a replicação está ativada.`);
+      .subscribe((status, err) => {
+        console.log(`📡 [GLOBAL] WebSocket: ${status}`, err || '');
+        if (status === 'SUBSCRIBED') {
+          setConnected(true);
+          setConnectionStatus('connected');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setConnectionStatus('error');
+          console.error('❌ [GLOBAL] Erro de conexão WebSocket');
         }
       });
-    }
 
     // Carga inicial de notificações
     api('/teams/invitations/inbox').then(setNotifications).catch(console.error);
 
     return () => {
       supabase.removeChannel(globalChannel);
-      if (teamChannel) supabase.removeChannel(teamChannel);
+    };
+  }, [user, success]);
+
+  // ─── CANAL PESSOAL: dados do usuário (sem time ativo) ───
+  useEffect(() => {
+    if (!supabase || !user || activeTeam) return;
+
+    console.log('📡 [PESSOAL] Conectando canal de dados pessoais...');
+
+    const personalChannel = supabase.channel('personal-data-channel', {
+      config: { broadcast: { self: false } },
+    });
+
+    DATA_TABLES.forEach((table) => {
+      personalChannel.on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: table,
+      }, (payload) => {
+        const record = payload.new || payload.old;
+        if (record && record.user_id !== userRef.current?.id) return;
+
+        console.log(`📡 [PESSOAL] Mudança em ${table}:`, payload.eventType, record?.id);
+
+        setLastEvent({ table, type: payload.eventType, timestamp: Date.now() });
+        dispatcherRef.current(table, payload);
+      });
+    });
+
+    personalChannel.subscribe((status) => {
+      console.log(`📡 [PESSOAL] Status: ${status}`);
+    });
+
+    return () => {
+      console.log('📡 [PESSOAL] Desconectando canal pessoal');
+      supabase.removeChannel(personalChannel);
     };
   }, [user, activeTeam, success]);
 
+  // ─── CANAL DO TIME ATIVO: dados do time ───
+  useEffect(() => {
+    if (!supabase || !user || !activeTeam) return;
+
+    console.log(`📡 [TIME] Conectando ao canal do time: ${activeTeam.name} (${activeTeam.id})`);
+
+    const teamChannel = supabase.channel(`team-data-${activeTeam.id}`, {
+      config: { broadcast: { self: false } },
+    });
+
+    DATA_TABLES.forEach((table) => {
+      teamChannel.on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: table,
+      }, (payload) => {
+        const record = payload.new || payload.old;
+        if (record && record.team_id !== activeTeamRef.current?.id) return;
+
+        console.log(`📡 [TIME:${activeTeamRef.current?.name}] Mudança em ${table}:`, payload.eventType, record?.id);
+
+        setLastEvent({ table, type: payload.eventType, team: activeTeamRef.current?.name, timestamp: Date.now() });
+        dispatcherRef.current(table, payload);
+      });
+    });
+
+    teamChannel.subscribe((status) => {
+      console.log(`📡 [TIME:${activeTeam.name}] Status: ${status}`);
+      if (status === 'CHANNEL_ERROR') {
+        console.error(`❌ Erro no canal do time. Verifique se o filtro team_id=eq.${activeTeam.id} é válido ou se a replicação está ativada.`);
+      }
+    });
+
+    return () => {
+      console.log(`📡 [TIME] Desconectando canal do time: ${activeTeam.name}`);
+      supabase.removeChannel(teamChannel);
+    };
+  }, [user, activeTeam, success]);
+
+  // ─── CANAL DE GERENCIAMENTO: times, membros, convites ───
+  useEffect(() => {
+    if (!supabase || !user) return;
+
+    console.log('📡 [MGMT] Conectando canal de gerenciamento de times...');
+
+    const mgmtChannel = supabase.channel('team-management-channel', {
+      config: { broadcast: { self: true } },
+    });
+
+    // Escutar mudanças em teams
+    mgmtChannel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'teams',
+    }, (payload) => {
+      console.log('📡 [MGMT] Mudança em teams:', payload.eventType, payload.new?.id || payload.old?.id);
+      dispatcherRef.current('teams', payload);
+    });
+
+    // Escutar mudanças em team_members
+    mgmtChannel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'team_members',
+    }, (payload) => {
+      console.log('📡 [MGMT] Mudança em team_members:', payload.eventType, payload.new?.user_id || payload.old?.user_id);
+      dispatcherRef.current('team_members', payload);
+    });
+
+    // Escutar mudanças no perfil dos usuários (para avatar/nome)
+    mgmtChannel.on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'users',
+    }, (payload) => {
+      console.log('📡 [MGMT] Perfil de usuário atualizado:', payload.new?.id);
+      // Notificar que times e team_members mudaram (porque mostram avatares)
+      dispatcherRef.current('team_members', payload);
+      dispatcherRef.current('teams', payload);
+    });
+
+    // Convites enviados pelo usuário
+    mgmtChannel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'team_invitations',
+    }, (payload) => {
+      const record = payload.new || payload.old;
+      if (!record) return;
+
+      if (record.invited_by === user.id) {
+        console.log('📡 [MGMT] Convite enviado atualizado:', payload.eventType, record.id, record.status);
+        dispatcherRef.current('team_invitations_sent', payload);
+        if (payload.eventType === 'UPDATE') {
+          dispatcherRef.current('teams', payload);
+          dispatcherRef.current('team_members', payload);
+        }
+      }
+
+      if (record.invited_user_id === user.id) {
+        console.log('📡 [MGMT] Convite recebido atualizado:', payload.eventType, record.id, record.status);
+        dispatcherRef.current('team_invitations', payload);
+        if (payload.eventType === 'UPDATE' && record.status === 'accepted') {
+          dispatcherRef.current('teams', payload);
+        }
+      }
+    });
+
+    // Broadcast channel para notificações instantâneas entre membros do time
+    mgmtChannel.on('broadcast', { event: 'team-action' }, (payload) => {
+      console.log('📡 [MGMT] Broadcast recebido:', payload);
+      dispatcherRef.current('teams', payload);
+      dispatcherRef.current('team_members', payload);
+    });
+
+    mgmtChannel.subscribe((status) => {
+      console.log(`📡 [MGMT] Status: ${status}`);
+    });
+
+    return () => {
+      console.log('📡 [MGMT] Desconectando canal de gerenciamento');
+      supabase.removeChannel(mgmtChannel);
+    };
+  }, [user]);
+
+  // ─── HELPER: hook para componentes escutarem eventos ───
+  const subscribe = useCallback((tables, callback) => {
+    const handler = (e) => {
+      if (tables.includes(e.detail.table)) {
+        callback(e.detail);
+      }
+    };
+    window.addEventListener('team-data-changed', handler);
+    return () => window.removeEventListener('team-data-changed', handler);
+  }, []);
+
   return (
-    <RealtimeContext.Provider value={{ notifications, connected }}>
+    <RealtimeContext.Provider value={{
+      notifications,
+      connected,
+      connectionStatus,
+      lastEvent,
+      subscribe,
+    }}>
       {children}
     </RealtimeContext.Provider>
   );
@@ -101,4 +333,29 @@ export function RealtimeProvider({ children }) {
 export function useRealtime() {
   const ctx = useContext(RealtimeContext);
   return ctx;
+}
+
+/**
+ * Hook utilitário para componentes se inscreverem em mudanças de tabelas específicas
+ *
+ * @param {string[]} tables - Lista de tabelas para escutar
+ * @param {Function} callback - Função chamada quando uma mudança ocorre
+ * @param {any[]} deps - Dependências adicionais para recriar o listener
+ *
+ * @example
+ * useRealtimeSubscription(['tasks', 'task_cards'], () => { load(); });
+ */
+export function useRealtimeSubscription(tables, callback, deps = []) {
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (tables.includes(e.detail.table)) {
+        callbackRef.current(e.detail);
+      }
+    };
+    window.addEventListener('team-data-changed', handler);
+    return () => window.removeEventListener('team-data-changed', handler);
+  }, [tables.join(','), ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
 }

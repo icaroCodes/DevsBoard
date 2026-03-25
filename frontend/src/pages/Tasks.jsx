@@ -26,6 +26,7 @@ import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -123,15 +124,7 @@ function ListView() {
     load();
   }, [activeTeam]);
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      if (e.detail.table === 'tasks') {
-        load();
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(['tasks'], () => { load(); });
 
   const filteredItems = items.filter(i => {
     if (filter === 'completed') return i.completed;
@@ -735,15 +728,10 @@ function BoardGallery({ onOpenBoard }) {
       .catch(err => { showError(err.message); setLoading(false); });
   }, [activeTeam]); // eslint-disable-line
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      if (e.detail.table === 'task_boards') {
-        api('/task-boards').then(setBoards).catch(console.error);
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(
+    ['task_boards', 'task_lists', 'task_cards'],
+    () => { api('/task-boards').then(setBoards).catch(console.error); }
+  );
 
   useEffect(() => { if (showAdd) inputRef.current?.focus(); }, [showAdd]);
 
@@ -1027,20 +1015,20 @@ function BoardKanban({ board, onBack }) {
 
   useEffect(() => { load(); }, [board.id, activeTeam]); // eslint-disable-line
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      const { table, payload } = e.detail;
+  useRealtimeSubscription(
+    ['task_lists', 'task_cards', 'task_boards'],
+    (detail) => {
+      const { table, payload } = detail;
       if (['task_lists', 'task_cards'].includes(table)) {
         load();
       }
-      if (table === 'task_boards' && payload.eventType === 'DELETE' && payload.old.id === board.id) {
+      if (table === 'task_boards' && payload?.eventType === 'DELETE' && payload?.old?.id === board.id) {
         success('Este quadro foi excluído.');
         onBack();
       }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, [board.id, onBack]);
+    },
+    [board.id, onBack]
+  );
   useEffect(() => { if (showAddList) listInputRef.current?.focus(); }, [showAddList]);
 
   async function addList() {

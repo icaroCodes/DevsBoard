@@ -10,7 +10,14 @@ if (supabaseUrl && supabaseAnonKey) {
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
     realtime: {
       params: {
-        eventsPerSecond: 10,
+        eventsPerSecond: 20,
+      },
+      // Heartbeat para manter conexão ativa
+      heartbeatIntervalMs: 15000,
+      // Timeout para reconnect
+      reconnectAfterMs: (tries) => {
+        // Backoff exponencial: 1s, 2s, 4s, 8s, max 30s
+        return Math.min(1000 * Math.pow(2, tries), 30000);
       },
     },
   });

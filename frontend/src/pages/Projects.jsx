@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -106,15 +107,7 @@ export default function Projects() {
     load();
   }, [activeTeam]);
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      if (e.detail.table === 'projects' || e.detail.table === 'project_assets') {
-        load();
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(['projects'], () => { load(); });
 
   const resetForm = () => {
     setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '', submitting: false });

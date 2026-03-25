@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import {
   DndContext,
   closestCenter,
@@ -434,15 +435,7 @@ export default function Routines() {
     load();
   }, [activeTeam]);
 
-  useEffect(() => {
-    const handleRemoteChange = (e) => {
-      if (e.detail.table === 'routines') {
-        load();
-      }
-    };
-    window.addEventListener('team-data-changed', handleRemoteChange);
-    return () => window.removeEventListener('team-data-changed', handleRemoteChange);
-  }, []);
+  useRealtimeSubscription(['routines', 'routine_tasks'], () => { load(); });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
