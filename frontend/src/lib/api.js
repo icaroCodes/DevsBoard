@@ -30,6 +30,15 @@ export async function api(endpoint, options = {}) {
   }
 
   const data = res.status === 204 ? null : await res.json().catch(() => null);
+
+  // Intercept 202 com change request
+  if (res.status === 202 && data?.is_change_request) {
+    const err = new Error('CHANGE_REQUEST:' + (data.message || 'Pedido enviado.'));
+    err.isChangeRequest = true;
+    err.changeRequestData = data;
+    throw err;
+  }
+
   if (!res.ok) {
     const errorMsg = data?.error || (data?.errors && data.errors[0]?.msg) || 'Erro na requisição';
     throw new Error(errorMsg);

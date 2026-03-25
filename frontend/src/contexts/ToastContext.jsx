@@ -22,7 +22,13 @@ export function ToastProvider({ children }) {
     }, []);
 
     const success = (msg) => addToast(msg, 'success');
-    const error = (msg) => addToast(msg, 'error');
+    const error = (msg) => {
+        if (msg?.startsWith('CHANGE_REQUEST:')) {
+            addToast(msg.replace('CHANGE_REQUEST:', ''), 'success');
+            return;
+        }
+        addToast(msg, 'error');
+    };
     const info = (msg) => addToast(msg, 'info');
 
     return (

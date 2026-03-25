@@ -389,6 +389,40 @@ router.get('/invitations/sent', async (req, res) => {
 });
 
 // ============================================
+// GET /teams/change-requests/inbox — Caixa de Entrada de solicitações
+// ============================================
+router.get('/change-requests/inbox', async (req, res) => {
+  try {
+    // Buscar times que sou admin ou owner
+    const { data: myMemberships } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', req.userId)
+      .in('role', ['admin', 'owner']);
+
+    if (!myMemberships || myMemberships.length === 0) {
+      return res.json([]);
+    }
+
+    const teamIds = myMemberships.map(m => m.team_id);
+
+    // Buscar change_requests pending
+    const { data, error } = await supabase
+      .from('change_requests')
+      .select('*, user:users(name, avatar_url), team:teams(name)')
+      .in('team_id', teamIds)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao buscar solicitações:', err);
+    res.status(500).json({ error: 'Erro ao buscar solicitações' });
+  }
+});
+
+// ============================================
 // POST /teams/invitations/:invitationId/accept — Aceitar convite
 // ============================================
 router.post('/invitations/:invitationId/accept', async (req, res) => {
@@ -544,6 +578,109 @@ router.delete('/:id/members/:memberId', async (req, res) => {
   } catch (err) {
     console.error('Erro ao remover membro:', err);
     res.status(500).json({ error: 'Erro ao remover membro' });
+  }
+});
+
+// ============================================
+// PUT /teams/:id/members/:memberId/role — Alterar papel
+// ============================================
+router.put('/:id/members/:memberId/role', async (req, res) => {
+  try {
+    const { id, memberId } = req.params;
+    const { role } = req.body;
+    
+    if (!['admin', 'member'].includes(role)) return res.status(400).json({ error: 'Role inválida' });
+
+    const { data: myMembership } = await supabase.from('team_members').select('role').eq('team_id', id).eq('user_id', req.userId).single();
+    if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) return res.status(403).json({ error: 'Sem permissão' });
+
+    const { data: targetMembership } = await supabase.from('team_members').select('role').eq('team_id', id).eq('user_id', memberId).single();
+    if (targetMembership?.role === 'owner') return res.status(403).json({ error: 'Não é possível alterar papel do dono' });
+
+    const { error } = await supabase.from('team_members').update({ role }).eq('team_id', id).eq('user_id', memberId);
+    if (error) throw error;
+    res.json({ message: 'Papel atualizado' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar papel do membro' });
+  }
+});
+
+// ============================================
+// POST /teams/change-requests/:id/approve — Approve change request
+// ============================================
+router.post('/change-requests/:id/approve', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: request } = await supabase.from('change_requests').select('*').eq('id', id).single();
+    if (!request) return res.status(404).json({ error: 'Solicitação não encontrada' });
+
+    const { data: myMembership } = await supabase.from('team_members').select('role').eq('team_id', request.team_id).eq('user_id', req.userId).single();
+    if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) return res.status(403).json({ error: 'Sem permissão' });
+
+    if (request.status !== 'pending') return res.status(400).json({ error: 'Já processada' });
+
+    let finalPayload = { ...(request.payload || {}) };
+    
+    // Injetar contexto ausente (que normalmente é inserido pela rota principal)
+    if (request.action_type === 'create') {
+      const entity = request.entity_type;
+      
+      // Apenas injeta em tabelas que sabemos que usam user_id e team_id
+      if (['finances', 'routines', 'goals'].includes(entity)) {
+        finalPayload.team_id = request.team_id;
+        finalPayload.user_id = request.user_id;
+      }
+      
+      if (entity === 'projects') {
+        finalPayload.user_id = request.user_id; // Projects usa user_id
+      }
+      
+      // tasks, task_lists, task_boards normalmente usam board_id e project_id (já vindo no payload)
+    }
+
+    let updateErr = null;
+    if (request.action_type === 'create') {
+      const { error } = await supabase.from(request.entity_type).insert(finalPayload);
+      updateErr = error;
+    } else if (request.action_type === 'update') {
+      const { error } = await supabase.from(request.entity_type).update(finalPayload).eq('id', request.entity_id);
+      updateErr = error;
+    } else if (request.action_type === 'delete') {
+      const { error } = await supabase.from(request.entity_type).delete().eq('id', request.entity_id);
+      updateErr = error;
+    }
+
+    if (updateErr) {
+      console.error('Erro do banco ao processar aprovação:', updateErr);
+      return res.status(400).json({ error: 'Falha técnica ao salvar no banco. ' + (updateErr.message || JSON.stringify(updateErr)) });
+    }
+
+    await supabase.from('change_requests').update({ status: 'approved' }).eq('id', id);
+    res.json({ message: 'Solicitação aprovada e aplicada com sucesso.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro fatal ao aprovar solicitação' });
+  }
+});
+
+// ============================================
+// POST /teams/change-requests/:id/reject — Reject change request
+// ============================================
+router.post('/change-requests/:id/reject', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: request } = await supabase.from('change_requests').select('*').eq('id', id).single();
+    if (!request) return res.status(404).json({ error: 'Solicitação não encontrada' });
+
+    const { data: myMembership } = await supabase.from('team_members').select('role').eq('team_id', request.team_id).eq('user_id', req.userId).single();
+    if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) return res.status(403).json({ error: 'Sem permissão' });
+
+    if (request.status !== 'pending') return res.status(400).json({ error: 'Já processada' });
+
+    await supabase.from('change_requests').update({ status: 'rejected' }).eq('id', id);
+    res.json({ message: 'Rejeitada' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao rejeitar' });
   }
 });
 

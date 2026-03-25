@@ -15,6 +15,8 @@ import taskListsRoutes from './routes/task-lists.js';
 import taskCardsRoutes from './routes/task-cards.js';
 import taskBoardsRoutes from './routes/task-boards.js';
 import teamsRoutes from './routes/teams.js';
+import { interceptMembers } from './middleware/interceptMembers.js';
+import { authenticate } from './middleware/auth.js';
 
 const app = express();
 
@@ -25,17 +27,19 @@ app.use(express.json({ limit: '5mb' }));
 app.use('/auth', authRoutes);
 app.use('/auth/github', githubRoutes);
 
-// Rotas protegidas
+// Rotas protegidas (Pass through authenticate first)
+app.use(authenticate);
+
 app.use('/dashboard', dashboardRoutes);
-app.use('/finances', financesRoutes);
-app.use('/tasks', tasksRoutes);
-app.use('/routines', routinesRoutes);
-app.use('/goals', goalsRoutes);
-app.use('/projects', projectsRoutes);
+app.use('/finances', interceptMembers('finances'), financesRoutes);
+app.use('/tasks', interceptMembers('tasks'), tasksRoutes);
+app.use('/routines', interceptMembers('routines'), routinesRoutes);
+app.use('/goals', interceptMembers('goals'), goalsRoutes);
+app.use('/projects', interceptMembers('projects'), projectsRoutes);
 app.use('/settings', settingsRoutes);
-app.use('/task-lists', taskListsRoutes);
-app.use('/task-cards', taskCardsRoutes);
-app.use('/task-boards', taskBoardsRoutes);
+app.use('/task-lists', interceptMembers('task_lists'), taskListsRoutes);
+app.use('/task-cards', interceptMembers('task_cards'), taskCardsRoutes);
+app.use('/task-boards', interceptMembers('task_boards'), taskBoardsRoutes);
 app.use('/teams', teamsRoutes);
 
 // 404

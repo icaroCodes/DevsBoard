@@ -33,6 +33,7 @@ export default function Teams() {
   const [newTeam, setNewTeam] = useState({ name: '', type: 'team' });
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [selectedTeamData, setSelectedTeamData] = useState(null);
+  const [changeRequests, setChangeRequests] = useState([]);
   const { connected: realtimeConnected } = useRealtime() || {};
 
   // ============================================
@@ -65,6 +66,16 @@ export default function Teams() {
     }
   }, []);
 
+  // Change Requests
+  const fetchChangeRequests = useCallback(async () => {
+    try {
+      const data = await api('/teams/change-requests/inbox');
+      setChangeRequests(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar requests:', err);
+    }
+  }, []);
+
   // Carregar detalhes do time selecionado
   const fetchTeamDetail = useCallback(async (teamId) => {
     if (!teamId) return;
@@ -86,24 +97,25 @@ export default function Teams() {
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
-      await Promise.all([fetchTeams(), fetchInbox(), fetchSentInvites()]);
+      await Promise.all([fetchTeams(), fetchInbox(), fetchSentInvites(), fetchChangeRequests()]);
       setLoading(false);
     };
     loadAll();
-  }, [fetchTeams, fetchInbox, fetchSentInvites]);
+  }, [fetchTeams, fetchInbox, fetchSentInvites, fetchChangeRequests]);
 
   // ============================================
   // SUPABASE REALTIME via centralized RealtimeContext
   // ============================================
   useRealtimeSubscription(
-    ['teams', 'team_members', 'team_invitations', 'team_invitations_sent'],
+    ['teams', 'team_members', 'team_invitations', 'team_invitations_sent', 'change_requests'],
     (detail) => {
       console.log('🔔 [Teams] Realtime event:', detail.table, detail.payload?.eventType);
 
-      if (detail.table === 'team_invitations' || detail.table === 'team_invitations_sent') {
+      if (detail.table === 'team_invitations' || detail.table === 'team_invitations_sent' || detail.table === 'change_requests') {
         fetchInbox();
         fetchSentInvites();
         fetchTeams();
+        fetchChangeRequests();
       }
       if (detail.table === 'team_members' || detail.table === 'teams') {
         fetchTeams();
@@ -237,6 +249,40 @@ export default function Teams() {
     });
   };
 
+  const handleChangeRole = async (teamId, memberId, role) => {
+    try {
+      await api(`/teams/${teamId}/members/${memberId}/role`, {
+        method: 'PUT',
+        body: JSON.stringify({ role })
+      });
+      success('Papel do membro atualizado.');
+      fetchTeamDetail(teamId);
+      fetchTeams();
+    } catch (err) {
+      toastError(err.message);
+    }
+  };
+
+  const handleApproveChange = async (reqId) => {
+    try {
+      await api(`/teams/change-requests/${reqId}/approve`, { method: 'POST' });
+      success('Alteração aprovada com sucesso.');
+      fetchChangeRequests();
+    } catch (err) {
+      toastError(err.message);
+    }
+  };
+
+  const handleRejectChange = async (reqId) => {
+    try {
+      await api(`/teams/change-requests/${reqId}/reject`, { method: 'POST' });
+      success('Alteração rejeitada.');
+      fetchChangeRequests();
+    } catch (err) {
+      toastError(err.message);
+    }
+  };
+
   // ============================================
   // HELPERS
   // ============================================
@@ -360,6 +406,17 @@ export default function Teams() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {['owner', 'admin'].includes(team.my_role) && member.role !== 'owner' && member.user_id !== user.id && (
+                    <select
+                      value={member.role}
+                      onChange={(e) => handleChangeRole(team.id, member.user_id, e.target.value)}
+                      className="bg-[#1C1C1E] border border-white/10 text-[#86868B] text-[12px] rounded-lg px-2 py-1 outline-none mr-2"
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="member">Membro</option>
+                    </select>
+                  )}
+
                   {member.user_id === user.id && member.role !== 'owner' && (
                     <button
                       onClick={() => handleLeaveTeam(team.id, team.name)}
@@ -427,31 +484,31 @@ export default function Teams() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-8">
+      {/* Tabs Switcher - Pill Style */}
+      <div className="flex p-1.5 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[20px] border border-white/[0.04] mb-10 w-fit mx-auto sm:mx-0">
         {[
           { id: 'teams', label: 'Meus Times', icon: Users, count: teams.length },
-          { id: 'inbox', label: 'Caixa de Entrada', icon: Inbox, count: inbox.length },
-          { id: 'create', label: 'Criar Novo', icon: Plus, count: null },
+          { id: 'inbox', label: 'Caixa de Entrada', icon: Inbox, count: (inbox.length + changeRequests.length) },
+          { id: 'create', label: 'Novo Time', icon: Plus, count: null },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[14px] font-medium transition-all active:scale-[0.97] ${activeTab === tab.id
-                ? 'bg-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
-                : 'bg-[#1C1C1E] text-[#86868B] hover:text-white border border-white/[0.04] hover:border-white/[0.08]'
-              }`}
+            className={`relative flex items-center gap-2.5 px-6 py-2.5 rounded-[14px] text-[13px] font-semibold transition-all duration-300 outline-none ${activeTab === tab.id ? 'text-white' : 'text-[#86868B] hover:text-[#A1A1A1]'}`}
           >
-            <tab.icon size={16} />
-            {tab.label}
+            {activeTab === tab.id && (
+              <motion.div
+                layoutId="activeTabBg"
+                className="absolute inset-0 bg-[#3A3A3C] rounded-[14px] shadow-sm -z-10"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            )}
+            <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} className="shrink-0" />
+            <span className="whitespace-nowrap">{tab.label}</span>
             {tab.count !== null && tab.count > 0 && (
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${activeTab === tab.id ? 'bg-white/20' : 'bg-white/5'
-                }`}>
+              <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black ${activeTab === tab.id ? 'bg-[#0A84FF] text-white shadow-[0_0_10px_rgba(10,132,255,0.4)]' : 'bg-white/5 text-[#86868B]'}`}>
                 {tab.count}
               </span>
-            )}
-            {tab.id === 'inbox' && inbox.length > 0 && activeTab !== 'inbox' && (
-              <span className="w-2 h-2 rounded-full bg-[#FF453A] animate-pulse" />
             )}
           </button>
         ))}
@@ -487,67 +544,68 @@ export default function Teams() {
             ) : (
               <div className="grid gap-4">
                 {teams.map((team) => (
-                  <motion.div
-                    key={team.id}
-                    layout
-                    onClick={() => { setSelectedTeam(team.id); fetchTeamDetail(team.id); }}
-                    className="bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] p-6 hover:border-white/[0.08] transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0A84FF]/15 to-[#5E5CE6]/15 border border-white/[0.06] flex items-center justify-center group-hover:scale-105 transition-transform">
-                          {getTypeIcon(team.type)}
+                    <motion.div
+                      key={team.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileHover={{ y: -4 }}
+                      onClick={() => { setSelectedTeam(team.id); fetchTeamDetail(team.id); }}
+                      className="bg-[#1C1C1E] border border-white/[0.05] rounded-[28px] p-6 hover:bg-[#2C2C2E]/30 hover:border-white/[0.1] transition-all cursor-pointer group relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#0A84FF] opacity-[0.02] blur-3xl rounded-full -mr-10 -mt-10" />
+                      
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-5">
+                          <div className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-xl ${
+                            team.type === 'family' 
+                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
+                            : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
+                          }`}>
+                            {getTypeIcon(team.type)}
+                          </div>
+                          <div>
+                            <h3 className="text-[19px] font-bold text-[#F5F5F7] tracking-tight group-hover:text-white transition-colors">{team.name}</h3>
+                            <div className="flex items-center gap-4 mt-1.5">
+                              <span className="text-[12px] text-[#86868B] font-medium flex items-center gap-1.5">
+                                <Users size={12} strokeWidth={2.5} />
+                                {team.member_count} {team.member_count === 1 ? 'Membro' : 'Membros'}
+                              </span>
+                              <span className="w-1 h-1 rounded-full bg-[#2C2C2E] shrink-0" />
+                              <span className={`text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded-md ${
+                                team.my_role === 'owner' ? 'bg-amber-400/10 text-amber-400' : 'bg-white/5 text-[#86868B]'
+                              }`}>
+                                {getRoleLabel(team.my_role)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-[17px] font-semibold text-[#F5F5F7] group-hover:text-white transition-colors">{team.name}</h3>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[12px] text-[#86868B] flex items-center gap-1">
-                              {team.type === 'family' ? <Heart size={11} /> : <Briefcase size={11} />}
-                              {team.type === 'family' ? 'Família' : 'Time'}
-                            </span>
-                            <span className="text-[12px] text-[#86868B] flex items-center gap-1">
-                              <Users size={11} />
-                              {team.member_count} {team.member_count === 1 ? 'membro' : 'membros'}
-                            </span>
-                            <span className="text-[12px] text-[#86868B] flex items-center gap-1">
-                              {getRoleIcon(team.my_role)}
-                              {getRoleLabel(team.my_role)}
-                            </span>
+                        
+                        <div className="flex items-center gap-4">
+                          <div className="hidden sm:flex -space-x-2.5">
+                            {team.members?.slice(0, 3).map((m, i) => (
+                              <div key={m.user_id} className="relative transition-transform hover:-translate-y-1" style={{ zIndex: 5 - i }}>
+                                {m.user?.avatar_url ? (
+                                  <img src={m.user.avatar_url} className="w-9 h-9 rounded-full border-[3px] border-[#1C1C1E] object-cover" />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-full bg-[#3A3A3C] border-[3px] border-[#1C1C1E] flex items-center justify-center">
+                                    <span className="text-[10px] font-bold text-zinc-400 uppercase">{m.user?.name?.[0]}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {team.member_count > 3 && (
+                              <div className="w-9 h-9 rounded-full bg-[#2C2C2E] border-[3px] border-[#1C1C1E] flex items-center justify-center z-0">
+                                <span className="text-[10px] font-bold text-zinc-500">+{team.member_count - 3}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="w-10 h-10 rounded-full bg-white/[0.03] flex items-center justify-center text-[#86868B] group-hover:bg-white/10 group-hover:text-white transition-all">
+                            <ChevronDown size={20} className="-rotate-90" />
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {/* Mini avatars */}
-                        <div className="flex -space-x-2 mr-2">
-                          {team.members?.slice(0, 4).map((m, i) => (
-                            m.user?.avatar_url ? (
-                              <img
-                                key={m.user_id}
-                                src={m.user.avatar_url}
-                                alt=""
-                                className="w-7 h-7 rounded-full border-2 border-[#1C1C1E] object-cover"
-                                style={{ zIndex: 4 - i }}
-                              />
-                            ) : (
-                              <div
-                                key={m.user_id}
-                                className="w-7 h-7 rounded-full bg-[#3A3A3C] border-2 border-[#1C1C1E] flex items-center justify-center"
-                                style={{ zIndex: 4 - i }}
-                              >
-                                <span className="text-[9px] font-bold text-zinc-400">{m.user?.name?.[0]?.toUpperCase() || '?'}</span>
-                              </div>
-                            )
-                          ))}
-                          {team.member_count > 4 && (
-                            <div className="w-7 h-7 rounded-full bg-[#2C2C2E] border-2 border-[#1C1C1E] flex items-center justify-center">
-                              <span className="text-[9px] font-bold text-zinc-500">+{team.member_count - 4}</span>
-                            </div>
-                          )}
-                        </div>
-                        <ChevronDown size={16} className="text-[#86868B] -rotate-90 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
                 ))}
               </div>
             )}
@@ -565,7 +623,7 @@ export default function Teams() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {inbox.length === 0 ? (
+            {(inbox.length === 0 && changeRequests.length === 0) ? (
               <div className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-[#2C2C2E] flex items-center justify-center mx-auto mb-4">
                   <Inbox size={28} className="text-[#86868B]" />
@@ -575,9 +633,87 @@ export default function Teams() {
               </div>
             ) : (
               <div className="space-y-4">
-                <h3 className="text-[14px] font-semibold text-[#86868B] uppercase tracking-wider px-1 mb-3">
-                  {inbox.length} {inbox.length === 1 ? 'convite pendente' : 'convites pendentes'}
-                </h3>
+                {/* Aprovações de alterações */}
+                {changeRequests?.length > 0 && (
+                  <div className="mb-10">
+                    <div className="flex items-center gap-3 px-1 mb-5">
+                       <div className="w-8 h-8 rounded-lg bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF]">
+                          <Shield size={18} />
+                       </div>
+                       <h3 className="text-[15px] font-bold text-[#F5F5F7] tracking-tight">
+                          Solicitações de Membros <span className="text-[#86868B] ml-1 font-medium">({changeRequests.length})</span>
+                       </h3>
+                    </div>
+                    
+                    <div className="grid gap-4">
+                      {changeRequests.map((req) => (
+                        <motion.div 
+                          key={req.id} 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="group relative bg-[#1C1C1E] border border-white/[0.05] rounded-[24px] p-5 shadow-sm overflow-hidden"
+                        >
+                          <div className="flex flex-col sm:flex-row gap-5 items-start justify-between relative z-10">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#3A3A3C] to-[#2C2C2E] flex items-center justify-center border border-white/5">
+                                   {req.user?.avatar_url ? (
+                                      <img src={req.user.avatar_url} className="w-full h-full rounded-full object-cover" />
+                                   ) : (
+                                      <span className="text-[11px] font-bold text-zinc-400">{req.user?.name?.[0]}</span>
+                                   )}
+                                </div>
+                                <div>
+                                   <p className="text-[14px] text-[#F5F5F7]">
+                                      <span className="font-bold underline decoration-[#0A84FF]/30">{req.user?.name}</span> no time <span className="font-semibold text-white/90">{req.team?.name}</span>
+                                   </p>
+                                   <p className="text-[11px] text-[#86868B] uppercase font-black tracking-widest mt-0.5">
+                                      {req.action_type === 'create' ? 'NOVO REGISTRO' : req.action_type === 'delete' ? 'EXCLUSÃO' : 'ATUALIZAÇÃO'} IN {req.entity_type}
+                                   </p>
+                                </div>
+                              </div>
+                              
+                              {req.payload && (
+                                <div className="mt-4 bg-black/20 rounded-[18px] p-4 border border-white/[0.03] relative group-hover:bg-black/30 transition-colors">
+                                   <div className="flex items-center justify-between mb-2">
+                                      <span className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Dados da Solicitação</span>
+                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0A84FF] animate-pulse" />
+                                   </div>
+                                   <pre className="text-[12px] text-zinc-400 font-mono leading-relaxed overflow-x-auto max-h-[150px] custom-scrollbar">
+                                      {JSON.stringify(req.payload, null, 2)}
+                                   </pre>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex flex-row sm:flex-col gap-2 shrink-0 self-stretch sm:self-auto justify-end">
+                               <button 
+                                  onClick={() => handleApproveChange(req.id)} 
+                                  className="flex-1 sm:flex-none h-11 px-6 rounded-[16px] bg-[#30D158] hover:bg-[#28C84E] text-white text-[13px] font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/10"
+                               >
+                                  <Check size={16} strokeWidth={3} />
+                                  <span>Aprovar</span>
+                               </button>
+                               <button 
+                                  onClick={() => handleRejectChange(req.id)} 
+                                  className="flex-1 sm:flex-none h-11 px-6 rounded-[16px] bg-white/[0.04] hover:bg-[#FF453A]/10 text-[#86868B] hover:text-[#FF453A] text-[13px] font-bold transition-all border border-transparent hover:border-[#FF453A]/20"
+                               >
+                                  <X size={16} strokeWidth={3} />
+                                  <span>Rejeitar</span>
+                               </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {inbox.length > 0 && (
+                  <h3 className="text-[14px] font-semibold text-[#86868B] uppercase tracking-wider px-1 mb-3">
+                    {inbox.length} {inbox.length === 1 ? 'convite pendente' : 'convites pendentes'}
+                  </h3>
+                )}
                 {inbox.map((invitation) => (
                   <motion.div
                     key={invitation.id}
