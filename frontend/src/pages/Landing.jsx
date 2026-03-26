@@ -481,9 +481,10 @@ export default function Landing() {
                 scale,
                 transformOrigin: 'top center',
               }}
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.01 }}
+              transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu"
             >
               <div className="rounded-lg bg-[#0A0A0A] border border-white/5 overflow-hidden flex flex-col">
@@ -491,6 +492,8 @@ export default function Landing() {
                   src="/capa_notebook.png"
                   alt="DevsBoard App Preview"
                   className="w-full h-auto object-cover opacity-90"
+                  loading="eager"
+                  fetchPriority="high"
                 />
               </div>
             </motion.div>
