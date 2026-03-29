@@ -175,6 +175,97 @@ const RoutineDragAndDropAnimation = () => {
   );
 };
 
+const InfiniteSponsors = () => {
+  const scrollerRef = useRef(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    let animationFrameId;
+    const renderLoop = () => {
+      // Auto-scrolling only if not dragging
+      if (!isDragging.current) {
+        scroller.scrollLeft += 1;
+        // The total scroll width includes 4 duplicate sets. 
+        // Once we pass half, we loop back minus half.
+        if (scroller.scrollLeft >= (scroller.scrollWidth / 2)) {
+          scroller.scrollLeft -= (scroller.scrollWidth / 2);
+        }
+      }
+      animationFrameId = requestAnimationFrame(renderLoop);
+    };
+
+    animationFrameId = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  const onDragStart = (e) => {
+    isDragging.current = true;
+    const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+    startX.current = pageX - scrollerRef.current.offsetLeft;
+    scrollLeft.current = scrollerRef.current.scrollLeft;
+  };
+  
+  const onDragMove = (e) => {
+    if (!isDragging.current) return;
+    const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+    const x = pageX - scrollerRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; 
+    let newScrollLeft = scrollLeft.current - walk;
+    
+    // Looping math while dragging
+    const halfWidth = scrollerRef.current.scrollWidth / 2;
+    if (newScrollLeft >= halfWidth) {
+      newScrollLeft -= halfWidth;
+      startX.current = x; // Reset to avoid jump
+      scrollLeft.current = newScrollLeft;
+    } else if (newScrollLeft <= 0) {
+      newScrollLeft += halfWidth;
+      startX.current = x;
+      scrollLeft.current = newScrollLeft;
+    }
+    
+    scrollerRef.current.scrollLeft = newScrollLeft;
+  };
+
+  const onDragEnd = () => {
+    isDragging.current = false;
+  };
+
+  return (
+    <div className="w-full relative z-10 block cursor-grab active:cursor-grabbing">
+      <div className="absolute left-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-r from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
+      <div className="absolute right-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-l from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
+
+      <div 
+        ref={scrollerRef}
+        className="flex flex-row items-center w-full overflow-x-hidden gap-16 sm:gap-24 md:gap-40 pr-16 sm:pr-24 md:pr-40"
+        style={{ scrollBehavior: 'auto' }}
+        onMouseDown={onDragStart}
+        onMouseMove={onDragMove}
+        onMouseUp={onDragEnd}
+        onMouseLeave={onDragEnd}
+        onTouchStart={onDragStart}
+        onTouchMove={onDragMove}
+        onTouchEnd={onDragEnd}
+      >
+        {[1, 2, 3, 4].map((group) => (
+          <React.Fragment key={group}>
+            <img draggable="false" className="h-20 sm:h-24 md:h-32 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Denna.png" alt="Denna" />
+            <img draggable="false" className="h-32 sm:h-40 md:h-52 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Robson.png" alt="Robson" />
+            <img draggable="false" className="h-16 sm:h-20 md:h-28 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/cleansite.png" alt="Cleansite" />
+            <img draggable="false" className="h-32 sm:h-44 md:h-56 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/im_transparente.png" alt="IM" />
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -510,35 +601,7 @@ export default function Landing() {
           >
             Patrocinadores
           </motion.p>
-          <div className="max-w-5xl w-full flex flex-row items-center justify-center gap-6 sm:gap-16 md:gap-32 px-4 relative z-10">
-            <motion.img
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              src="/Denna.png"
-              alt="Denna"
-              className="h-20 sm:h-24 md:h-32 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer"
-            />
-            <motion.img
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              src="/Robson.png"
-              alt="Robson"
-              className="h-32 sm:h-40 md:h-52 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer"
-            />
-            <motion.img
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              src="/cleansite.png"
-              alt="Cleansite"
-              className="h-16 sm:h-20 md:h-28 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer"
-            />
-          </div>
+          <InfiniteSponsors />
         </section>
 
         {/* C. FEATURES - Artefatos Funcionais Interativos */}
