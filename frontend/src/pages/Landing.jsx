@@ -529,6 +529,15 @@ export default function Landing() {
               alt="Robson"
               className="h-32 sm:h-40 md:h-52 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer"
             />
+            <motion.img
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              src="/cleansite.png"
+              alt="Cleansite"
+              className="h-16 sm:h-20 md:h-28 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer"
+            />
           </div>
         </section>
 
