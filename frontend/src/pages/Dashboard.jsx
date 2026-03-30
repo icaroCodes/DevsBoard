@@ -17,15 +17,9 @@ import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
-const ROUTINE_TYPE_LABELS = {
-  daily: 'Diária',
-  weekly: 'Semanal',
-};
+import { globalTranslations } from '../utils/translations';
 
-const GOAL_TYPE_LABELS = {
-  financial: 'Financeira',
-  performance: 'Desempenho',
-};
+/* Note: Routine/Goal labels are now dynamic inside the component! */
 
 function TaskStatusCheck({ completed, priority, colorClass = "bg-[#0A84FF]" }) {
   if (completed) {
@@ -56,6 +50,14 @@ export default function Dashboard() {
   const [routineTab, setRoutineTab] = useState('daily');
   const { error: showError } = useToast();
   const { user, activeTeam } = useAuth();
+  const [lang, setLang] = useState('pt');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) setLang(savedLang);
+  }, []);
+
+  const t = globalTranslations[lang] || globalTranslations['pt'];
 
   const load = () => {
     api('/dashboard')
@@ -125,7 +127,7 @@ export default function Dashboard() {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
         />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Preparando seu dashboard...</p>
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.dashPrep}</p>
       </div>
     );
   }
@@ -166,7 +168,7 @@ export default function Dashboard() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col gap-1 mb-8">
         <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight text-center">
-          Olá, {displayName}
+          {t.dashHello}, {displayName}
         </h1>
       </motion.div>
 
@@ -175,10 +177,10 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Wallet size={20} className="text-[#F5F5F7]" />
-            <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">Finanças</h2>
+            <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">{t.dashFinances}</h2>
           </div>
           <Link to="/finances" className="text-[14px] font-medium text-[#0A84FF] hover:text-[#5E94FF] transition-colors">
-            Ver todas
+            {t.viewAll}
           </Link>
         </div>
 
@@ -186,7 +188,7 @@ export default function Dashboard() {
           <Link to="/finances" className="block outline-none group">
             <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
               <div className="flex items-center gap-2 text-[#86868B] z-10">
-                <span className="text-[14px] font-medium">Saldo Atual</span>
+                <span className="text-[14px] font-medium">{t.dashBalance}</span>
               </div>
               <p className={`text-[36px] font-semibold tracking-tight z-10 ${finance.balance >= 0 ? 'text-[#F5F5F7]' : 'text-[#FF453A]'}`}>
                 R$ {finance.balance.toFixed(2).replace('.', ',')}
@@ -199,7 +201,7 @@ export default function Dashboard() {
             <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
               <div className="flex items-center gap-2 text-[#86868B] z-10">
                 <ArrowUpRight size={16} className="text-[#30D158]" />
-                <span className="text-[14px] font-medium">Receitas</span>
+                <span className="text-[14px] font-medium">{t.dashIncome}</span>
               </div>
               <p className="text-[32px] font-medium text-[#F5F5F7] tracking-tight z-10">
                 R$ {finance.income.toFixed(2).replace('.', ',')}
@@ -212,7 +214,7 @@ export default function Dashboard() {
             <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
               <div className="flex items-center gap-2 text-[#86868B] z-10">
                 <ArrowDownRight size={16} className="text-[#FF453A]" />
-                <span className="text-[14px] font-medium">Despesas</span>
+                <span className="text-[14px] font-medium">{t.dashExpense}</span>
               </div>
               <p className="text-[32px] font-medium text-[#F5F5F7] tracking-tight z-10">
                 R$ {finance.expense.toFixed(2).replace('.', ',')}
@@ -231,10 +233,10 @@ export default function Dashboard() {
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckSquare size={18} className="text-[#F5F5F7]" />
-              <h3 className="text-[17px] font-semibold text-[#F5F5F7]">Tarefas Pendentes</h3>
+              <h3 className="text-[17px] font-semibold text-[#F5F5F7]">{t.dashTasksPending}</h3>
             </div>
             <Link to="/tasks" className="text-[14px] font-medium text-[#0A84FF] hover:text-[#5E94FF] transition-colors">
-              Gerenciar
+              {t.manage}
             </Link>
           </div>
 
@@ -242,7 +244,7 @@ export default function Dashboard() {
             {tasks.items?.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-60 space-y-3 py-10">
                 <ListTodo size={40} className="text-[#86868B]" strokeWidth={1.5} />
-                <p className="text-[15px] text-[#86868B]">Tudo limpo por aqui.</p>
+                <p className="text-[15px] text-[#86868B]">{t.dashTasksClean}</p>
               </div>
             ) : (
               tasks.items?.map((t) => (
@@ -266,10 +268,10 @@ export default function Dashboard() {
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Repeat size={18} className="text-[#F5F5F7]" />
-              <h3 className="text-[17px] font-semibold text-[#F5F5F7]">Hábitos e Rotinas</h3>
+              <h3 className="text-[17px] font-semibold text-[#F5F5F7]">{t.dashHabits}</h3>
             </div>
             <Link to="/routines" className="text-[14px] font-medium text-[#0A84FF] hover:text-[#5E94FF] transition-colors">
-              Gerenciar
+              {t.manage}
             </Link>
           </div>
 
@@ -289,7 +291,7 @@ export default function Dashboard() {
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  {ROUTINE_TYPE_LABELS[tab]}
+                  {t.routineType[tab] || tab}
                 </button>
               ))}
             </div>
@@ -299,7 +301,7 @@ export default function Dashboard() {
             {routineTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-60 space-y-3 py-6">
                 <Clock size={40} className="text-[#86868B]" strokeWidth={1.5} />
-                <p className="text-[15px] text-[#86868B]">Nenhuma rotina {ROUTINE_TYPE_LABELS[routineTab].toLowerCase()}.</p>
+                <p className="text-[15px] text-[#86868B]">{t.dashNoRoutine} {t.routineType[routineTab]?.toLowerCase()}.</p>
               </div>
             ) : (
               routineTasks.map((t) => (
@@ -343,10 +345,10 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Target size={20} className="text-[#F5F5F7]" />
-            <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">Metas Ativas</h2>
+            <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">{t.dashGoals}</h2>
           </div>
           <Link to="/goals" className="text-[14px] font-medium text-[#0A84FF] hover:text-[#5E94FF] transition-colors">
-            Ver todas
+            {t.viewAll}
           </Link>
         </div>
 
@@ -354,9 +356,9 @@ export default function Dashboard() {
           {goals.items?.length === 0 ? (
             <div className="col-span-full bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] flex flex-col items-center justify-center py-12 px-6">
               <Target size={48} strokeWidth={1.5} className="text-[#86868B] mb-4 opacity-60" />
-              <p className="text-[15px] text-[#86868B]">Você não possui metas em andamento.</p>
+              <p className="text-[15px] text-[#86868B]">{t.dashNoGoals}</p>
               <Link to="/goals" className="mt-4 px-5 py-2 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[14px] font-medium text-[#F5F5F7] transition-colors flex items-center gap-2">
-                <Plus size={16} /> Criar Meta
+                <Plus size={16} /> {t.dashCreateGoal}
               </Link>
             </div>
           ) : (
@@ -365,13 +367,13 @@ export default function Dashboard() {
                 <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60 h-full flex flex-col justify-between min-h-[160px]">
                   <div className="flex-1 z-10">
                     <div className="mb-3 inline-block px-2.5 py-1 rounded-[6px] bg-[#FF9F0A]/10 text-[#FF9F0A] text-[12px] font-semibold tracking-wide uppercase">
-                      {GOAL_TYPE_LABELS[g.type] || g.type}
+                      {t.goalType[g.type] || g.type}
                     </div>
                     <h3 className="text-[17px] font-medium text-[#F5F5F7] leading-tight line-clamp-2">{g.name}</h3>
                   </div>
 
                   <div className="mt-4 z-10">
-                    <p className="text-[13px] text-[#86868B] mb-0.5">Acumulado</p>
+                    <p className="text-[13px] text-[#86868B] mb-0.5">{t.dashGoalAccum}</p>
                     <p className="text-[24px] font-semibold text-[#FF9F0A] tracking-tight">R$ {Number(g.saved_amount || 0).toFixed(2).replace('.', ',')}</p>
                   </div>
                   {/* decorative background glow */}

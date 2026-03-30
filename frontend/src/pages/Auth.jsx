@@ -104,6 +104,69 @@ function Field({ icon, id, label, rightElement, ...props }) {
   );
 }
 
+const translations = {
+  pt: {
+    backHome: "Voltar para Home",
+    welcomeTitle: "Bem vindo\nde volta.",
+    createTitle: "Crie sua\nconta.",
+    welcomeDesc: "Continue organizando seus projetos, finanças e tarefas em um único lugar.",
+    createDesc: "Comece agora a organizar tudo em um único lugar, de forma simples e eficaz.",
+    back: "Voltar",
+    loginHead: "Faça seu login",
+    registerHead: "Crie sua conta",
+    loginSub: "Entre com seus dados para continuar",
+    registerSub: "Preencha seus dados para começar",
+    nameLabel: "Nome",
+    namePlaceholder: "Seu nome completo",
+    nameObj: "Nome é obrigatório",
+    emailLabel: "E-mail",
+    emailPlaceholder: "seu@email.com",
+    passLabel: "Senha",
+    passPlaceholder: "••••••••",
+    errOAuth: "Erro ao autenticar com GitHub. Tente novamente.",
+    errAuth: "Erro ao autenticar",
+    btnLoading: "Carregando…",
+    btnLogin: "Entrar na Plataforma",
+    btnRegister: "Criar minha conta",
+    divider: "ou continue com",
+    githubBtn: "Continue com GitHub",
+    noAccount: "Não tem uma conta? ",
+    hasAccount: "Já tem uma conta? ",
+    btnSwToReg: "Cadastre-se.",
+    btnSwToLog: "Entrar."
+  },
+  en: {
+    backHome: "Back to Home",
+    welcomeTitle: "Welcome\nback.",
+    createTitle: "Create your\naccount.",
+    welcomeDesc: "Continue organizing your projects, finances and tasks in one place.",
+    createDesc: "Start organizing everything in a single, simple and effective place.",
+    back: "Back",
+    loginHead: "Log in",
+    registerHead: "Create account",
+    loginSub: "Enter your details to continue",
+    registerSub: "Fill in your details to start",
+    nameLabel: "Name",
+    namePlaceholder: "Your full name",
+    nameObj: "Name is required",
+    emailLabel: "Email",
+    emailPlaceholder: "your@email.com",
+    passLabel: "Password",
+    passPlaceholder: "••••••••",
+    errOAuth: "GitHub authentication error. Try again.",
+    errAuth: "Authentication error",
+    btnLoading: "Loading…",
+    btnLogin: "Enter Platform",
+    btnRegister: "Create my account",
+    divider: "or continue with",
+    githubBtn: "Continue with GitHub",
+    noAccount: "Don't have an account? ",
+    hasAccount: "Already have an account? ",
+    btnSwToReg: "Sign up.",
+    btnSwToLog: "Log in."
+  }
+};
+
 /* ─── Main Component ─────────────────────────────────────────────── */
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -115,6 +178,18 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
+  
+  // Detecção de idioma
+  const [lang, setLang] = useState('pt');
+  
+  useEffect(() => {
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const t = translations[lang] || translations['pt'];
 
   useEffect(() => {
     // Se o usuário já estiver logado (via cookie), redireciona
@@ -126,10 +201,10 @@ export default function Auth() {
     const params = new URLSearchParams(window.location.search);
     const err = params.get('error');
     if (err) {
-      setError('Erro ao autenticar com GitHub. Tente novamente.');
+      setError(t.errOAuth);
       window.history.replaceState({}, '', '/auth');
     }
-  }, [user, navigate]);
+  }, [user, navigate, t]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,10 +212,10 @@ export default function Auth() {
     setLoading(true);
     try {
       if (isLogin) { await login(email, password); }
-      else { if (!name.trim()) return setError('Nome é obrigatório'); await register(name, email, password); }
+      else { if (!name.trim()) return setError(t.nameObj); await register(name, email, password); }
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Erro ao autenticar');
+      setError(err.message || t.errAuth);
     } finally {
       setLoading(false);
     }
@@ -222,7 +297,7 @@ export default function Auth() {
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} style={{ display: 'inline-block', marginBottom: 32 }}>
               <Link to="/" style={s.back} id="auth-back-btn">
                 <IconArrow />
-                <span id="auth-back-text">Voltar para Home</span>
+                <span id="auth-back-text">{t.backHome}</span>
               </Link>
             </motion.div>
           </motion.div>
@@ -247,12 +322,10 @@ export default function Auth() {
             animate="animate"
           >
             <motion.h1 variants={itemVariant} style={s.leftH1}>
-              {isLogin ? 'Bem vindo\nde volta.' : 'Crie sua\nconta.'}
+              {isLogin ? t.welcomeTitle : t.createTitle}
             </motion.h1>
             <motion.p variants={itemVariant} style={s.leftP}>
-              {isLogin
-                ? 'Continue organizando seus projetos, finanças e tarefas em um único lugar.'
-                : 'Comece agora a organizar tudo em um único lugar, de forma simples e eficaz.'}
+              {isLogin ? t.welcomeDesc : t.createDesc}
             </motion.p>
           </motion.div>
 
@@ -288,7 +361,7 @@ export default function Auth() {
               borderRadius: 14,
               boxShadow: '0 8px 16px rgba(142,156,120,0.2)'
             }}>
-              <IconArrow /> Voltar
+              <IconArrow /> {t.back}
             </Link>
           </div>
 
@@ -303,10 +376,10 @@ export default function Auth() {
               {/* Header */}
               <motion.div variants={stagger} initial="initial" animate="animate" style={s.formHeader}>
                 <motion.h2 variants={itemVariant} style={s.formTitle}>
-                  {isLogin ? 'Faça seu login' : 'Crie sua conta'}
+                  {isLogin ? t.loginHead : t.registerHead}
                 </motion.h2>
                 <motion.p variants={itemVariant} style={s.formSub}>
-                  {isLogin ? 'Entre com seus dados para continuar' : 'Preencha seus dados para começar'}
+                  {isLogin ? t.loginSub : t.registerSub}
                 </motion.p>
               </motion.div>
 
@@ -330,8 +403,8 @@ export default function Auth() {
                       style={{ overflow: 'hidden' }}
                     >
                       <Field
-                        icon={<IconUser />} id="f-name" label="Nome"
-                        type="text" placeholder="Seu nome completo"
+                        icon={<IconUser />} id="f-name" label={t.nameLabel}
+                        type="text" placeholder={t.namePlaceholder}
                         value={name} onChange={e => setName(e.target.value)}
                       />
                     </motion.div>
@@ -339,13 +412,13 @@ export default function Auth() {
                 </AnimatePresence>
 
                 <Field
-                  icon={<IconEmail />} id="f-email" label="E-mail"
-                  type="email" placeholder="seu@email.com"
+                  icon={<IconEmail />} id="f-email" label={t.emailLabel}
+                  type="email" placeholder={t.emailPlaceholder}
                   value={email} onChange={e => setEmail(e.target.value)} required
                 />
                 <Field
-                  icon={<IconLock />} id="f-password" label="Senha"
-                  type={showPassword ? "text" : "password"} placeholder="••••••••"
+                  icon={<IconLock />} id="f-password" label={t.passLabel}
+                  type={showPassword ? "text" : "password"} placeholder={t.passPlaceholder}
                   value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
                   rightElement={
                     <button
@@ -408,7 +481,7 @@ export default function Auth() {
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.18 }}
                     >
-                      {loading ? 'Carregando…' : isLogin ? 'Entrar na Plataforma' : 'Criar minha conta'}
+                      {loading ? t.btnLoading : isLogin ? t.btnLogin : t.btnRegister}
                     </motion.span>
                   </AnimatePresence>
                 </motion.button>
@@ -420,7 +493,7 @@ export default function Auth() {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
               >
                 <div style={s.divLine} />
-                <span style={s.divText}>ou continue com</span>
+                <span style={s.divText}>{t.divider}</span>
                 <div style={s.divLine} />
               </motion.div>
 
@@ -436,7 +509,7 @@ export default function Auth() {
                 whileTap={{ scale: 0.97 }}
               >
                 <IconGithub />
-                <span>Continue with GitHub</span>
+                <span>{t.githubBtn}</span>
               </motion.a>
 
               {/* Switch */}
@@ -444,9 +517,9 @@ export default function Auth() {
                 style={s.switchRow}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
               >
-                {isLogin ? 'Não tem uma conta? ' : 'Já tem uma conta? '}
+                {isLogin ? t.noAccount : t.hasAccount}
                 <button type="button" id="btn-switch" onClick={switchMode} style={s.switchBtn}>
-                  {isLogin ? 'Cadastre-se.' : 'Entrar.'}
+                  {isLogin ? t.btnSwToReg : t.btnSwToLog}
                 </button>
               </motion.p>
 

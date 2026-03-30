@@ -3,7 +3,121 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { ReactLenis } from 'lenis/react';
-import { ArrowRight, Code, Zap, Shield, Sparkles, Server, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Code, Zap, Shield, Sparkles, Server, CheckCircle2, Users } from 'lucide-react';
+
+/* Translations Object */
+const translations = {
+  pt: {
+    bannerText: "Acelere o seu trabalho com a nova função de trabalhar em equipe.",
+    bannerLink: "Saiba mais",
+    navHow: "Como Funciona",
+    navVision: "Nossa Visão",
+    navStep: "O Passo a Passo",
+    navDashboard: "Ir para o Painel",
+    navLogin: "Entrar",
+    navStart: "Começar Agora",
+    mobileFocus: "Foco e Simplicidade",
+    mobileJourney: "Começar Jornada",
+    heroFree: "100% Gratuito",
+    heroTitle1: "Organize sua vida",
+    heroTitle2: "com o",
+    heroDesc: "O aplicativo completo que organiza suas tarefas, rotinas e seu dinheiro de um jeito bem fácil e em um só lugar.",
+    heroBtnStart: "Inicie sua jornada",
+    heroBtnDash: "Ir para o painel",
+    heroBtnDiscover: "Descubra mais",
+    heroSocial: "Junte-se a mais de 50 membros",
+    sponsors: "Patrocinadores",
+    featTitle1: "Tudo no seu",
+    featTitle2: "devido lugar",
+    feat1Title: "Saúde Financeira",
+    feat1Desc: "Diga adeus às planilhas difíceis. Anote seus ganhos, registre onde gastou e veja seu dinheiro render através de gráficos muito fáceis de entender.",
+    feat2Title: "Gestão de Tarefas",
+    feat2Desc: "Suas atividades sempre em ordem. Crie tarefas em quadros visuais e apenas arraste os cartões para o lado quando terminar o que precisa ser feito.",
+    feat3Title: "Rotinas e Hábitos",
+    feat3Desc: "Crie bons hábitos todos os dias. Monte o seu passo a passo e ordene suas atividades da forma que preferir, sem complicação.",
+    feat4Tag: "Novo Recurso",
+    feat4Title: "Trabalhar em equipe nunca foi tão fácil.",
+    feat4Desc: "Acompanhe em tempo real as tarefas e finanças do seu time ou da sua família. Colabore simultaneamente em diferentes projetos sem perder o controle do que já foi feito.",
+    feat4L1: "Convites instantâneos",
+    feat4L2: "Níveis de permissões",
+    feat4L3: "Atualizações em tempo real",
+    phil1: "A maioria das pessoas:",
+    phil2: "usa dezenas de apps confusos.",
+    phil3: "Nosso sistema agrupa:",
+    phil4: "tudo em uma só tela.",
+    protTitle: "Por que somos diferentes?",
+    protDesc: "Um sistema muito intuitivo que não trava seu celular ou computador.",
+    prot1Tag: "TAREFAS",
+    prot1Title: "Mural de Atividades",
+    prot1Desc: "Divida o que você tem para fazer em colunas simples. Apenas arraste e solte os cartões quando finalizar algo, como num mural de recados sem complicação.",
+    prot2Tag: "CLAREZA",
+    prot2Title: "Visual Limpo",
+    prot2Desc: "Um design muito elegante, focado no que é mais essencial e pensado para nunca causar estresse e nem cansar a sua vista durante o uso diário.",
+    prot3Tag: "PROGRESSO",
+    prot3Title: "Metas Automáticas",
+    prot3Desc: "Defina seus grandes objetivos de vida e deixe que nosso sistema acompanhe seu progresso sozinho, mostrando gráficos fáceis para você comemorar suas conquistas.",
+    ctaTitle: "Assuma o controle do seu tempo.",
+    ctaDesc: "Pare de perder tempo se perdendo entre anotações soltas e papéis. Organize dinheiro, tarefas, rotinas e objetivos agora mesmo.",
+    ctaBtn: "Cadastre-se",
+    footerMade: "Feito por",
+    chartBalance: "Saldo Atual"
+  },
+  en: {
+    bannerText: "Accelerate your work with the new teamwork feature.",
+    bannerLink: "Learn more",
+    navHow: "How it Works",
+    navVision: "Our Vision",
+    navStep: "Step by step",
+    navDashboard: "Go to Dashboard",
+    navLogin: "Sign in",
+    navStart: "Get Started",
+    mobileFocus: "Focus and Simplicity",
+    mobileJourney: "Start Journey",
+    heroFree: "100% Free",
+    heroTitle1: "Organize your life",
+    heroTitle2: "with",
+    heroDesc: "The complete app that organizes your tasks, routines and your money easily in one place.",
+    heroBtnStart: "Start your journey",
+    heroBtnDash: "Go to dashboard",
+    heroBtnDiscover: "Discover more",
+    heroSocial: "Join over 50 members",
+    sponsors: "Sponsors",
+    featTitle1: "Everything in its",
+    featTitle2: "proper place",
+    feat1Title: "Financial Health",
+    feat1Desc: "Say goodbye to hard spreadsheets. Record your income, track where you spent, and see your money grow through easy-to-understand charts.",
+    feat2Title: "Task Management",
+    feat2Desc: "Your activities always in order. Create tasks on visual boards and simply drag the cards aside when you finish what needs to be done.",
+    feat3Title: "Routines & Habits",
+    feat3Desc: "Create good habits every day. Build your step-by-step and organize your activities just the way you like, without complications.",
+    feat4Tag: "New Feature",
+    feat4Title: "Teamwork has never been easier.",
+    feat4Desc: "Track your team's or family's tasks and finances in real time. Collaborate simultaneously on different projects without losing track of what's been done.",
+    feat4L1: "Instant invites",
+    feat4L2: "Custom permissions",
+    feat4L3: "Real-time updates",
+    phil1: "Most people:",
+    phil2: "use dozens of confusing apps.",
+    phil3: "Our system groups:",
+    phil4: "everything on one screen.",
+    protTitle: "Why are we different?",
+    protDesc: "A very intuitive system that doesn't slow down your phone or computer.",
+    prot1Tag: "TASKS",
+    prot1Title: "Activity Board",
+    prot1Desc: "Divide what you have to do into simple columns. Just drag and drop cards when you finish something, just like an easy sticky notes board.",
+    prot2Tag: "CLARITY",
+    prot2Title: "Clean Look",
+    prot2Desc: "A very elegant design, focused on what's most essential and designed never to cause stress or tire your eyes during daily use.",
+    prot3Tag: "PROGRESS",
+    prot3Title: "Automatic Goals",
+    prot3Desc: "Set your major life goals and let our system track your progress automatically, displaying simple charts for you to celebrate your achievements.",
+    ctaTitle: "Take control of your time.",
+    ctaDesc: "Stop wasting time getting lost amidst loose notes and papers. Organize money, tasks, routines, and goals right now.",
+    ctaBtn: "Sign up",
+    footerMade: "Made by",
+    chartBalance: "Current Balance"
+  }
+};
 
 
 
@@ -27,13 +141,14 @@ const staggerContainer = {
   }
 };
 
-const FinancialChartAnimation = () => {
+const FinancialChartAnimation = ({ lang = 'pt' }) => {
+  const t = translations[lang];
   return (
     <div className="h-48 relative flex flex-col items-center justify-end p-5 bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden shadow-inner">
       {/* Saldo Header */}
       <div className="absolute top-5 left-5 w-full flex justify-between pr-10 items-start">
         <div>
-          <div className="text-[10px] text-zinc-500 font-mono mb-1 uppercase tracking-widest">Saldo Atual</div>
+          <div className="text-[10px] text-zinc-500 font-mono mb-1 uppercase tracking-widest">{t.chartBalance}</div>
           <div className="text-2xl font-bold text-white tracking-tight flex items-center gap-1">
             <span className="text-zinc-500 text-lg">R$</span>
             <motion.span
@@ -266,7 +381,69 @@ const InfiniteSponsors = () => {
   );
 };
 
+const TeamCollaborationAnimation = () => {
+  return (
+    <div className="h-64 md:h-full min-h-[250px] relative flex items-center justify-center p-4 bg-[#0A0A0A] rounded-[1.5rem] overflow-hidden shadow-inner border border-white/5">
+      <div className="absolute inset-0 bg-[#8E9C78]/[0.02]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
+      {/* Central Board Area */}
+      <div className="w-full max-w-[280px] h-36 bg-[#111] border border-white/10 rounded-xl relative z-10 shadow-2xl flex flex-col p-4 gap-2.5">
+        <div className="w-1/3 h-2 bg-white/20 rounded-full mb-2"></div>
+        <div className="w-full h-9 bg-white/5 border border-white/10 rounded-lg flex items-center px-3">
+          <div className="w-4/5 h-1.5 bg-white/20 rounded-full"></div>
+        </div>
+        <div className="w-full h-9 bg-[#8E9C78]/10 border border-[#8E9C78]/20 rounded-lg flex items-center px-3">
+          <div className="w-3/5 h-1.5 bg-[#8E9C78]/80 rounded-full"></div>
+        </div>
+      </div>
+
+      {/* Cursor 1 */}
+      <motion.div
+        animate={{ 
+          x: [-90, -30, -30, -90], 
+          y: [-30, 30, 30, -30] 
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute z-20"
+      >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20 relative">
+          <path d="M4 4L10.5 21L14 14L21 10.5L4 4Z" fill="#0A84FF" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+        </svg>
+        <div className="bg-[#0A84FF] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg absolute top-4 left-4 z-10">Admin</div>
+      </motion.div>
+
+      {/* Cursor 2 */}
+      <motion.div
+        animate={{ 
+          x: [90, 30, 30, 90], 
+          y: [40, -10, -10, 40] 
+        }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute z-20"
+      >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20 relative">
+          <path d="M4 4L10.5 21L14 14L21 10.5L4 4Z" fill="#30D158" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+        </svg>
+        <div className="bg-[#30D158] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg absolute top-4 left-4 z-10">Membro</div>
+      </motion.div>
+      
+      {/* Light effect */}
+      <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-[#8E9C78]/10 -translate-x-1/2 -translate-y-1/2 blur-2xl rounded-full pointer-events-none z-0" />
+    </div>
+  );
+};
+
 export default function Landing() {
+  const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'pt');
+  const t = translations[lang];
+
+  useEffect(() => {
+    localStorage.setItem('lang', lang);
+  }, [lang]);
+
+  const toggleLang = () => setLang((prev) => (prev === 'pt' ? 'en' : 'pt'));
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const lenisRef = useRef(null);
@@ -335,11 +512,11 @@ export default function Landing() {
           animate={{ y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${isScrolled
-            ? "py-3 bg-[#0a0a0a]/60 backdrop-blur-2xl border-b border-white/[0.06]"
-            : "py-6 bg-transparent border-b border-transparent"
+            ? "bg-[#0a0a0a]/60 backdrop-blur-2xl border-b border-white/[0.06]"
+            : "bg-transparent border-b border-transparent"
             }`}
         >
-          <div className="max-w-6xl mx-auto px-6 flex items-center justify-between relative">
+          <div className={`max-w-6xl mx-auto px-6 flex items-center justify-between relative transition-all duration-500 ${isScrolled ? "py-3" : "py-6"}`}>
 
             {/* LOGO AREA */}
             <Link to="/" className="relative z-10">
@@ -358,9 +535,9 @@ export default function Landing() {
             {/* DESKTOP MENU - Minimalist & Interactive */}
             <div className="hidden min-[824px]:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8">
               {[
-                { name: 'Como Funciona', id: '#features' },
-                { name: 'Nossa Visão', id: '#philosophy' },
-                { name: 'O Passo a Passo', id: '#protocol' }
+                { name: t.navHow, id: '#features' },
+                { name: t.navVision, id: '#philosophy' },
+                { name: t.navStep, id: '#protocol' }
               ].map((link) => (
                 <a
                   key={link.name}
@@ -375,32 +552,60 @@ export default function Landing() {
 
             {/* ACTIONS AREA */}
             <div className="flex items-center gap-3">
+              {/* Language Segmented Control (Apple Minimalist Style) */}
+              <div className="relative flex items-center bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.05] rounded-full p-[2px] transition-colors mr-1 sm:mr-3">
+                <motion.div
+                  className="absolute h-6 bg-white/[0.12] rounded-full shadow-sm"
+                  layout
+                  initial={false}
+                  animate={{
+                    width: "28px",
+                    x: lang === 'pt' ? 0 : 28
+                  }}
+                  transition={{ type: "spring", stiffness: 600, damping: 35 }}
+                />
+                
+                <button 
+                  onClick={() => setLang('pt')}
+                  className={`relative z-10 w-7 h-6 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'pt' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
+                >
+                  <img src="https://flagcdn.com/br.svg" alt="PT" className="w-[14px] h-[14px] rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+                </button>
+
+                <button 
+                  onClick={() => setLang('en')}
+                  className={`relative z-10 w-7 h-6 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'en' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
+                >
+                  <img src="https://flagcdn.com/us.svg" alt="EN" className="w-[14px] h-[14px] rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+                </button>
+              </div>
+
               {user ? (
                 <Link to="/dashboard">
                   <motion.button
                     whileHover={{ scale: 1.02, backgroundColor: "rgba(142,156,120,0.1)" }}
                     whileTap={{ scale: 0.98 }}
-                    className="relative px-6 py-2 rounded-full border border-[#8E9C78]/30 bg-[#8E9C78]/10 text-[#8E9C78] text-[13px] font-bold transition-colors hover:border-[#8E9C78]/50"
+                    className="relative px-6 py-2 rounded-full border border-[#8E9C78]/30 bg-[#8E9C78]/10 text-[#8E9C78] text-[13px] font-bold transition-colors hover:border-[#8E9C78]/50 whitespace-nowrap"
                   >
-                    Ir para o Painel
+                    {t.navDashboard}
                   </motion.button>
                 </Link>
               ) : (
                 <>
                   <Link
                     to="/auth"
-                    className="hidden sm:block px-4 py-2 text-[13px] font-medium text-zinc-400 hover:text-white transition-colors"
+                    className="hidden sm:block px-4 py-2 text-[13px] font-medium text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
                   >
-                    Entrar
+                    {t.navLogin}
                   </Link>
 
                   <Link to="/auth">
                     <motion.button
                       whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.03)" }}
                       whileTap={{ scale: 0.98 }}
-                      className="relative px-5 py-2 rounded-full border border-white/10 text-zinc-300 text-[13px] font-medium transition-colors hover:border-white/30 hover:text-white"
+                      className="relative px-5 py-2 rounded-full border border-white/10 text-zinc-300 text-[13px] font-medium transition-colors hover:border-white/30 hover:text-white whitespace-nowrap"
                     >
-                      Começar Agora
+                      {t.navStart}
                     </motion.button>
                   </Link>
                 </>
@@ -416,6 +621,34 @@ export default function Landing() {
               </button>
             </div>
           </div>
+
+          {/* Feature Announcement Banner */}
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="w-full bg-[#8E9C78]/10 border-t border-white/[0.05] overflow-hidden"
+          >
+            <div className="max-w-6xl mx-auto px-6 py-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-[#8E9C78] shrink-0" />
+                <div className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8E9C78] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#8E9C78]"></span>
+                </div>
+                <p className="text-[12px] md:text-[13px] font-medium text-zinc-300 tracking-tight">
+                  {t.bannerText}
+                </p>
+              </div>
+              <Link 
+                to="/auth" 
+                className="text-[11px] md:text-[12px] font-bold text-[#8E9C78] hover:text-white transition-colors flex items-center gap-1 group"
+              >
+                {t.bannerLink}
+                <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          </motion.div>
         </motion.nav>
 
         {/* MOBILE MENU OVERLAY */}
@@ -435,7 +668,7 @@ export default function Landing() {
                     DevsBoard
                   </span>
                   <span className="text-zinc-500 text-[8px] sm:text-[9px] tracking-[0.2em] mt-2 uppercase font-mono">
-                    Foco e Simplicidade
+                    {t.mobileFocus}
                   </span>
                 </div>
 
@@ -453,9 +686,9 @@ export default function Landing() {
               {/* Center Navigation Links */}
               <div className="flex-1 flex flex-col justify-center gap-8 sm:gap-10 w-full relative z-10 max-w-sm mx-auto pl-2">
                 {[
-                  { name: 'Como Funciona', id: '#features' },
-                  { name: 'Nossa Visão', id: '#philosophy' },
-                  { name: 'O Passo a Passo', id: '#protocol' }
+                  { name: t.navHow, id: '#features' },
+                  { name: t.navVision, id: '#philosophy' },
+                  { name: t.navStep, id: '#protocol' }
                 ].map((link, i) => (
                   <motion.div
                     key={link.name}
@@ -487,12 +720,41 @@ export default function Landing() {
                 transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full flex flex-col gap-6 relative z-10 mt-auto"
               >
+                <div className="flex justify-center mb-4">
+                  <div className="relative flex items-center bg-white/[0.03] border border-white/[0.05] rounded-full p-[3px]">
+                    <motion.div
+                      className="absolute h-8 bg-white/[0.12] rounded-full shadow-sm"
+                      layout
+                      initial={false}
+                      animate={{
+                        width: "36px",
+                        x: lang === 'pt' ? 0 : 36
+                      }}
+                      transition={{ type: "spring", stiffness: 600, damping: 35 }}
+                    />
+                    
+                    <button 
+                      onClick={() => setLang('pt')}
+                      className={`relative z-10 w-9 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'pt' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
+                    >
+                      <img src="https://flagcdn.com/br.svg" alt="PT" className="w-[16px] h-[16px] rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+                    </button>
+
+                    <button 
+                      onClick={() => setLang('en')}
+                      className={`relative z-10 w-9 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'en' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
+                    >
+                      <img src="https://flagcdn.com/us.svg" alt="EN" className="w-[16px] h-[16px] rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+                    </button>
+                  </div>
+                </div>
+
                 <Link
                   to="/auth"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full py-4 sm:py-5 rounded-[1.2rem] bg-white text-black text-[15px] font-bold tracking-[-0.01em] text-center hover:scale-[1.02] transition-transform"
                 >
-                  Começar Jornada
+                  {t.mobileJourney}
                 </Link>
 
                 <div className="flex justify-between items-center w-full px-1 mb-2">
@@ -521,19 +783,19 @@ export default function Landing() {
           >
             <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-xs font-medium text-[#8E9C78] mb-6 md:mb-8">
               <Sparkles size={12} />
-              <span>100% Gratuito</span>
+              <span>{t.heroFree}</span>
             </motion.div>
 
             <motion.h1 
               variants={fadeIn} 
               className="text-fluid-h1 font-bold tracking-tight text-white mb-4 md:mb-6 leading-[1.1] px-2"
             >
-              Organize sua vida <br className="hidden md:block" />
-              com o <span className="text-[#8E9C78]">DevsBoard</span>.
+              {t.heroTitle1} <br className="hidden md:block" />
+              {t.heroTitle2} <span className="text-[#8E9C78]">DevsBoard</span>.
             </motion.h1>
 
             <motion.p variants={fadeIn} className="text-base sm:text-lg md:text-xl text-zinc-300 mb-8 md:mb-10 max-w-2xl mx-auto font-normal leading-relaxed px-4">
-              O aplicativo completo que organiza suas tarefas, rotinas e seu dinheiro de um jeito bem fácil e em um só lugar.
+              {t.heroDesc}
             </motion.p>
 
             <motion.div variants={fadeIn} className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full px-4 sm:px-0">
@@ -541,11 +803,11 @@ export default function Landing() {
                 to={user ? "/dashboard" : "/auth"}
                 className="group flex items-center justify-center gap-1.5 sm:gap-2 bg-white text-black px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-sm font-medium hover:scale-[1.02] transition-transform whitespace-nowrap"
               >
-                {user ? "Ir para o painel" : "Inicie sua jornada"}
+                {user ? t.heroBtnDash : t.heroBtnStart}
                 <ArrowRight className="w-[14px] h-[14px] sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a href="#features" onClick={(e) => scrollToSection(e, '#features')} className="text-[12px] sm:text-sm font-medium text-zinc-400 hover:text-white px-3 sm:px-6 py-2.5 sm:py-3 transition-colors whitespace-nowrap">
-                Descubra mais
+                {t.heroBtnDiscover}
               </a>
             </motion.div>
 
@@ -559,7 +821,11 @@ export default function Landing() {
                 ))}
               </div>
               <p className="text-xs text-zinc-400 font-medium tracking-wide">
-                Junte-se a <span className="text-zinc-200">mais de 50 membros</span>
+                {lang === 'pt' ? (
+                  <>Junte-se a <span className="text-zinc-200">mais de 50 membros</span></>
+                ) : (
+                  <>Join <span className="text-zinc-200">over 50 members</span></>
+                )}
               </p>
             </motion.div>
           </motion.div>
@@ -599,7 +865,7 @@ export default function Landing() {
             viewport={{ once: true }}
             className="hidden sm:block text-[10px] md:text-xs font-medium text-zinc-500 tracking-[0.2em] uppercase mb-8 md:mb-10 text-center px-4"
           >
-            Patrocinadores
+            {t.sponsors}
           </motion.p>
           <InfiniteSponsors />
         </section>
@@ -615,7 +881,7 @@ export default function Landing() {
               className="mb-12 md:mb-20 text-center md:text-left"
             >
               <motion.h2 variants={fadeIn} className="text-3xl lg:text-5xl font-bold text-white tracking-tight mb-4 px-2">
-                Tudo no seu <span className="text-[#8E9C78]">devido lugar</span>.
+                {t.featTitle1} <span className="text-[#8E9C78]">{t.featTitle2}</span>.
               </motion.h2>
             </motion.div>
 
@@ -627,11 +893,11 @@ export default function Landing() {
                 className="bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:border-white/10 transition-colors"
               >
                 <div className="mb-12">
-                  <FinancialChartAnimation />
+                  <FinancialChartAnimation lang={lang} />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">Saúde Financeira</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">{t.feat1Title}</h3>
                 <p className="text-sm text-zinc-400 leading-relaxed font-light">
-                  Diga adeus às planilhas difíceis. Anote seus ganhos, registre onde gastou e veja seu dinheiro render através de gráficos muito fáceis de entender.
+                  {t.feat1Desc}
                 </p>
               </motion.div>
 
@@ -643,9 +909,9 @@ export default function Landing() {
                 <div className="mb-12">
                   <TrelloDragAndDropAnimation />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">Gestão de Tarefas</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">{t.feat2Title}</h3>
                 <p className="text-sm text-zinc-400 leading-relaxed font-light">
-                  Suas atividades sempre em ordem. Crie tarefas em quadros visuais e apenas arraste os cartões para o lado quando terminar o que precisa ser feito.
+                  {t.feat2Desc}
                 </p>
               </motion.div>
 
@@ -657,10 +923,40 @@ export default function Landing() {
                 <div className="mb-12">
                   <RoutineDragAndDropAnimation />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">Rotinas e Hábitos</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">{t.feat3Title}</h3>
                 <p className="text-sm text-zinc-400 leading-relaxed font-light">
-                  Crie bons hábitos todos os dias. Monte o seu passo a passo e ordene suas atividades da forma que preferir, sem complicação.
+                  {t.feat3Desc}
                 </p>
+              </motion.div>
+
+              {/* Card 4: Team Collaboration (Spans full width) */}
+              <motion.div
+                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
+                className="lg:col-span-3 bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 md:p-12 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:border-white/10 transition-colors flex flex-col md:flex-row items-center gap-8 md:gap-16"
+              >
+                <div className="flex-1 w-full order-2 md:order-1">
+                  <TeamCollaborationAnimation />
+                </div>
+                <div className="flex-1 w-full order-1 md:order-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8E9C78]/10 text-[#8E9C78] text-[11px] font-bold uppercase tracking-widest border border-[#8E9C78]/20 mb-4 xl:mb-6">
+                    <Sparkles size={12} />
+                    <span>{t.feat4Tag}</span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl xl:text-4xl font-semibold text-white mb-4 tracking-tight">
+                    {t.feat4Title}
+                  </h3>
+                  <p className="text-sm md:text-base text-zinc-400 leading-relaxed font-light mb-6">
+                    {t.feat4Desc}
+                  </p>
+                  <ul className="space-y-3">
+                    {[t.feat4L1, t.feat4L2, t.feat4L3].map((item, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-zinc-300 font-medium">
+                        <CheckCircle2 size={18} className="text-[#8E9C78]" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </motion.div>
 
             </div>
@@ -676,14 +972,14 @@ export default function Landing() {
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 1 }}
               className="text-xs sm:text-sm md:text-base text-zinc-400 font-medium mb-6 md:mb-8 tracking-wide drop-shadow-md px-2"
             >
-              A maioria das pessoas: <br className="sm:hidden" /><span className="text-white font-bold inline-block mt-1 sm:mt-0">usa dezenas de apps confusos.</span>
+              {t.phil1} <br className="sm:hidden" /><span className="text-white font-bold inline-block mt-1 sm:mt-0">{t.phil2}</span>
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 1, delay: 0.2 }}
               className="text-3xl sm:text-4xl md:text-6xl font-medium text-white leading-tight drop-shadow-lg flex flex-col gap-1 md:gap-3"
             >
-              <span>Nosso sistema agrupa:</span>
-              <span className="text-fluid-drama font-serif italic text-[#8E9C78] drop-shadow-[0_0_15px_rgba(142,156,120,0.2)]">tudo em uma só tela.</span>
+              <span>{t.phil3}</span>
+              <span className="text-fluid-drama font-serif italic text-[#8E9C78] drop-shadow-[0_0_15px_rgba(142,156,120,0.2)]">{t.phil4}</span>
             </motion.h2>
           </div>
         </section>
@@ -692,14 +988,14 @@ export default function Landing() {
         <section id="protocol" className="py-20 md:py-32 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16 md:mb-24 px-2">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-3 md:mb-4">Por que somos diferentes?</h2>
-              <p className="text-zinc-400 text-sm md:text-base">Um sistema muito intuitivo que não trava seu celular ou computador.</p>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-3 md:mb-4">{t.protTitle}</h2>
+              <p className="text-zinc-400 text-sm md:text-base">{t.protDesc}</p>
             </div>
 
             <div className="space-y-16 md:space-y-32">
               {[
                 {
-                  step: "TAREFAS", title: "Mural de Atividades", desc: "Divida o que você tem para fazer em colunas simples. Apenas arraste e solte os cartões quando finalizar algo, como num mural de recados sem complicação.", viz: (
+                  step: t.prot1Tag, title: t.prot1Title, desc: t.prot1Desc, viz: (
                     <div className="w-full aspect-video rounded-[1rem] border border-white/5 flex items-center justify-center overflow-hidden bg-[#111] relative shadow-inner">
                       <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="w-32 h-32 border border-[#8E9C78]/30 rounded-full border-dashed" />
                       <motion.div animate={{ rotate: -360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} className="w-48 h-48 border border-[#8E9C78]/20 rounded-full border-dashed absolute" />
@@ -707,7 +1003,7 @@ export default function Landing() {
                   )
                 },
                 {
-                  step: "CLAREZA", title: "Visual Limpo", desc: "Um design muito elegante, focado no que é mais essencial e pensado para nunca causar estresse e nem cansar a sua vista durante o uso diário.", viz: (
+                  step: t.prot2Tag, title: t.prot2Title, desc: t.prot2Desc, viz: (
                     <div className="w-full aspect-video rounded-[1rem] border border-white/5 flex items-center justify-center overflow-hidden bg-[#111] relative shadow-inner">
                       <div className="w-full h-full bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px]" />
                       <motion.div animate={{ y: ["-100%", "100%"] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute w-full h-[2px] bg-[#8E9C78] shadow-[0_0_15px_#8E9C78]" />
@@ -715,7 +1011,7 @@ export default function Landing() {
                   )
                 },
                 {
-                  step: "PROGRESSO", title: "Metas Automáticas", desc: "Defina seus grandes objetivos de vida e deixe que nosso sistema acompanhe seu progresso sozinho, mostrando gráficos fáceis para você comemorar suas conquistas.", viz: (
+                  step: t.prot3Tag, title: t.prot3Title, desc: t.prot3Desc, viz: (
                     <div className="w-full aspect-video rounded-[1rem] border border-white/5 flex items-center justify-center overflow-hidden bg-[#111] relative shadow-inner">
                       <svg viewBox="0 0 200 50" className="w-full h-24 stroke-[#8E9C78] fill-transparent stroke-[2px]">
                         <motion.path
@@ -762,10 +1058,10 @@ export default function Landing() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] md:w-[80%] md:h-[80%] bg-[#8E9C78]/10 rounded-[100%] blur-[60px] md:blur-[100px] pointer-events-none" />
             <div className="relative z-10 flex flex-col items-center">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-4 md:mb-8 leading-tight">
-                Assuma o controle <br className="sm:hidden" /> do seu tempo.
+                {t.ctaTitle}
               </h2>
               <p className="text-zinc-400 text-[13px] sm:text-sm md:text-base font-light mb-8 md:mb-12 max-w-xl leading-relaxed">
-                Pare de perder tempo se perdendo entre anotações soltas e papéis. Organize dinheiro, tarefas, rotinas e objetivos agora mesmo.
+                {t.ctaDesc}
               </p>
               <Link
                 to="/auth"
@@ -775,7 +1071,7 @@ export default function Landing() {
                   initial={{ x: "-100%" }} whileHover={{ x: "100%" }} transition={{ duration: 0.5 }}
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
                 />
-                <span className="relative z-10">Cadastre-se</span>
+                <span className="relative z-10">{t.ctaBtn}</span>
                 <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -826,7 +1122,7 @@ export default function Landing() {
 
                 <div className="flex gap-6">
                   <p className="text-zinc-700 text-[10px] tracking-[0.1em] uppercase">
-                    Feito por <a href="https://github.com/icaroCodes" className="text-zinc-500 hover:text-white transition-colors duration-500">IcaroCodes</a>
+                    {t.footerMade} <a href="https://github.com/icaroCodes" className="text-zinc-500 hover:text-white transition-colors duration-500">IcaroCodes</a>
                   </p>
                 </div>
               </motion.div>
