@@ -295,7 +295,7 @@ const InfiniteSponsors = () => {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
-  
+
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
@@ -324,14 +324,14 @@ const InfiniteSponsors = () => {
     startX.current = pageX - scrollerRef.current.offsetLeft;
     scrollLeft.current = scrollerRef.current.scrollLeft;
   };
-  
+
   const onDragMove = (e) => {
     if (!isDragging.current) return;
     const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
     const x = pageX - scrollerRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.5; 
+    const walk = (x - startX.current) * 1.5;
     let newScrollLeft = scrollLeft.current - walk;
-    
+
     // Looping math while dragging
     const halfWidth = scrollerRef.current.scrollWidth / 2;
     if (newScrollLeft >= halfWidth) {
@@ -343,7 +343,7 @@ const InfiniteSponsors = () => {
       startX.current = x;
       scrollLeft.current = newScrollLeft;
     }
-    
+
     scrollerRef.current.scrollLeft = newScrollLeft;
   };
 
@@ -356,7 +356,7 @@ const InfiniteSponsors = () => {
       <div className="absolute left-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-r from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
       <div className="absolute right-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-l from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
 
-      <div 
+      <div
         ref={scrollerRef}
         className="flex flex-row items-center w-full overflow-x-hidden gap-16 sm:gap-24 md:gap-40 pr-16 sm:pr-24 md:pr-40"
         style={{ scrollBehavior: 'auto' }}
@@ -386,7 +386,7 @@ const TeamCollaborationAnimation = () => {
     <div className="h-64 md:h-full min-h-[250px] relative flex items-center justify-center p-4 bg-[#0A0A0A] rounded-[1.5rem] overflow-hidden shadow-inner border border-white/5">
       <div className="absolute inset-0 bg-[#8E9C78]/[0.02]" />
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
-      
+
       {/* Central Board Area */}
       <div className="w-full max-w-[280px] h-36 bg-[#111] border border-white/10 rounded-xl relative z-10 shadow-2xl flex flex-col p-4 gap-2.5">
         <div className="w-1/3 h-2 bg-white/20 rounded-full mb-2"></div>
@@ -400,9 +400,9 @@ const TeamCollaborationAnimation = () => {
 
       {/* Cursor 1 */}
       <motion.div
-        animate={{ 
-          x: [-90, -30, -30, -90], 
-          y: [-30, 30, 30, -30] 
+        animate={{
+          x: [-90, -30, -30, -90],
+          y: [-30, 30, 30, -30]
         }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         className="absolute z-20"
@@ -415,9 +415,9 @@ const TeamCollaborationAnimation = () => {
 
       {/* Cursor 2 */}
       <motion.div
-        animate={{ 
-          x: [90, 30, 30, 90], 
-          y: [40, -10, -10, 40] 
+        animate={{
+          x: [90, 30, 30, 90],
+          y: [40, -10, -10, 40]
         }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         className="absolute z-20"
@@ -427,7 +427,7 @@ const TeamCollaborationAnimation = () => {
         </svg>
         <div className="bg-[#30D158] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg absolute top-4 left-4 z-10">Membro</div>
       </motion.div>
-      
+
       {/* Light effect */}
       <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-[#8E9C78]/10 -translate-x-1/2 -translate-y-1/2 blur-2xl rounded-full pointer-events-none z-0" />
     </div>
@@ -564,15 +564,15 @@ export default function Landing() {
                   }}
                   transition={{ type: "spring", stiffness: 600, damping: 35 }}
                 />
-                
-                <button 
+
+                <button
                   onClick={() => setLang('pt')}
                   className={`relative z-10 w-7 h-6 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'pt' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
                 >
                   <img src="https://flagcdn.com/br.svg" alt="PT" className="w-[14px] h-[14px] rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
                 </button>
 
-                <button 
+                <button
                   onClick={() => setLang('en')}
                   className={`relative z-10 w-7 h-6 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'en' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
                 >
@@ -640,8 +640,8 @@ export default function Landing() {
                   {t.bannerText}
                 </p>
               </div>
-              <Link 
-                to="/auth" 
+              <Link
+                to="/auth"
                 className="text-[11px] md:text-[12px] font-bold text-[#8E9C78] hover:text-white transition-colors flex items-center gap-1 group"
               >
                 {t.bannerLink}
@@ -732,15 +732,15 @@ export default function Landing() {
                       }}
                       transition={{ type: "spring", stiffness: 600, damping: 35 }}
                     />
-                    
-                    <button 
+
+                    <button
                       onClick={() => setLang('pt')}
                       className={`relative z-10 w-9 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'pt' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
                     >
                       <img src="https://flagcdn.com/br.svg" alt="PT" className="w-[16px] h-[16px] rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => setLang('en')}
                       className={`relative z-10 w-9 h-8 flex items-center justify-center rounded-full transition-all duration-300 ${lang === 'en' ? 'opacity-100 grayscale-0' : 'opacity-30 grayscale hover:opacity-60 hover:grayscale-[0.5]'}`}
                     >
@@ -786,8 +786,8 @@ export default function Landing() {
               <span>{t.heroFree}</span>
             </motion.div>
 
-            <motion.h1 
-              variants={fadeIn} 
+            <motion.h1
+              variants={fadeIn}
               className="text-fluid-h1 font-bold tracking-tight text-white mb-4 md:mb-6 leading-[1.1] px-2"
             >
               {t.heroTitle1} <br className="hidden md:block" />
@@ -812,13 +812,22 @@ export default function Landing() {
             </motion.div>
 
             {/* Social Proof */}
-            <motion.div variants={fadeIn} className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 opacity-80">
-              <div className="flex items-center gap-1 translate-y-[1px]">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-4 h-4 text-[#8E9C78] fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
+            <motion.div variants={fadeIn} className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 opacity-80">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex -space-x-2">
+                  {['/icaro.png', '/lidia.jfif', '/nobre.png', '/emanuel.png'].map((src, i) => (
+                    <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-[#0A0A0A] overflow-hidden bg-zinc-800">
+                      <img src={src} alt="Membro" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1 translate-y-[1px]">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8E9C78] fill-current" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
               </div>
               <p className="text-xs text-zinc-400 font-medium tracking-wide">
                 {lang === 'pt' ? (
@@ -842,7 +851,7 @@ export default function Landing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.01 }}
               transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-               className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu"
+              className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu"
             >
               <div className="rounded-lg bg-[#0A0A0A] border border-white/5 overflow-hidden flex flex-col">
                 <img
@@ -967,7 +976,7 @@ export default function Landing() {
         <section id="philosophy" className="py-24 md:py-40 px-4 sm:px-6 bg-[#000000] relative overflow-hidden border-y border-white/5">
           <div className="absolute inset-0 z-0 pointer-events-none opacity-15" style={{ backgroundImage: 'url("/banner.png")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', filter: 'contrast(1.2)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#000000]/60 to-[#000000] z-0 pointer-events-none" />
-           <div className="max-w-4xl mx-auto relative z-10 text-center drop-shadow-2xl motion-gpu">
+          <div className="max-w-4xl mx-auto relative z-10 text-center drop-shadow-2xl motion-gpu">
             <motion.p
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 1 }}
               className="text-xs sm:text-sm md:text-base text-zinc-400 font-medium mb-6 md:mb-8 tracking-wide drop-shadow-md px-2"
@@ -1031,8 +1040,8 @@ export default function Landing() {
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-20%" }}
-                   transition={{ duration: isMobile ? 0.5 : 0.8 }}
-                   className="sticky top-16 md:top-32 bg-[#0A0A0A] p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8 md:gap-12 group hover:border-[#8E9C78]/20 transition-colors motion-gpu"
+                  transition={{ duration: isMobile ? 0.5 : 0.8 }}
+                  className="sticky top-16 md:top-32 bg-[#0A0A0A] p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8 md:gap-12 group hover:border-[#8E9C78]/20 transition-colors motion-gpu"
                   style={{ zIndex: 10 + i }}
                 >
                   <div className="flex-1 space-y-4 md:space-y-6 w-full">

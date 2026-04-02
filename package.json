@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@dnd-kit/react": "^0.3.2",
+    "liquid-glass-react": "^1.1.1",
     "react-router-dom": "^7.13.1"
   }
 }

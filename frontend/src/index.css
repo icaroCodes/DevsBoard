@@ -72,8 +72,17 @@ body::before {
 
 /* Utility Animations */
 @keyframes pulse-soft {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 
 .animate-pulse-soft {
@@ -91,8 +100,13 @@ body::before {
 }
 
 /* Base Performance Utilities */
-.will-change-transform { will-change: transform; }
-.will-change-opacity { will-change: opacity; }
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
 
 /* Responsive Fluid Typography */
 @layer utilities {
@@ -101,10 +115,10 @@ body::before {
     line-height: 1.1;
     letter-spacing: -0.02em;
   }
+
   .text-fluid-drama {
     font-size: clamp(2.8rem, 14vw, 7rem);
     line-height: 1.0;
     letter-spacing: -0.04em;
   }
 }
-
