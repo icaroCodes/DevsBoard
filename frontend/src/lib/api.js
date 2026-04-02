@@ -1,4 +1,8 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Forçamos o endpoint '/api' para ALWAYS virar requisição First-Party.
+// No PC/Mac local -> Vite Proxy redireciona pro Backend.
+// No Vercel Produção -> Vercel Rewrite redireciona pro Backend.
+// Isso elimina 100% o bloqueio de cookies ITP do Safari do iPhone.
+const API_URL = '/api';
 
 function getHeaders() {
   const headers = { 'Content-Type': 'application/json' };
