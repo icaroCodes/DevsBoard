@@ -58,7 +58,11 @@ router.post('/register', authRateLimiter, async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(newUser.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    res.status(201).json({ user: newUser });
+    res.status(201).json({ 
+      user: newUser,
+      token: accessToken,
+      refreshToken: refreshToken
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ errors: err.errors });
@@ -82,7 +86,11 @@ router.post('/login', authRateLimiter, async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url } });
+    res.json({ 
+      user: { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url },
+      token: accessToken,
+      refreshToken: refreshToken
+    });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ errors: err.errors });
@@ -93,14 +101,18 @@ router.post('/login', authRateLimiter, async (req, res) => {
 });
 
 router.post('/refresh', async (req, res) => {
-  const token = req.cookies?.refreshToken;
+  const token = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!token) return res.status(401).json({ error: 'Refresh token ausente' });
 
   try {
     const decoded = jwt.verify(token, config.jwt.refreshSecret);
     const { accessToken, refreshToken } = generateTokens(decoded.userId);
     setAuthCookies(res, { accessToken, refreshToken });
-    res.status(200).json({ success: true });
+    res.status(200).json({ 
+      success: true,
+      token: accessToken,
+      refreshToken: refreshToken
+    });
   } catch {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');

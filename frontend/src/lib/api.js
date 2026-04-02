@@ -3,6 +3,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 function getHeaders() {
   const headers = { 'Content-Type': 'application/json' };
 
+  const token = localStorage.getItem('token');
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const activeTeam = JSON.parse(localStorage.getItem('activeTeam'));
   if (activeTeam) headers['x-team-id'] = activeTeam.id;
 
@@ -28,13 +31,19 @@ export async function api(endpoint, options = {}, isRetry = false) {
 
     if (errorData?.error === 'TOKEN_EXPIRED') {
       try {
-        const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+        const refreshReq = await fetch(`${API_URL}/auth/refresh`, {
           method: 'POST',
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') })
         });
 
-        if (refreshRes.ok) {
-          return api(endpoint, options, true); // Tenta novamente com o novo token setado no cookie
+        if (refreshReq.ok) {
+          const resJson = await refreshReq.json();
+          if (resJson.token) {
+            localStorage.setItem('token', resJson.token);
+            localStorage.setItem('refreshToken', resJson.refreshToken);
+          }
+          return api(endpoint, options, true); 
         }
       } catch (err) {
         console.error('[Refresh Failed]', err);
@@ -43,6 +52,8 @@ export async function api(endpoint, options = {}, isRetry = false) {
 
     // Se falhar no refresh ou não for erro de expiração, limpa e desloga
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('activeTeam');
     if (!window.location.pathname.includes('/auth') && window.location.pathname !== '/') {
       window.location.href = '/auth';

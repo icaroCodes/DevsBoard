@@ -29,6 +29,8 @@ export function AuthProvider({ children }) {
         console.warn('[Session Verify Failed]', err.message);
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -49,7 +51,8 @@ export function AuthProvider({ children }) {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    // O token é setado via Cookie HttpOnly no backend.
+    if (data.token) localStorage.setItem('token', data.token);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     setActiveTeam(null);
@@ -61,6 +64,8 @@ export function AuthProvider({ children }) {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
     });
+    if (data.token) localStorage.setItem('token', data.token);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     setActiveTeam(null);
@@ -89,6 +94,8 @@ export function AuthProvider({ children }) {
       console.error('Erro no logout remoto:', err);
     }
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('activeTeam');
     setUser(null);
     setActiveTeam(null);
