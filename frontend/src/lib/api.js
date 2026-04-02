@@ -1,15 +1,11 @@
-// Forçamos o endpoint '/api' para ALWAYS virar requisição First-Party.
-// No PC/Mac local -> Vite Proxy redireciona pro Backend.
-// No Vercel Produção -> Vercel Rewrite redireciona pro Backend.
-// Isso elimina 100% o bloqueio de cookies ITP do Safari do iPhone.
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 function getHeaders() {
   const headers = { 'Content-Type': 'application/json' };
-  
+
   const activeTeam = JSON.parse(localStorage.getItem('activeTeam'));
   if (activeTeam) headers['x-team-id'] = activeTeam.id;
-  
+
   return headers;
 }
 
@@ -19,7 +15,7 @@ function getHeaders() {
  */
 export async function api(endpoint, options = {}, isRetry = false) {
   const url = `${API_URL}${endpoint}`;
-  
+
   const res = await fetch(url, {
     ...options,
     credentials: 'include', // Essencial para enviar/receber cookies HttpOnly
@@ -29,7 +25,7 @@ export async function api(endpoint, options = {}, isRetry = false) {
   // 1. Lógica de Refresh de Token Silencioso
   if (res.status === 401 && !isRetry) {
     const errorData = await res.json().catch(() => null);
-    
+
     if (errorData?.error === 'TOKEN_EXPIRED') {
       try {
         const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
