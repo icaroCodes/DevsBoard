@@ -8,59 +8,59 @@ import { ArrowRight, Code, Zap, Shield, Sparkles, Server, CheckCircle2, Users } 
 /* Translations Object */
 const translations = {
   pt: {
-    bannerText: "Acelere o seu trabalho com a nova função de trabalhar em equipe.",
-    bannerLink: "Saiba mais",
-    navHow: "Como Funciona",
-    navVision: "Nossa Visão",
-    navStep: "O Passo a Passo",
-    navDashboard: "Ir para o Painel",
-    navLogin: "Entrar",
-    navStart: "Começar Agora",
-    mobileFocus: "Foco e Simplicidade",
-    mobileJourney: "Começar Jornada",
-    heroFree: "100% Gratuito",
-    heroTitle1: "Organize sua vida",
+    bannerText: "Organize seu dia a dia e colabore com sua família ou amigos de um jeito simples.",
+    bannerLink: "Entenda melhor",
+    navHow: "Como funciona?",
+    navVision: "Para que serve?",
+    navStep: "Passo a passo",
+    navDashboard: "Minha Página",
+    navLogin: "Acessar conta",
+    navStart: "Criar conta grátis",
+    mobileFocus: "Simplicidade e Foco",
+    mobileJourney: "Começar agora",
+    heroFree: "Totalmente Gratuito",
+    heroTitle1: "Organize sua rotina",
     heroTitle2: "com o",
-    heroDesc: "O aplicativo completo que organiza suas tarefas, rotinas e seu dinheiro de um jeito bem fácil e em um só lugar.",
-    heroBtnStart: "Inicie sua jornada",
-    heroBtnDash: "Ir para o painel",
-    heroBtnDiscover: "Descubra mais",
-    heroSocial: "Junte-se a mais de 50 membros",
-    sponsors: "Patrocinadores",
+    heroDesc: "O lugar mais simples para você cuidar das suas tarefas, do seu dinheiro e dos seus objetivos, sem complicação.",
+    heroBtnStart: "Criar minha conta",
+    heroBtnDash: "Ver meu progresso",
+    heroBtnDiscover: "Conhecer melhor",
+    heroSocial: "Junte-se a mais de 50 pessoas",
+    sponsors: "Parceiros",
     featTitle1: "Tudo no seu",
-    featTitle2: "devido lugar",
-    feat1Title: "Saúde Financeira",
-    feat1Desc: "Diga adeus às planilhas difíceis. Anote seus ganhos, registre onde gastou e veja seu dinheiro render através de gráficos muito fáceis de entender.",
-    feat2Title: "Gestão de Tarefas",
-    feat2Desc: "Suas atividades sempre em ordem. Crie tarefas em quadros visuais e apenas arraste os cartões para o lado quando terminar o que precisa ser feito.",
-    feat3Title: "Rotinas e Hábitos",
-    feat3Desc: "Crie bons hábitos todos os dias. Monte o seu passo a passo e ordene suas atividades da forma que preferir, sem complicação.",
-    feat4Tag: "Novo Recurso",
-    feat4Title: "Trabalhar em equipe nunca foi tão fácil.",
-    feat4Desc: "Acompanhe em tempo real as tarefas e finanças do seu time ou da sua família. Colabore simultaneamente em diferentes projetos sem perder o controle do que já foi feito.",
-    feat4L1: "Convites instantâneos",
-    feat4L2: "Níveis de permissões",
-    feat4L3: "Atualizações em tempo real",
+    featTitle2: "lugar certo",
+    feat1Title: "Controle do Dinheiro",
+    feat1Desc: "Chega de planilhas difíceis. Anote o que ganha e o que gasta para ver seu dinheiro render com gráficos muito fáceis de ler.",
+    feat2Title: "Minhas Atividades",
+    feat2Desc: "Suas tarefas sempre em ordem. Use um quadro de recados onde você só precisa arrastar o que já terminou para o lado.",
+    feat3Title: "Tarefas do Dia",
+    feat3Desc: "Crie bons hábitos todos os dias. Monte sua rotina do seu jeito, sem se perder em anotações soltas.",
+    feat4Tag: "Novidade",
+    feat4Title: "Ajudar a família e amigos ficou fácil.",
+    feat4Desc: "Acompanhe as tarefas e as contas da sua casa ou do seu time em tempo real. Trabalhem juntos para ninguém se perder.",
+    feat4L1: "Convites rápidos",
+    feat4L2: "Controle de quem pode ver",
+    feat4L3: "Atualizado na hora",
     phil1: "A maioria das pessoas:",
-    phil2: "usa dezenas de apps confusos.",
-    phil3: "Nosso sistema agrupa:",
-    phil4: "tudo em uma só tela.",
-    protTitle: "Por que somos diferentes?",
-    protDesc: "Um sistema muito intuitivo que não trava seu celular ou computador.",
-    prot1Tag: "TAREFAS",
-    prot1Title: "Mural de Atividades",
-    prot1Desc: "Divida o que você tem para fazer em colunas simples. Apenas arraste e solte os cartões quando finalizar algo, como num mural de recados sem complicação.",
+    phil2: "se perde em muitos papéis e apps.",
+    phil3: "Nosso sistema junta:",
+    phil4: "tudo em uma só tela facilitada.",
+    protTitle: "Por que escolher o DevsBoard?",
+    protDesc: "Um sistema feito para ser fácil e que não trava o seu celular.",
+    prot1Tag: "ATIVIDADES",
+    prot1Title: "Mural de Recados",
+    prot1Desc: "Organize o que precisa fazer de um jeito simples. Arraste e solte os cartões quando terminar, igual a um mural de avisos.",
     prot2Tag: "CLAREZA",
     prot2Title: "Visual Limpo",
-    prot2Desc: "Um design muito elegante, focado no que é mais essencial e pensado para nunca causar estresse e nem cansar a sua vista durante o uso diário.",
-    prot3Tag: "PROGRESSO",
-    prot3Title: "Metas Automáticas",
-    prot3Desc: "Defina seus grandes objetivos de vida e deixe que nosso sistema acompanhe seu progresso sozinho, mostrando gráficos fáceis para você comemorar suas conquistas.",
-    ctaTitle: "Assuma o controle do seu tempo.",
-    ctaDesc: "Pare de perder tempo se perdendo entre anotações soltas e papéis. Organize dinheiro, tarefas, rotinas e objetivos agora mesmo.",
-    ctaBtn: "Cadastre-se",
-    footerMade: "Feito por",
-    chartBalance: "Saldo Atual"
+    prot2Desc: "Um desenho elegante e focado no que é importante, feito para não cansar a sua vista e ser fácil de ler.",
+    prot3Tag: "CONQUISTAS",
+    prot3Title: "Meus Objetivos",
+    prot3Desc: "Diga o que você quer conquistar e o sistema te ajuda a acompanhar seu progresso com desenhos simples de entender.",
+    ctaTitle: "Tome as rédeas da sua rotina.",
+    ctaDesc: "Pare de se perder entre anotações soltas. Deixe suas tarefas e seu dinheiro em ordem agora mesmo.",
+    ctaBtn: "Começar Agora",
+    footerMade: "Criado por",
+    chartBalance: "Meu Saldo"
   },
   en: {
     bannerText: "Accelerate your work with the new teamwork feature.",
@@ -126,7 +126,7 @@ const fadeIn = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+    transition: { duration: 0.5, ease: "easeOut" }
   }
 };
 
@@ -135,8 +135,8 @@ const staggerContainer = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
+      staggerChildren: 0.05,
+      delayChildren: 0.1
     }
   }
 };
@@ -151,12 +151,9 @@ const FinancialChartAnimation = ({ lang = 'pt' }) => {
           <div className="text-[10px] text-zinc-500 font-mono mb-1 uppercase tracking-widest">{t.chartBalance}</div>
           <div className="text-2xl font-bold text-white tracking-tight flex items-center gap-1">
             <span className="text-zinc-500 text-lg">R$</span>
-            <motion.span
-              animate={{ opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            >
+            <span>
               8.450
-            </motion.span>
+            </span>
             <span className="text-zinc-500 text-lg">,00</span>
           </div>
         </div>
@@ -171,12 +168,10 @@ const FinancialChartAnimation = ({ lang = 'pt' }) => {
       {/* Bouncing Chart Bars (Otimizado para escala sem layout thrashing) */}
       <div className="flex items-end gap-1.5 w-full h-20 opacity-80 z-10 relative left-1/2 -translate-x-1/2 pr-3 pl-3">
         {[30, 50, 40, 70, 55, 90, 65, 100].map((height, i) => (
-          <motion.div
+          <div
             key={i}
-            style={{ height: `${height}%`, transformOrigin: 'bottom' }}
-            animate={{ scaleY: [0.4, 1, 0.4] }}
-            transition={{ duration: 3, delay: i * 0.15, repeat: Infinity, ease: "easeInOut" }}
-            className="flex-1 bg-gradient-to-t from-transparent via-[#8E9C78]/40 to-[#8E9C78]/90 rounded-t-sm will-change-transform"
+            style={{ height: `${height}%` }}
+            className="flex-1 bg-gradient-to-t from-transparent via-[#8E9C78]/40 to-[#8E9C78]/90 rounded-t-sm"
           />
         ))}
       </div>
@@ -212,7 +207,7 @@ const TrelloDragAndDropAnimation = () => {
               rotate: [0, -4, -4, 0, 0],
               scale: [1, 1.05, 1.05, 1, 1]
             }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 4, ease: "easeInOut" }}
             className="w-[calc(100%-20px)] h-10 absolute top-9 left-2.5 bg-[#1a1a1a] border border-[#8E9C78]/40 rounded-lg shadow-[0_8px_20px_rgba(0,0,0,0.6)] z-20 flex flex-col px-2 py-1.5 gap-1.5"
           >
             <div className="w-8 h-1 bg-[#8E9C78]/80 rounded-full"></div>
@@ -221,7 +216,7 @@ const TrelloDragAndDropAnimation = () => {
             {/* Mouse Cursor */}
             <motion.div
               animate={{ scale: [1, 0.9, 0.9, 1, 1] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 4, ease: "easeInOut" }}
               className="absolute -right-2 top-4 w-4 h-4 z-30"
             >
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-white drop-shadow-lg">
@@ -269,7 +264,7 @@ const RoutineDragAndDropAnimation = () => {
             y: [108, 108, 68, 68, 108],
             scale: [1, 1.05, 1.05, 1, 1]
           }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 4, ease: "easeInOut" }}
           style={{ top: 0 }}
         >
           <div className="w-3 h-3 rounded-sm border border-[#8E9C78]/60 bg-[#8E9C78]/10"></div>
@@ -278,7 +273,7 @@ const RoutineDragAndDropAnimation = () => {
           {/* Cursor */}
           <motion.div
             animate={{ scale: [1, 0.9, 0.9, 1, 1] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 4, ease: "easeInOut" }}
             className="absolute right-1 top-3.5 w-4 h-4 z-30"
           >
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-white drop-shadow-lg">
@@ -335,7 +330,7 @@ const TeamCollaborationAnimation = () => {
           x: [-90, -30, -30, -90],
           y: [-30, 30, 30, -30]
         }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 4, ease: "easeInOut" }}
         className="absolute z-20"
       >
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20 relative">
@@ -350,7 +345,7 @@ const TeamCollaborationAnimation = () => {
           x: [90, 30, 30, 90],
           y: [40, -10, -10, 40]
         }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        transition={{ duration: 5, ease: "easeInOut", delay: 1 }}
         className="absolute z-20"
       >
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20 relative">
@@ -429,8 +424,8 @@ export default function Landing() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const rotateX = useTransform(scrollY, [0, 500], isMobile ? [0, 0] : [25, 0]);
-  const scale = useTransform(scrollY, [0, 500], isMobile ? [1, 1] : [0.9, 1]);
+  const rotateX = useTransform(scrollY, [0, 500], isMobile ? [0, 0] : [10, 0]);
+  const scale = useTransform(scrollY, [0, 500], isMobile ? [1, 1] : [0.95, 1]);
 
 
   return (
@@ -441,7 +436,7 @@ export default function Landing() {
         <motion.nav
           initial={{ y: -100 }}
           animate={{ y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className={`fixed top-0 left-0 right-0 z-[60] transition-colors duration-200 will-change-transform ${isScrolled
             ? "bg-[#0a0a0a]/85 backdrop-blur-md border-b border-white/[0.06]"
             : "bg-transparent border-b border-transparent"
@@ -937,8 +932,8 @@ export default function Landing() {
                 {
                   step: t.prot1Tag, title: t.prot1Title, desc: t.prot1Desc, viz: (
                     <div className="w-full aspect-video rounded-[1rem] border border-white/5 flex items-center justify-center overflow-hidden bg-[#111] relative shadow-inner">
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="w-32 h-32 border border-[#8E9C78]/30 rounded-full border-dashed" />
-                      <motion.div animate={{ rotate: -360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }} className="w-48 h-48 border border-[#8E9C78]/20 rounded-full border-dashed absolute" />
+                      <div className="w-32 h-32 border border-[#8E9C78]/30 rounded-full border-dashed" />
+                      <div className="w-48 h-48 border border-[#8E9C78]/20 rounded-full border-dashed absolute" />
                     </div>
                   )
                 },
@@ -946,7 +941,7 @@ export default function Landing() {
                   step: t.prot2Tag, title: t.prot2Title, desc: t.prot2Desc, viz: (
                     <div className="w-full aspect-video rounded-[1rem] border border-white/5 flex items-center justify-center overflow-hidden bg-[#111] relative shadow-inner">
                       <div className="w-full h-full bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px]" />
-                      <motion.div animate={{ y: ["-100%", "100%"] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} className="absolute w-full h-[2px] bg-[#8E9C78] shadow-[0_0_15px_#8E9C78]" />
+                      <div className="absolute w-full h-[2px] bg-[#8E9C78] shadow-[0_0_15px_#8E9C78]" />
                     </div>
                   )
                 },
@@ -958,7 +953,7 @@ export default function Landing() {
                           d="M 0,25 C 25,25 25,5 50,5 C 75,5 75,45 100,45 C 125,45 125,25 150,25 C 175,25 175,25 200,25"
                           initial={{ strokeDasharray: "400", strokeDashoffset: "400" }}
                           animate={{ strokeDashoffset: 0 }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                          transition={{ duration: 3, ease: "easeInOut" }}
                           style={{ filter: 'drop-shadow(0px 0px 4px rgba(142,156,120,0.5))' }}
                         />
                       </svg>
@@ -1007,10 +1002,7 @@ export default function Landing() {
                 to="/auth"
                 className="group relative overflow-hidden inline-flex items-center gap-3 bg-[#8E9C78] text-[#0A0A0A] px-8 py-4 rounded-full text-[15px] font-bold hover:scale-[1.02] transition-transform"
               >
-                <motion.span
-                  initial={{ x: "-100%" }} whileHover={{ x: "100%" }} transition={{ duration: 0.5 }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12"
-                />
+
                 <span className="relative z-10">{t.ctaBtn}</span>
                 <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -1039,7 +1031,7 @@ export default function Landing() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className="flex items-center gap-2"
               >
                 <img src="/devsboard.png" alt="Logo" className="w-5 h-5 grayscale opacity-80" />

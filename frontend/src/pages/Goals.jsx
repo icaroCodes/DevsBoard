@@ -69,7 +69,7 @@ export default function Goals() {
       setModalOpen(false);
       setEditing(null);
       setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '', submitting: false });
-      success(editing ? 'Meta atualizada!' : 'Meta criada!');
+      success(editing ? 'Pronto, tudo atualizado!' : 'Legal! Você começou um novo objetivo!');
       load();
     } catch (err) {
       error(err.message);
@@ -94,7 +94,7 @@ export default function Goals() {
         body: JSON.stringify({ add_amount: parseFloat(addAmount.value) }),
       });
       setAddAmount({ id: null, value: '' });
-      success('Valor adicionado!');
+      success('Muito bem! Esse dinheiro foi guardado.');
       load();
     } catch (err) {
       error(err.message);
@@ -103,14 +103,14 @@ export default function Goals() {
 
   const handleDelete = async (item) => {
     confirm({
-      title: 'Excluir meta?',
+      title: 'Apagar este objetivo?',
       message: item.saved_amount > 0
-        ? `Esta meta possui R$ ${Number(item.saved_amount).toFixed(2)} guardados. Ao excluir, este valor será devolvido ao seu saldo. Deseja continuar?`
-        : 'Tem certeza que deseja excluir esta meta?',
+        ? `Você já guardou R$ ${Number(item.saved_amount).toFixed(2)} para isso. Se apagar agora, esse dinheiro volta para o seu saldo total. Quer mesmo apagar?`
+        : 'Você tem certeza que deseja apagar este objetivo?',
       onConfirm: async () => {
         try {
           await api(`/goals/${item.id}`, { method: 'DELETE' });
-          success('Meta excluída e saldo devolvido!');
+          success('Objetivo apagado e o dinheiro voltou para o saldo.');
           load();
         } catch (err) {
           error(err.message);
@@ -119,7 +119,7 @@ export default function Goals() {
     });
   };
 
-  const deadlineLabels = { monthly: 'Mensal', yearly: 'Anual', indefinite: 'Livre' };
+  const deadlineLabels = { monthly: 'Todo mês', yearly: 'Todo ano', indefinite: 'Sem pressa' };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -133,15 +133,15 @@ export default function Goals() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Metas</h1>
-          <p className="text-[17px] text-[#86868B] mt-1">Defina e alcance seus objetivos</p>
+          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Objetivos</h1>
+          <p className="text-[17px] text-[#86868B] mt-1">Escolha o que você quer conquistar e acompanhe o progresso.</p>
         </div>
 
         <button
           onClick={() => { setEditing(null); setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
         >
-          <Plus size={18} strokeWidth={2.5} /> Nova Meta
+          <Plus size={18} strokeWidth={2.5} /> Novo Objetivo
         </button>
       </div>
 
@@ -159,9 +159,9 @@ export default function Goals() {
               <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mb-6">
                 <TargetIcon size={32} className="text-[#86868B]" />
               </div>
-              <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">Você ainda não possui metas criadas</p>
+              <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">Você ainda não criou nenhum objetivo</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-[280px] leading-relaxed">
-                Crie sua primeira meta para começar a acompanhar seu progresso e alcançar seus objetivos.
+                Escolha algo que você quer conquistar (como uma viagem ou ler um livro) para começar.
               </p>
             </div>
           ) : (
@@ -195,7 +195,7 @@ export default function Goals() {
                       <div className="min-w-0">
                         <p className={`text-[17px] font-semibold text-[#F5F5F7] tracking-tight truncate ${item.completed ? 'line-through text-[#86868B]' : ''}`}>{item.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[12px] font-bold uppercase tracking-wider text-[#86868B]">{item.type === 'performance' ? 'Desempenho' : 'Financeira'}</span>
+                          <span className="text-[12px] font-bold uppercase tracking-wider text-[#86868B]">{item.type === 'performance' ? 'Pelo esforço' : 'Guardando dinheiro'}</span>
                           <span className="w-1 h-1 rounded-full bg-white/20" />
                           <span className="text-[12px] font-bold uppercase tracking-wider text-[#8E9C78]">{deadlineLabels[item.deadline_type]}</span>
                         </div>
@@ -216,8 +216,8 @@ export default function Goals() {
                     <div className="mt-6 relative z-10">
                       <div className="flex justify-between items-end mb-2.5">
                         <div className="space-y-0.5">
-                          <p className="text-[12px] font-medium text-[#86868B]">Progresso</p>
-                          <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {saved.toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ R$ {target.toFixed(0)}</span></p>
+                          <p className="text-[12px] font-medium text-[#86868B]">Andamento</p>
+                          <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {saved.toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ total de R$ {target.toFixed(0)}</span></p>
                         </div>
                         <span className="text-[17px] font-bold text-[#F5F5F7] tracking-tight">{progress.toFixed(0)}%</span>
                       </div>
@@ -249,7 +249,7 @@ export default function Goals() {
                             </form>
                           ) : (
                             <button onClick={() => setAddAmount({ id: item.id, value: '' })} className="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-[13px] font-bold text-[#86868B] hover:text-[#F5F5F7] transition-all">
-                              + Adicionar Montante
+                              + Guardar mais um pouco
                             </button>
                           )}
                         </div>
@@ -279,7 +279,7 @@ export default function Goals() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-                  {editing ? 'Editar Meta' : 'Nova Meta'}
+                  {editing ? 'Editar Objetivo' : 'Novo Objetivo'}
                 </h2>
                 <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-full bg-white/[0.04] hover:bg-white/[0.08] transition-colors">
                   <X size={18} />
@@ -288,19 +288,19 @@ export default function Goals() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">O que você quer alcançar?</label>
+                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">O que você quer conquistar?</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="w-full px-5 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-transparent text-[16px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50"
-                    placeholder="Ex: Ler 12 livros, Guardar p/ iPhone"
+                    placeholder="Ex: Ler 12 livros, Guardar para viagem"
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Tipo de Meta</label>
+                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Como você quer medir?</label>
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
                     {['performance', 'financial'].map((type) => (
                       <button
@@ -317,7 +317,7 @@ export default function Goals() {
                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                           />
                         )}
-                        {type === 'performance' ? 'Desempenho' : 'Financeira'}
+                        {type === 'performance' ? 'Pelo esforço' : 'Guardando dinheiro'}
                       </button>
                     ))}
                   </div>
@@ -325,7 +325,7 @@ export default function Goals() {
 
                 <div className="space-y-1.5">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center justify-between ml-1 mb-1">
-                    <label className="text-[13px] font-medium text-[#86868B] uppercase tracking-wider">Prazo da Meta</label>
+                    <label className="text-[13px] font-medium text-[#86868B] uppercase tracking-wider">Até quando você quer conseguir?</label>
                   </div>
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
                     {['monthly', 'yearly', 'indefinite'].map((dType) => (
@@ -351,7 +351,7 @@ export default function Goals() {
 
                 {form.type === 'financial' && (
                   <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Valor do Objetivo (R$)</label>
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Quanto dinheiro você precisa juntar? (R$)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-3.5 text-[#86868B] text-[16px]">R$</span>
                       <input
@@ -378,7 +378,7 @@ export default function Goals() {
                         <Loader2 size={20} className="animate-spin" />
                         <span>Salvando...</span>
                       </>
-                    ) : editing ? 'Salvar Alterações' : 'Criar Objetivo'}
+                    ) : editing ? 'Pronto, salvar' : 'Começar agora'}
                   </button>
                 </div>
               </form>

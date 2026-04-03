@@ -106,34 +106,34 @@ function Field({ icon, id, label, rightElement, ...props }) {
 
 const translations = {
   pt: {
-    backHome: "Voltar para Home",
-    welcomeTitle: "Bem vindo\nde volta.",
-    createTitle: "Crie sua\nconta.",
-    welcomeDesc: "Continue organizando seus projetos, finanças e tarefas em um único lugar.",
-    createDesc: "Comece agora a organizar tudo em um único lugar, de forma simples e eficaz.",
+    backHome: "Voltar para o início",
+    welcomeTitle: "Que bom ver\nvocê de novo.",
+    createTitle: "Vamos criar\nsua conta.",
+    welcomeDesc: "Continue cuidando do seu dinheiro, das suas atividades e dos seus sonhos em um único lugar.",
+    createDesc: "Comece hoje a colocar sua vida em ordem de um jeito simples, fácil e que funciona.",
     back: "Voltar",
-    loginHead: "Faça seu login",
-    registerHead: "Crie sua conta",
-    loginSub: "Entre com seus dados para continuar",
-    registerSub: "Preencha seus dados para começar",
+    loginHead: "Acesse seu espaço",
+    registerHead: "Cadastre-se agora",
+    loginSub: "Coloque seu e-mail e senha para entrar",
+    registerSub: "Preencha os campos abaixo para começar",
     nameLabel: "Nome",
     namePlaceholder: "Seu nome completo",
-    nameObj: "Nome é obrigatório",
+    nameObj: "Por favor, digite seu nome",
     emailLabel: "E-mail",
-    emailPlaceholder: "seu@email.com",
+    emailPlaceholder: "exemplo@email.com",
     passLabel: "Senha",
-    passPlaceholder: "••••••••",
-    errOAuth: "Erro ao autenticar com GitHub. Tente novamente.",
-    errAuth: "Erro ao autenticar",
-    btnLoading: "Carregando…",
-    btnLogin: "Entrar na Plataforma",
-    btnRegister: "Criar minha conta",
-    divider: "ou continue com",
-    githubBtn: "Continue com GitHub",
-    noAccount: "Não tem uma conta? ",
+    passPlaceholder: "Sua senha secreta",
+    errOAuth: "Não conseguimos entrar com o GitHub. Tente novamente.",
+    errAuth: "E-mail ou senha incorretos",
+    btnLoading: "Entrando…",
+    btnLogin: "Acessar minha conta",
+    btnRegister: "Criar minha conta agora",
+    divider: "ou use sua conta do",
+    githubBtn: "Entrar com GitHub",
+    noAccount: "Ainda não tem conta? ",
     hasAccount: "Já tem uma conta? ",
-    btnSwToReg: "Cadastre-se.",
-    btnSwToLog: "Entrar."
+    btnSwToReg: "Criar uma agora.",
+    btnSwToLog: "Acessar minha conta."
   },
   en: {
     backHome: "Back to Home",
@@ -178,10 +178,10 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
-  
+
   // Detecção de idioma
   const [lang, setLang] = useState('pt');
-  
+
   useEffect(() => {
     const savedLang = localStorage.getItem('lang');
     if (savedLang) {
@@ -345,16 +345,16 @@ export default function Auth() {
 
         {/* ══ RIGHT PANEL ═════════════════════════════════════════ */}
         <div style={s.right} id="auth-right">
-          
+
           {/* Mobile Back Button (Top Left Highlighted) */}
           <div id="auth-logo-mobile" style={{ display: 'none', position: 'absolute', top: 24, left: 24, zIndex: 100 }}>
-            <Link to="/" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 8, 
-              color: '#0e0e0e', 
-              textDecoration: 'none', 
-              fontSize: 12, 
+            <Link to="/" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: '#0e0e0e',
+              textDecoration: 'none',
+              fontSize: 12,
               fontWeight: 700,
               background: '#8E9C78',
               padding: '10px 16px',

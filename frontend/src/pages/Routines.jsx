@@ -174,7 +174,7 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
                 <div
                   className="w-1.5 h-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: priorityColors[task.priority] }}
-                  title={`Prioridade ${task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}`}
+                  title={`Importância ${task.priority === 'high' ? 'Urgente' : task.priority === 'medium' ? 'Importante' : 'Normal'}`}
                 />
               )}
             </div>
@@ -222,7 +222,7 @@ function RoutinePreview({ r, visualLabels, isOverlay = false }) {
               <p className="font-semibold text-[14px] sm:text-[15px] text-[#F5F5F7] tracking-tight truncate flex-1 min-w-0 uppercase font-bold">{r.name}</p>
             </div>
             <p className="text-[12px] text-[#86868B] mt-0.5">
-              {r.tasks?.length || 0} {(r.tasks?.length === 1) ? 'tarefa' : 'tarefas'}
+              {r.tasks?.length || 0} {(r.tasks?.length === 1) ? 'atividade' : 'atividades'}
             </p>
           </div>
         </div>
@@ -318,7 +318,7 @@ function SortableRoutine({
               </span>
             </div>
             <p className="text-[14px] text-[#86868B] mt-0.5">
-              {r.tasks?.length || 0} {(r.tasks?.length === 1) ? 'tarefa' : 'tarefas'}
+              {r.tasks?.length || 0} {(r.tasks?.length === 1) ? 'atividade' : 'atividades'}
             </p>
           </div>
         </div>
@@ -410,7 +410,7 @@ function SortableRoutine({
                   <div className="space-y-3">
                     <input
                       type="text"
-                      placeholder="Nome da tarefa..."
+                      placeholder="O que você faz? (Ex: Tomar remédio)"
                       value={taskForm.title}
                       autoFocus
                       onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
@@ -418,7 +418,7 @@ function SortableRoutine({
                       required
                     />
                     <textarea
-                      placeholder="Descrição (opcional)"
+                      placeholder="Quer escrever alguma anotação sobre isso?"
                       value={taskForm.description}
                       onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
                       className="w-full bg-transparent border-none outline-none text-[15px] text-[#86868B] placeholder:text-[#86868B]/50 resize-none h-16"
@@ -427,7 +427,7 @@ function SortableRoutine({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-1.5 ml-1">Horário</label>
+                      <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-1.5 ml-1">Em qual horário você começa?</label>
                       <input
                         type="time"
                         value={taskForm.start_time || ''}
@@ -437,7 +437,7 @@ function SortableRoutine({
                     </div>
                     {r.visual_type === 'weekly' && (
                       <div className="col-span-1 sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2.5 ml-1">Dia da Semana</label>
+                        <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2.5 ml-1">Em qual dia da semana ocorre?</label>
                         <div className="flex justify-between items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
                           {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, idx) => (
                             <button
@@ -459,7 +459,7 @@ function SortableRoutine({
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-white/[0.04]">
                     <div className="w-full sm:w-auto">
-                      <label className="block sm:hidden text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2 ml-1">Prioridade</label>
+                      <label className="block sm:hidden text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2 ml-1">Qual a importância disso?</label>
                       <div className="grid grid-cols-4 sm:flex gap-1.5 w-full sm:w-auto">
                         {['none', 'low', 'medium', 'high'].map((p) => (
                           <button
@@ -471,7 +471,7 @@ function SortableRoutine({
                                 : 'bg-white/5 text-[#86868B] hover:bg-white/10'
                               }`}
                           >
-                            <span className="truncate">{p === 'high' ? 'Alta' : p === 'medium' ? 'Média' : p === 'low' ? 'Baixa' : 'Nada'}</span>
+                            <span className="truncate">{p === 'high' ? 'Urgente' : p === 'medium' ? 'Importante' : p === 'low' ? 'Normal' : 'Tanto faz'}</span>
                           </button>
                         ))}
                       </div>
@@ -505,7 +505,7 @@ function SortableRoutine({
                   onClick={() => setTaskForm({ ...taskForm, routineId: r.id })}
                   className="flex items-center gap-2 mt-2 px-3 py-2 text-[14px] font-medium text-[#8E9C78] hover:bg-[#8E9C78]/10 rounded-[12px] transition-colors"
                 >
-                  <Plus size={16} /> Nova Tarefa
+                  <Plus size={16} /> Nova atividade na rotina
                 </button>
               )}
             </div>
@@ -598,7 +598,7 @@ export default function Routines() {
       }
 
       setTaskForm({ routineId: null, id: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null, submitting: false });
-      success(taskForm.id ? 'Tarefa atualizada!' : 'Tarefa adicionada à rotina!');
+      success(taskForm.id ? 'Anotação atualizada!' : 'Legal, atividade colocada na rotina!');
       load();
     } catch (err) {
       error(err.message);
@@ -684,12 +684,12 @@ export default function Routines() {
 
   const deleteTask = async (routineId, taskId) => {
     confirm({
-      title: 'Excluir tarefa?',
-      message: 'Deseja remover esta tarefa desta rotina?',
+      title: 'Remover isso da rotina?',
+      message: 'Você quer mesmo tirar isso da sua rotina?',
       onConfirm: async () => {
         try {
           await api(`/routines/${routineId}/tasks/${taskId}`, { method: 'DELETE' });
-          success('Tarefa removida!');
+          success('Atividade removida!');
           load();
         } catch (err) {
           error(err.message);
@@ -700,8 +700,8 @@ export default function Routines() {
 
   const handleDelete = async (id) => {
     confirm({
-      title: 'Excluir rotina?',
-      message: 'Tem certeza que deseja excluir esta rotina inteira? Todas as tarefas associadas serão perdidas.',
+      title: 'Apagar esta rotina inteira?',
+      message: 'Você tem certeza? Todas as atividades dessa rotina serão apagadas também.',
       onConfirm: async () => {
         try {
           await api(`/routines/${id}`, { method: 'DELETE' });
@@ -714,7 +714,7 @@ export default function Routines() {
     });
   };
 
-  const visualLabels = { daily: 'Diária', weekly: 'Semanal' };
+  const visualLabels = { daily: 'Todo dia', weekly: 'Toda semana' };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -732,16 +732,16 @@ export default function Routines() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8 lg:mb-10 px-1 sm:px-0">
         <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">
-            Rotinas
+            Minha Rotina
           </h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Gerencie seus hábitos recorrentes</p>
+          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Acompanhe o que você faz no seu dia a dia.</p>
         </div>
 
         <button
           onClick={() => { setEditing(null); setForm({ name: '', visual_type: 'daily' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#0A84FF] text-white text-[12px] sm:text-[14px] font-bold sm:font-medium hover:bg-[#5E94FF] transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-95 self-start sm:self-auto"
         >
-          <Plus size={16} strokeWidth={3} className="sm:size-[18px] sm:stroke-[2.5]" /> Nova Rotina
+          <Plus size={16} strokeWidth={3} className="sm:size-[18px] sm:stroke-[2.5]" /> Criar Nova Rotina
         </button>
       </div>
 
@@ -756,8 +756,8 @@ export default function Routines() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
               <Repeat size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
-              <p className="text-[17px] font-medium text-[#F5F5F7]">Nenhuma rotina configurada</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">Crie rotinas diárias, semanais ou mensais para acompanhar seus hábitos consistentes.</p>
+              <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhuma rotina.</p>
+              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">Coloque aqui as coisas que você faz sempre para não esquecer (como remédios, exercícios ou limpar a casa).</p>
             </div>
           ) : (
             <DndContext

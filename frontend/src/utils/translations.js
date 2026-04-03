@@ -6,28 +6,28 @@ export const globalTranslations = {
     manage: "Gerenciar",
 
     // Dashboard
-    dashHello: "Olá",
-    dashPrep: "Preparando seu dashboard...",
-    dashFinances: "Finanças",
-    dashBalance: "Saldo Atual",
-    dashIncome: "Receitas",
-    dashExpense: "Despesas",
-    dashTasksPending: "Tarefas Pendentes",
-    dashTasksClean: "Tudo limpo por aqui.",
-    dashHabits: "Hábitos e Rotinas",
-    dashNoRoutine: "Nenhuma rotina",
-    dashGoals: "Metas Ativas",
-    dashNoGoals: "Você não possui metas em andamento.",
-    dashCreateGoal: "Criar Meta",
-    dashGoalAccum: "Acumulado",
+    dashHello: "Bom dia",
+    dashPrep: "Organizando suas informações...",
+    dashFinances: "Meu Dinheiro",
+    dashBalance: "Quanto tenho agora",
+    dashIncome: "O que entrou",
+    dashExpense: "O que saiu",
+    dashTasksPending: "Atividades para fazer",
+    dashTasksClean: "Tudo em ordem por enquanto.",
+    dashHabits: "Minha Rotina",
+    dashNoRoutine: "Sem atividades para",
+    dashGoals: "Meus Objetivos",
+    dashNoGoals: "Você ainda não criou nenhum objetivo.",
+    dashCreateGoal: "Criar novo objetivo",
+    dashGoalAccum: "Já guardei",
     
     routineType: {
-      daily: "Diária",
-      weekly: "Semanal"
+      daily: "Todo dia",
+      weekly: "Uma vez por semana"
     },
     goalType: {
-      financial: "Financeira",
-      performance: "Desempenho"
+      financial: "Para economizar",
+      performance: "Meta pessoal"
     }
   },
   en: {

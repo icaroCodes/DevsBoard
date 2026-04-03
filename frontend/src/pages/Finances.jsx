@@ -8,7 +8,7 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
-const CATEGORIES = ['Salário', 'Freelance', 'Investimentos', 'Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Outros'];
+const CATEGORIES = ['Salário', 'Ganhos Extras', 'Mercado/Comida', 'Ônibus/Carro', 'Luz/Água/Casa', 'Saúde/Médico', 'Lazer/Diversão', 'Presentes', 'Outros'];
 
 export default function Finances() {
   const [items, setItems] = useState([]);
@@ -65,7 +65,7 @@ export default function Finances() {
       setModalOpen(false);
       setEditing(null);
       setForm({ category: '', description: '', amount: '', type: 'expense', transaction_date: new Date().toISOString().slice(0, 10), submitting: false });
-      success(editing ? 'Transação atualizada' : 'Transação registrada');
+      success(editing ? 'Pronto, atualizado!' : 'Pronto, anotado!');
       load();
     } catch (err) {
       showError(err.message);
@@ -75,12 +75,12 @@ export default function Finances() {
 
   const handleDelete = async (id) => {
     confirm({
-      title: 'Excluir transação?',
-      message: 'Esta ação não pode ser desfeita.',
+      title: 'Apagar esta anotação?',
+      message: 'Você tem certeza? Isso vai remover o valor dos seus cálculos.',
       onConfirm: async () => {
         try {
           await api(`/finances/${id}`, { method: 'DELETE' });
-          success('Transação excluída');
+          success('Anotação removida');
           load();
         } catch (err) {
           showError(err.message);
@@ -139,7 +139,7 @@ export default function Finances() {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
         />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide font-sans">Carregando dados financeiros...</p>
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide font-sans">Organizando suas contas...</p>
       </div>
     );
   }
@@ -193,8 +193,8 @@ export default function Finances() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">
-          <h1 className="text-[32px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Finanças</h1>
-          <p className="text-[15px] text-[#86868B]">Acompanhe seu fluxo de caixa detalhado.</p>
+          <h1 className="text-[32px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meu Dinheiro</h1>
+          <p className="text-[15px] text-[#86868B]">Veja para onde seu dinheiro está indo e quanto você ainda tem.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -215,7 +215,7 @@ export default function Finances() {
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                {f === 'all' ? 'Todas' : f === 'income' ? 'Entradas' : 'Despesas'}
+                {f === 'all' ? 'Tudo' : f === 'income' ? 'O que entrou' : 'O que saiu'}
               </button>
             ))}
           </div>
@@ -227,7 +227,7 @@ export default function Finances() {
             }}
             className="flex items-center gap-1.5 px-5 py-2 rounded-[12px] bg-[#F5F5F7] text-[#000000] text-[14px] font-medium hover:bg-white transition-colors cursor-pointer shadow-sm"
           >
-            <Plus size={16} strokeWidth={2.5} /> Novo Registro
+            <Plus size={16} strokeWidth={2.5} /> Anotar novo gasto ou ganho
           </button>
         </div>
       </motion.div>
@@ -238,7 +238,7 @@ export default function Finances() {
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <Wallet size={16} />
-              <span className="text-[14px] font-medium">Saldo Atual</span>
+              <span className="text-[14px] font-medium">Quanto tenho agora</span>
             </div>
           </div>
           <p className={`text-[36px] font-semibold tracking-tight z-10 ${balance >= 0 ? 'text-[#F5F5F7]' : 'text-[#FF453A]'}`}>
@@ -252,7 +252,7 @@ export default function Finances() {
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowUpRight size={16} className="text-[#30D158]" />
-              <span className="text-[14px] font-medium">Entradas</span>
+              <span className="text-[14px] font-medium">O que entrou</span>
             </div>
           </div>
           <p className="text-[32px] font-medium text-[#F5F5F7] tracking-tight z-10">
@@ -265,7 +265,7 @@ export default function Finances() {
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowDownRight size={16} className="text-[#FF453A]" />
-              <span className="text-[14px] font-medium">Despesas</span>
+              <span className="text-[14px] font-medium">O que saiu</span>
             </div>
           </div>
           <p className="text-[32px] font-medium text-[#F5F5F7] tracking-tight z-10">
@@ -279,16 +279,16 @@ export default function Finances() {
         {/* Transactions Formatted specifically for SaaS look */}
         <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
-            <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Transações Recentes</h2>
+            <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Últimas anotações</h2>
             <div className="text-[13px] text-[#86868B] bg-[#2C2C2E] px-3 py-1 rounded-full">
-              {filtered.length} registro{filtered.length !== 1 && 's'}
+              {filtered.length} anotação{filtered.length !== 1 && 'ões'}
             </div>
           </div>
 
           {filtered.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
               <Clock size={40} strokeWidth={1.5} className="text-[#86868B]" />
-              <p className="text-[15px] text-[#86868B]">Nenhuma transação registrada.</p>
+              <p className="text-[15px] text-[#86868B]">Você ainda não anotou nada sobre seu dinheiro.</p>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto px-2 py-2">
@@ -299,7 +299,7 @@ export default function Finances() {
                       {item.type === 'income' ? <ArrowUpRight size={18} className="sm:w-5 sm:h-5" /> : <ArrowDownRight size={18} className="sm:w-5 sm:h-5" />}
                     </div>
                     <div className="flex flex-col min-w-0 w-full">
-                      <span className="text-[14px] sm:text-[15px] font-medium text-[#F5F5F7] truncate">{item.description || 'Transação genérica'}</span>
+                      <span className="text-[14px] sm:text-[15px] font-medium text-[#F5F5F7] truncate">{item.description || 'Gasto ou Ganho'}</span>
                       <span className="text-[12px] sm:text-[13px] text-[#86868B] mt-0.5 truncate">{item.category} • {formatDate(item.transaction_date)}</span>
                     </div>
                   </div>
@@ -328,12 +328,12 @@ export default function Finances() {
           <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowDownRight size={18} className="text-[#FF453A]" />
-              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Top Despesas</h2>
+              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Onde gastei mais</h2>
             </div>
             <div className="p-6 h-[250px] w-full mt-2">
               {expensesData.length === 0 ? (
                 <div className="flex items-center justify-center opacity-60 h-full">
-                  <p className="text-[14px] text-[#86868B]">Sem despesas registradas.</p>
+                  <p className="text-[14px] text-[#86868B]">Ainda não há gastos anotados.</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -363,12 +363,12 @@ export default function Finances() {
           <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowUpRight size={18} className="text-[#30D158]" />
-              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Top Entradas (R$)</h2>
+              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">De onde veio mais dinheiro</h2>
             </div>
             <div className="p-6 h-[250px] w-full mt-2">
               {incomesData.length === 0 ? (
                 <div className="flex items-center justify-center opacity-60 h-full">
-                  <p className="text-[14px] text-[#86868B]">Sem entradas registradas.</p>
+                  <p className="text-[14px] text-[#86868B]">Ainda não há ganhos anotados.</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -403,7 +403,7 @@ export default function Finances() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-                  {editing ? 'Editar Transação' : 'Nova Transação'}
+                  {editing ? 'Editar anotação' : 'Anotar novo gasto ou ganho'}
                 </h2>
                 <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer">
                   <X size={18} />
@@ -431,12 +431,12 @@ export default function Finances() {
                       {type === 'income' ? (
                         <>
                           <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
-                          Entrada
+                          Dinheiro que entrou
                         </>
                       ) : (
                         <>
                           <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
-                          Despesa
+                          Dinheiro que saiu
                         </>
                       )}
                     </button>
@@ -445,26 +445,26 @@ export default function Finances() {
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Descrição</label>
-                    <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Conta de Luz" required />
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1">O que é? (Ex: Mercado, Conta de Luz...)</label>
+                    <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Compra de pão" required />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Valor</label>
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Quanto (Valor)?</label>
                       <div className="relative">
                         <span className="absolute left-4 top-3.5 text-[#86868B] text-[15px]">R$</span>
                         <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full pl-11 pr-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="0,00" required />
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Data</label>
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Quando (Data)?</label>
                       <input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all [color-scheme:dark]" required />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Categoria</label>
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Tipo da anotação (Categoria)</label>
                     <div className="grid grid-cols-3 gap-2">
                       {CATEGORIES.map(c => (
                         <button
@@ -492,9 +492,9 @@ export default function Finances() {
                     {form.submitting ? (
                       <>
                         <Loader2 size={20} className="animate-spin" />
-                        <span>Salvando...</span>
+                        <span>Guardando anotação...</span>
                       </>
-                    ) : editing ? 'Salvar Alterações' : 'Adicionar Transação'}
+                    ) : editing ? 'Salvar mudanças' : 'Pronto, anotar'}
                   </button>
                 </div>
               </form>
