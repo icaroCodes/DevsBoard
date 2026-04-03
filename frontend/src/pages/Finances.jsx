@@ -293,26 +293,26 @@ export default function Finances() {
           ) : (
             <div className="flex-1 overflow-y-auto px-2 py-2">
               {filtered.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-4 my-1 rounded-[16px] hover:bg-white/[0.03] transition-colors group cursor-default">
-                  <div className="flex items-center gap-4 border border-transparent">
-                    <div className={`w-11 h-11 rounded-[12px] flex items-center justify-center ${item.type === 'income' ? 'bg-[#30D158]/[0.08] text-[#30D158]' : 'bg-[#FF453A]/[0.08] text-[#FF453A]'}`}>
-                      {item.type === 'income' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+                <div key={item.id} className="flex items-center justify-between p-3 sm:p-4 my-1 rounded-[16px] hover:bg-white/[0.03] transition-colors group cursor-default">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className={`w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-[12px] flex items-center justify-center ${item.type === 'income' ? 'bg-[#30D158]/[0.08] text-[#30D158]' : 'bg-[#FF453A]/[0.08] text-[#FF453A]'}`}>
+                      {item.type === 'income' ? <ArrowUpRight size={18} className="sm:w-5 sm:h-5" /> : <ArrowDownRight size={18} className="sm:w-5 sm:h-5" />}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[15px] font-medium text-[#F5F5F7] truncate max-w-[200px] sm:max-w-xs">{item.description || 'Transação genérica'}</span>
-                      <span className="text-[13px] text-[#86868B] mt-0.5">{item.category} • {formatDate(item.transaction_date)}</span>
+                    <div className="flex flex-col min-w-0 w-full">
+                      <span className="text-[14px] sm:text-[15px] font-medium text-[#F5F5F7] truncate">{item.description || 'Transação genérica'}</span>
+                      <span className="text-[12px] sm:text-[13px] text-[#86868B] mt-0.5 truncate">{item.category} • {formatDate(item.transaction_date)}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-5">
-                    <span className={`text-[15px] font-medium ${item.type === 'income' ? 'text-[#30D158]' : 'text-[#F5F5F7]'}`}>
+                  <div className="flex items-center gap-2 sm:gap-5 ml-2 sm:ml-4 shrink-0">
+                    <span className={`text-[14px] sm:text-[15px] font-medium whitespace-nowrap ${item.type === 'income' ? 'text-[#30D158]' : 'text-[#F5F5F7]'}`}>
                       {item.type === 'income' ? '+' : '-'}R$ {Number(item.amount).toFixed(2).replace('.', ',')}
                     </span>
-                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(item)} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
-                        <Pencil size={15} />
+                    <div className="flex items-center gap-0.5 sm:gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(item)} className="p-1.5 sm:p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
+                        <Pencil size={14} className="sm:w-[15px] sm:h-[15px]" />
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
-                        <Trash2 size={15} />
+                      <button onClick={() => handleDelete(item.id)} className="p-1.5 sm:p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
+                        <Trash2 size={14} className="sm:w-[15px] sm:h-[15px]" />
                       </button>
                     </div>
                   </div>

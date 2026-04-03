@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import {
   DndContext,
-  closestCenter,
+  closestCorners,
   KeyboardSensor,
   PointerSensor,
   MouseSensor,
@@ -50,6 +50,50 @@ function TaskStatusCheck({ completed, colorClass = "bg-[#8E9C78]" }) {
   return <div className={`w-5 h-5 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10`} />;
 }
 
+function TaskPreview({ task, isOverlay = false }) {
+  const priorityColors = {
+    high: '#FF453A',
+    medium: '#FF9F0A',
+    low: '#32D74B',
+    none: 'transparent'
+  };
+
+  const formatTime = (time) => {
+    if (!time) return null;
+    return time.substring(0, 5);
+  };
+
+  return (
+    <div className={`flex items-start justify-between p-3.5 rounded-[12px] border shadow-xl ${isOverlay ? 'rotate-2 opacity-95 scale-[1.02] bg-[#222224] border-white/20' : 'bg-[#161618] border-white/[0.08]'}`}>
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="p-1 mt-0.5 text-[#86868B] shrink-0">
+          <GripVertical size={16} />
+        </div>
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="mt-1">
+            <TaskStatusCheck completed={task.completed} colorClass="bg-[#8E9C78]" />
+          </div>
+          <div className="flex-1 min-w-0 pr-2">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <span className={`text-[15px] font-medium truncate transition-colors ${task.completed ? 'text-[#86868B] line-through' : 'text-[#F5F5F7]'}`}>
+                {task.title}
+              </span>
+              {task.start_time && !task.completed && (
+                <span className="flex items-center gap-1 text-[11px] font-medium text-[#8E9C78]">
+                  <Clock size={10} /> {formatTime(task.start_time)}
+                </span>
+              )}
+              {task.priority && task.priority !== 'none' && !task.completed && (
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: priorityColors[task.priority] }} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
   const {
     attributes,
@@ -57,7 +101,8 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
+    isOver
   } = useSortable({ id: `task-${task.id}`, data: { type: 'task', task, routineId } });
 
   const style = {
@@ -87,7 +132,12 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-start justify-between p-3.5 bg-transparent hover:bg-white/[0.03] rounded-[16px] transition-colors ${isDragging ? 'bg-white/[0.05] shadow-lg opacity-50' : ''}`}
+      className={`group flex items-start justify-between p-3.5 rounded-[16px] transition-all duration-200 ${isDragging
+          ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/20 opacity-40'
+          : isOver
+            ? 'bg-[#8E9C78]/5 border border-[#8E9C78]/30 scale-[0.98]'
+            : 'bg-transparent hover:bg-white/[0.03]'
+        }`}
     >
       <div className="flex items-start gap-3 flex-1 min-w-0">
         <div
@@ -154,6 +204,44 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
   );
 }
 
+function RoutinePreview({ r, visualLabels, isOverlay = false }) {
+  if (!r) return null;
+
+  return (
+    <div className={`flex flex-col rounded-[16px] border transition-all overflow-hidden ${isOverlay ? 'rotate-1 scale-[1.05] bg-[#111111] border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)] opacity-95' : 'bg-[#1C1C1E] border-white/[0.08] shadow-2xl'}`}>
+      <div className={`flex justify-between items-center p-4 sm:p-5 lg:px-6 ${isOverlay && r.tasks?.length > 0 ? 'border-b border-white/[0.04]' : ''}`}>
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          <div className="p-1 text-[#86868B] shrink-0">
+            <GripVertical size={18} className="sm:size-5" />
+          </div>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center shrink-0">
+            <Repeat size={14} className="sm:size-[18px] text-[#8E9C78]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="font-semibold text-[14px] sm:text-[15px] text-[#F5F5F7] tracking-tight truncate flex-1 min-w-0 uppercase font-bold">{r.name}</p>
+            </div>
+            <p className="text-[12px] text-[#86868B] mt-0.5">
+              {r.tasks?.length || 0} {(r.tasks?.length === 1) ? 'tarefa' : 'tarefas'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {isOverlay && r.tasks && r.tasks.length > 0 && (
+        <div className="p-2 space-y-2 bg-[#111111] max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-hide">
+          {r.tasks.map(t => (
+            <div key={t.id} className="flex items-center gap-2 px-3 py-2.5 rounded-[12px] bg-[#222224] border border-white/20 shadow-md">
+              <div className="w-3.5 h-3.5 rounded-full border border-white/10 shrink-0" />
+              <span className="text-[13px] text-[#E5E5EA] font-medium truncate flex-1">{t.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SortableRoutine({
   r,
   expanded,
@@ -171,13 +259,15 @@ function SortableRoutine({
   sensors,
   visualLabels
 }) {
+  const [activeTaskId, setActiveTaskId] = useState(null);
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
+    isOver
   } = useSortable({ id: `routine-${r.id}`, data: { type: 'routine', routine: r } });
 
   const style = {
@@ -189,14 +279,21 @@ function SortableRoutine({
   const isExpanded = expanded[r.id];
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
       style={style}
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className={`bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm transition-all duration-300 hover:border-white/10 ${isDragging ? 'opacity-50 ring-2 ring-[#8E9C78]/50' : ''}`}
+      className={`relative rounded-[24px] overflow-hidden transition-all duration-300 ${isDragging
+          ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/40 shadow-none z-0'
+          : isOver 
+            ? 'bg-[#1C1C1E] border-2 border-[#0A84FF]/50 shadow-[0_0_15px_rgba(10,132,255,0.1)] scale-[0.98]'
+            : 'bg-[#1C1C1E] border border-white/[0.04] shadow-sm hover:border-white/10'
+        }`}
     >
+      {/* Indicador visual de inserção estilo "glow" quando o item é o destino do drop */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-[#8E9C78]/5 pointer-events-none animate-pulse" />
+      )}
+
       <div
         className="flex justify-between items-center p-4 sm:p-5 lg:px-6 cursor-pointer select-none group gap-2 sm:gap-4"
         onClick={() => setExpanded(prev => ({ ...prev, [r.id]: !prev[r.id] }))}
@@ -264,8 +361,11 @@ function SortableRoutine({
             <div className="p-4 sm:p-6 bg-[#161618] space-y-2">
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={(e) => onTaskDragEnd(e, r.id)}
+                collisionDetection={closestCorners}
+
+                onDragStart={(e) => setActiveTaskId(e.active.id)}
+                onDragEnd={(e) => { setActiveTaskId(null); onTaskDragEnd(e, r.id); }}
+                onDragCancel={() => setActiveTaskId(null)}
               >
                 <SortableContext
                   items={(r.tasks || []).map(t => `task-${t.id}`)}
@@ -290,6 +390,14 @@ function SortableRoutine({
                     />
                   ))}
                 </SortableContext>
+                <DragOverlay dropAnimation={dropAnimation}>
+                  {activeTaskId ? (
+                    <TaskPreview 
+                      task={r.tasks.find(t => `task-${t.id}` === activeTaskId)} 
+                      isOverlay={true} 
+                    />
+                  ) : null}
+                </DragOverlay>
               </DndContext>
 
               {taskForm.routineId === r.id ? (
@@ -317,7 +425,7 @@ function SortableRoutine({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-1.5 ml-1">Horário</label>
                       <input
@@ -328,7 +436,7 @@ function SortableRoutine({
                       />
                     </div>
                     {r.visual_type === 'weekly' && (
-                      <div className="col-span-2">
+                      <div className="col-span-1 sm:col-span-2">
                         <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2.5 ml-1">Dia da Semana</label>
                         <div className="flex justify-between items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
                           {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, idx) => (
@@ -336,7 +444,7 @@ function SortableRoutine({
                               key={idx}
                               type="button"
                               onClick={() => setTaskForm({ ...taskForm, day_of_week: taskForm.day_of_week === idx ? null : idx })}
-                              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-[12px] sm:text-[13px] font-bold transition-all duration-200 border ${taskForm.day_of_week === idx
+                              className={`w-9 h-9 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-[12px] sm:text-[13px] font-bold transition-all duration-200 border ${taskForm.day_of_week === idx
                                   ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-105 sm:scale-110'
                                   : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
                                 }`}
@@ -349,35 +457,38 @@ function SortableRoutine({
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
-                    <div className="flex gap-1.5">
-                      {['none', 'low', 'medium', 'high'].map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setTaskForm({ ...taskForm, priority: p })}
-                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${taskForm.priority === p
-                              ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
-                              : 'bg-white/5 text-[#86868B] hover:bg-white/10'
-                            }`}
-                        >
-                          {p === 'high' ? 'Alta' : p === 'medium' ? 'Média' : p === 'low' ? 'Baixa' : 'Nenhuma'}
-                        </button>
-                      ))}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-white/[0.04]">
+                    <div className="w-full sm:w-auto">
+                      <label className="block sm:hidden text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2 ml-1">Prioridade</label>
+                      <div className="grid grid-cols-4 sm:flex gap-1.5 w-full sm:w-auto">
+                        {['none', 'low', 'medium', 'high'].map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setTaskForm({ ...taskForm, priority: p })}
+                            className={`flex flex-1 sm:flex-none justify-center px-1 sm:px-3 py-2 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${taskForm.priority === p
+                                ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
+                                : 'bg-white/5 text-[#86868B] hover:bg-white/10'
+                              }`}
+                          >
+                            <span className="truncate">{p === 'high' ? 'Alta' : p === 'medium' ? 'Média' : p === 'low' ? 'Baixa' : 'Nada'}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <button
                         type="button"
                         onClick={() => setTaskForm({ routineId: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null })}
-                        className="px-4 py-2 rounded-full text-[14px] font-medium text-[#86868B] hover:bg-white/5 transition-colors"
+                        className="flex-1 sm:flex-none px-4 py-3 sm:py-2 rounded-full text-[13px] sm:text-[14px] font-medium text-[#86868B] bg-white/5 sm:bg-transparent hover:bg-white/10 sm:hover:bg-white/5 transition-colors"
                       >
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={taskForm.submitting}
-                        className={`px-6 py-2 rounded-full bg-[#8E9C78] text-white text-[14px] font-bold hover:bg-[#9EAC88] transition-all shadow-lg shadow-[#8E9C78]/10 disabled:opacity-50 flex items-center justify-center gap-2 min-w-[100px]`}
+                        className={`flex-1 sm:flex-none px-6 py-3 sm:py-2 rounded-full bg-[#8E9C78] text-white text-[13px] sm:text-[14px] font-bold hover:bg-[#9EAC88] transition-all shadow-lg shadow-[#8E9C78]/10 disabled:opacity-50 flex items-center justify-center gap-2`}
                       >
                         {taskForm.submitting ? (
                           <>
@@ -401,7 +512,7 @@ function SortableRoutine({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
@@ -651,7 +762,7 @@ export default function Routines() {
           ) : (
             <DndContext
               sensors={sensors}
-              collisionDetection={closestCenter}
+              collisionDetection={closestCorners}
               onDragStart={(e) => setActiveId(e.active.id)}
               onDragEnd={handleRoutineDragEnd}
               onDragCancel={() => setActiveId(null)}
@@ -684,12 +795,11 @@ export default function Routines() {
 
               <DragOverlay dropAnimation={dropAnimation}>
                 {activeId && activeId.toString().startsWith('routine-') ? (
-                  <div className="bg-[#1C1C1E] border border-[#8E9C78]/50 rounded-[24px] overflow-hidden shadow-2xl opacity-90 p-5 flex items-center gap-4">
-                    <Repeat size={18} className="text-[#8E9C78]" />
-                    <span className="font-semibold text-[#F5F5F7] text-[17px]">
-                      {items.find(r => `routine-${r.id}` === activeId)?.name}
-                    </span>
-                  </div>
+                  <RoutinePreview 
+                    r={items.find(r => `routine-${r.id}` === activeId)} 
+                    visualLabels={visualLabels} 
+                    isOverlay={true} 
+                  />
                 ) : null}
               </DragOverlay>
             </DndContext>

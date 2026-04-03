@@ -71,6 +71,20 @@ body::before {
 }
 
 /* Utility Animations */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 15s linear infinite;
+  will-change: transform;
+}
+
 @keyframes pulse-soft {
 
   0%,
@@ -106,6 +120,18 @@ body::before {
 
 .will-change-opacity {
   will-change: opacity;
+}
+
+.text-gradient-ios {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent; /* Fallback */
+}
+
+/* Force Light/Dark consistency */
+:root {
+  color-scheme: dark;
 }
 
 /* Responsive Fluid Typography */

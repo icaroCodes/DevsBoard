@@ -220,7 +220,7 @@ function ListView() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`relative flex-1 sm:flex-none px-4 sm:px-5 py-1.5 rounded-[8px] text-[13px] font-medium transition-colors z-10 outline-none ${filter === f ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
+                className={`relative flex-1 sm:flex-none px-2 sm:px-5 py-2 sm:py-1.5 rounded-[8px] text-[12px] sm:text-[13px] font-medium transition-colors z-10 outline-none ${filter === f ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
               >
                 {filter === f && (
                   <motion.div layoutId="activeTaskFilter" className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
@@ -235,9 +235,9 @@ function ListView() {
               setFormParams({ title: '', description: '', priority: 'medium', submitting: false });
               setModalOpen(true);
             }}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto"
+            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-3 sm:py-2 rounded-[12px] sm:rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[14px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95"
           >
-            <Plus size={14} strokeWidth={3} /> Nova Tarefa
+            <Plus size={16} strokeWidth={3} className="sm:w-4 sm:h-4" /> Nova Tarefa
           </button>
         </div>
       </motion.div>
@@ -274,7 +274,7 @@ function ListView() {
             <p className="text-[15px] text-[#86868B]">Nenhuma tarefa encontrada.</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 space-y-1">
             {filteredItems.map(item => (
               <motion.div
                 key={item.id}
@@ -282,35 +282,35 @@ function ListView() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`flex items-center justify-between p-4 my-1 rounded-[16px] hover:bg-white/[0.03] transition-colors group cursor-default border border-transparent ${item.completed ? 'opacity-60' : ''}`}
+                className={`flex items-center justify-between p-3 sm:p-4 rounded-[16px] hover:bg-white/[0.03] transition-colors group cursor-default border border-transparent ${item.completed ? 'opacity-60' : ''}`}
               >
-                <div className="flex items-start sm:items-center gap-4 flex-1 min-w-0">
-                  <div className="mt-1 sm:mt-0">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="mt-0.5 sm:mt-0 shrink-0">
                     <TaskStatusCheck completed={item.completed} priority={item.priority} onClick={() => toggleComplete(item)} />
                   </div>
-                  <div className="flex flex-col min-w-0 flex-1 pr-4">
-                    <span className={`text-[16px] font-medium truncate transition-colors ${item.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
+                  <div className="flex flex-col min-w-0 flex-1 pr-2 sm:pr-4">
+                    <span className={`text-[15px] sm:text-[16px] font-medium truncate transition-colors ${item.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
                       {item.title}
                     </span>
                     {item.description && (
-                      <span className={`text-[13px] mt-0.5 line-clamp-2 transition-colors ${item.completed ? 'text-[#86868B]/70' : 'text-[#86868B]'}`}>
+                      <span className={`text-[12px] sm:text-[13px] mt-0.5 line-clamp-2 transition-colors ${item.completed ? 'text-[#86868B]/70' : 'text-[#86868B]'}`}>
                         {item.description}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                   <span className={`hidden sm:inline-flex px-2.5 py-1 rounded-[6px] text-[12px] font-semibold tracking-wide uppercase ${priorityBg[item.priority] || ''} ${priorityColors[item.priority] || ''}`}>
                     {priorityLabels[item.priority] || item.priority}
                   </span>
 
-                  <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(item)} className="p-2.5 sm:p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
-                      <Pencil size={18} className="sm:size-4" />
+                  <div className="flex items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => openEdit(item)} className="p-2 sm:p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
+                      <Pencil size={15} />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2.5 sm:p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
-                      <Trash2 size={18} className="sm:size-4" />
+                    <button onClick={() => handleDelete(item.id)} className="p-2 sm:p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>

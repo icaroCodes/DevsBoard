@@ -168,14 +168,15 @@ const FinancialChartAnimation = ({ lang = 'pt' }) => {
         </div>
       </div>
 
-      {/* Bouncing Chart Bars */}
+      {/* Bouncing Chart Bars (Otimizado para escala sem layout thrashing) */}
       <div className="flex items-end gap-1.5 w-full h-20 opacity-80 z-10 relative left-1/2 -translate-x-1/2 pr-3 pl-3">
         {[30, 50, 40, 70, 55, 90, 65, 100].map((height, i) => (
           <motion.div
             key={i}
-            animate={{ height: [`${height * 0.4}%`, `${height}%`, `${height * 0.4}%`] }}
+            style={{ height: `${height}%`, transformOrigin: 'bottom' }}
+            animate={{ scaleY: [0.4, 1, 0.4] }}
             transition={{ duration: 3, delay: i * 0.15, repeat: Infinity, ease: "easeInOut" }}
-            className="flex-1 bg-gradient-to-t from-transparent via-[#8E9C78]/40 to-[#8E9C78]/90 rounded-t-sm"
+            className="flex-1 bg-gradient-to-t from-transparent via-[#8E9C78]/40 to-[#8E9C78]/90 rounded-t-sm will-change-transform"
           />
         ))}
       </div>
@@ -291,90 +292,20 @@ const RoutineDragAndDropAnimation = () => {
 };
 
 const InfiniteSponsors = () => {
-  const scrollerRef = useRef(null);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const scrollLeft = useRef(0);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    let animationFrameId;
-    const renderLoop = () => {
-      // Auto-scrolling only if not dragging
-      if (!isDragging.current) {
-        scroller.scrollLeft += 1;
-        // The total scroll width includes 4 duplicate sets. 
-        // Once we pass half, we loop back minus half.
-        if (scroller.scrollLeft >= (scroller.scrollWidth / 2)) {
-          scroller.scrollLeft -= (scroller.scrollWidth / 2);
-        }
-      }
-      animationFrameId = requestAnimationFrame(renderLoop);
-    };
-
-    animationFrameId = requestAnimationFrame(renderLoop);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  const onDragStart = (e) => {
-    isDragging.current = true;
-    const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-    startX.current = pageX - scrollerRef.current.offsetLeft;
-    scrollLeft.current = scrollerRef.current.scrollLeft;
-  };
-
-  const onDragMove = (e) => {
-    if (!isDragging.current) return;
-    const pageX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-    const x = pageX - scrollerRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.5;
-    let newScrollLeft = scrollLeft.current - walk;
-
-    // Looping math while dragging
-    const halfWidth = scrollerRef.current.scrollWidth / 2;
-    if (newScrollLeft >= halfWidth) {
-      newScrollLeft -= halfWidth;
-      startX.current = x; // Reset to avoid jump
-      scrollLeft.current = newScrollLeft;
-    } else if (newScrollLeft <= 0) {
-      newScrollLeft += halfWidth;
-      startX.current = x;
-      scrollLeft.current = newScrollLeft;
-    }
-
-    scrollerRef.current.scrollLeft = newScrollLeft;
-  };
-
-  const onDragEnd = () => {
-    isDragging.current = false;
-  };
-
   return (
-    <div className="w-full relative z-10 block cursor-grab active:cursor-grabbing">
+    <div className="w-full relative z-10 block overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-r from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
       <div className="absolute right-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-l from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
 
-      <div
-        ref={scrollerRef}
-        className="flex flex-row items-center w-full overflow-x-hidden gap-16 sm:gap-24 md:gap-40 pr-16 sm:pr-24 md:pr-40"
-        style={{ scrollBehavior: 'auto' }}
-        onMouseDown={onDragStart}
-        onMouseMove={onDragMove}
-        onMouseUp={onDragEnd}
-        onMouseLeave={onDragEnd}
-        onTouchStart={onDragStart}
-        onTouchMove={onDragMove}
-        onTouchEnd={onDragEnd}
-      >
-        {[1, 2, 3, 4].map((group) => (
-          <React.Fragment key={group}>
+      {/* Marquee Container CSS - Accelerated 60FPS Safari */}
+      <div className="flex flex-row items-center w-[200%] animate-marquee will-change-transform gap-16 sm:gap-24 md:gap-40">
+        {[1, 2, 3, 4, 5, 6].map((group) => (
+          <div key={group} className="flex items-center shrink-0 gap-16 sm:gap-24 md:gap-40">
             <img draggable="false" className="h-20 sm:h-24 md:h-32 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Denna.png" alt="Denna" />
             <img draggable="false" className="h-32 sm:h-40 md:h-52 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Robson.png" alt="Robson" />
             <img draggable="false" className="h-16 sm:h-20 md:h-28 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/cleansite.png" alt="Cleansite" />
             <img draggable="false" className="h-32 sm:h-44 md:h-56 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/im_transparente.png" alt="IM" />
-          </React.Fragment>
+          </div>
         ))}
       </div>
     </div>
@@ -428,8 +359,8 @@ const TeamCollaborationAnimation = () => {
         <div className="bg-[#30D158] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg absolute top-4 left-4 z-10">Membro</div>
       </motion.div>
 
-      {/* Light effect */}
-      <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-[#8E9C78]/10 -translate-x-1/2 -translate-y-1/2 blur-2xl rounded-full pointer-events-none z-0" />
+      {/* Light effect (Radial Gradient ao invés de Blur pesado para 60fps iOS) */}
+      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[radial-gradient(circle,_rgba(142,156,120,0.15)_0%,_transparent_60%)] -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none z-0" />
     </div>
   );
 };
@@ -511,12 +442,12 @@ export default function Landing() {
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${isScrolled
-            ? "bg-[#0a0a0a]/60 backdrop-blur-2xl border-b border-white/[0.06]"
+          className={`fixed top-0 left-0 right-0 z-[60] transition-colors duration-200 will-change-transform ${isScrolled
+            ? "bg-[#0a0a0a]/85 backdrop-blur-md border-b border-white/[0.06]"
             : "bg-transparent border-b border-transparent"
             }`}
         >
-          <div className={`max-w-6xl mx-auto px-6 flex items-center justify-between relative transition-all duration-500 ${isScrolled ? "py-3" : "py-6"}`}>
+          <div className={`max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between relative transition-all duration-500 ${isScrolled ? "py-3" : "py-6"}`}>
 
             {/* LOGO AREA */}
             <Link to="/" className="relative z-10">
@@ -551,9 +482,9 @@ export default function Landing() {
             </div>
 
             {/* ACTIONS AREA */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Language Segmented Control (Apple Minimalist Style) */}
-              <div className="relative flex items-center bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.05] rounded-full p-[2px] transition-colors mr-1 sm:mr-3">
+              <div className="hidden sm:flex relative items-center bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.05] rounded-full p-[2px] transition-colors mr-1 sm:mr-3">
                 <motion.div
                   className="absolute h-6 bg-white/[0.12] rounded-full shadow-sm"
                   layout
@@ -629,23 +560,23 @@ export default function Landing() {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="w-full bg-[#8E9C78]/10 border-t border-white/[0.05] overflow-hidden"
           >
-            <div className="max-w-6xl mx-auto px-6 py-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
-              <div className="flex items-center gap-2">
-                <Users size={14} className="text-[#8E9C78] shrink-0" />
-                <div className="relative flex h-2 w-2">
+            <div className="max-w-6xl mx-auto px-2 sm:px-6 py-2 md:py-2.5 flex flex-row flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <Users size={12} className="text-[#8E9C78] shrink-0 md:w-3.5 md:h-3.5" />
+                <div className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8E9C78] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#8E9C78]"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-[#8E9C78]"></span>
                 </div>
-                <p className="text-[12px] md:text-[13px] font-medium text-zinc-300 tracking-tight">
+                <p className="text-[9.5px] sm:text-[11px] md:text-[13px] font-medium text-zinc-300 tracking-tight leading-tight max-w-[240px] sm:max-w-none line-clamp-1 sm:line-clamp-none">
                   {t.bannerText}
                 </p>
               </div>
               <Link
                 to="/auth"
-                className="text-[11px] md:text-[12px] font-bold text-[#8E9C78] hover:text-white transition-colors flex items-center gap-1 group"
+                className="text-[9.5px] sm:text-[11px] md:text-[12px] font-bold text-[#8E9C78] hover:text-white transition-colors flex items-center gap-1 group whitespace-nowrap"
               >
                 {t.bannerLink}
-                <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight size={10} className="md:w-3 md:h-3 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
           </motion.div>
@@ -772,8 +703,8 @@ export default function Landing() {
 
         {/* Hero Section */}
         <section className="pt-32 md:pt-40 pb-16 md:pb-20 px-4 sm:px-6 min-h-[90vh] md:min-h-[95vh] flex flex-col items-center justify-center relative overflow-hidden">
-          {/* Subtle gradient background */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#8E9C78]/10 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
+          {/* Subtle gradient background (Radial Gradient em vez de Blur 120px) */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[radial-gradient(circle,_rgba(142,156,120,0.1)_0%,_transparent_70%)] rounded-full pointer-events-none" />
 
           <motion.div
             initial="hidden"
@@ -842,7 +773,7 @@ export default function Landing() {
           {/* Hero Image/Preview */}
           <div className="mt-20 w-full max-w-5xl mx-auto relative z-10" style={{ perspective: '1200px' }}>
             <motion.div
-              style={{
+              style={isMobile ? {} : {
                 rotateX,
                 scale,
                 transformOrigin: 'top center',
@@ -851,7 +782,7 @@ export default function Landing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.01 }}
               transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu"
+              className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu will-change-transform will-change-opacity"
             >
               <div className="rounded-lg bg-[#0A0A0A] border border-white/5 overflow-hidden flex flex-col">
                 <img
@@ -1062,9 +993,9 @@ export default function Landing() {
         <section className="py-20 md:py-32 px-4 sm:px-6">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
-            className="max-w-5xl mx-auto bg-[#111] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-8 sm:p-12 md:p-24 text-center relative overflow-hidden shadow-[0_0_80px_rgba(142,156,120,0.05)]"
+            className="max-w-5xl mx-auto bg-[#111] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-8 sm:p-12 md:p-24 text-center relative overflow-hidden shadow-[0_0_80px_rgba(142,156,120,0.05)] will-change-transform will-change-opacity"
           >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] md:w-[80%] md:h-[80%] bg-[#8E9C78]/10 rounded-[100%] blur-[60px] md:blur-[100px] pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] md:w-[80%] md:h-[80%] bg-[radial-gradient(circle,_rgba(142,156,120,0.1)_0%,_transparent_70%)] rounded-[100%] pointer-events-none" />
             <div className="relative z-10 flex flex-col items-center">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-4 md:mb-8 leading-tight">
                 {t.ctaTitle}

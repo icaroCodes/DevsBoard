@@ -18,7 +18,8 @@ import {
   Plus,
   Heart,
   Briefcase,
-  LogOut
+  LogOut,
+  Trophy
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
@@ -32,6 +33,7 @@ const navItems = [
   { to: '/goals', icon: Target, label: 'Metas' },
   { to: '/projects', icon: Folder, label: 'Projetos' },
   { to: '/teams', icon: Users, label: 'Times' },
+  { to: '/achievements', icon: Trophy, label: 'Conquistas' },
   { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 

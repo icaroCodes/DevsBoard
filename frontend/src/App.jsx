@@ -11,6 +11,7 @@ import Goals from './pages/Goals';
 import Projects from './pages/Projects';
 import Teams from './pages/Teams';
 import Settings from './pages/Settings';
+import Achievements from './pages/Achievements';
 import NotFound from './pages/NotFound';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmModalContext';
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                 <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </RealtimeProvider>
