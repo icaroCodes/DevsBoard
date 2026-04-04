@@ -16,6 +16,7 @@ import NotFound from './pages/NotFound';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmModalContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
+import { AchievementProvider } from './contexts/AchievementContext';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -37,6 +38,7 @@ export default function App() {
       <ToastProvider>
         <ConfirmProvider>
           <AuthProvider>
+            <AchievementProvider>
             <RealtimeProvider>
               <Routes>
                 <Route path="/" element={<Landing />} />
@@ -53,6 +55,7 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </RealtimeProvider>
+            </AchievementProvider>
           </AuthProvider>
         </ConfirmProvider>
       </ToastProvider>

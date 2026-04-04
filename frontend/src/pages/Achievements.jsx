@@ -1,354 +1,443 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Lock, Sparkles, Clock, Calendar } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Lock } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 
-const categoryLabels = {
-  all: 'Todas',
-  tasks: 'Tarefas',
-  goals: 'Metas',
+// ─── Tier config ─────────────────────────────────────────────────────────────
+
+const TIERS = {
+  bronze: {
+    label:        'Bronze',
+    color:        '#CD7F32',
+    colorAlpha:   'rgba(205,127,50,',
+    border:       '1px solid rgba(205,127,50,0.22)',
+    borderHover:  '1px solid rgba(205,127,50,0.45)',
+    glow:         '0 0 32px rgba(205,127,50,0.18)',
+    glowStrong:   '0 0 60px rgba(205,127,50,0.30)',
+    bg:           'rgba(205,127,50,0.06)',
+    medal:        '/bronze.svg',
+    barColor:     '#CD7F32',
+  },
+  prata: {
+    label:        'Prata',
+    color:        '#C8D4E3',
+    colorAlpha:   'rgba(200,212,227,',
+    border:       '1px solid rgba(200,212,227,0.22)',
+    borderHover:  '1px solid rgba(200,212,227,0.45)',
+    glow:         '0 0 32px rgba(200,212,227,0.15)',
+    glowStrong:   '0 0 60px rgba(200,212,227,0.28)',
+    bg:           'rgba(200,212,227,0.05)',
+    medal:        '/prata.svg',
+    barColor:     '#A8B8CC',
+  },
+  ouro: {
+    label:        'Ouro',
+    color:        '#FFD700',
+    colorAlpha:   'rgba(255,215,0,',
+    border:       '1px solid rgba(255,215,0,0.22)',
+    borderHover:  '1px solid rgba(255,215,0,0.45)',
+    glow:         '0 0 32px rgba(255,215,0,0.18)',
+    glowStrong:   '0 0 60px rgba(255,215,0,0.30)',
+    bg:           'rgba(255,215,0,0.05)',
+    medal:        '/ouro.svg',
+    barColor:     '#FFD700',
+  },
+  platina: {
+    label:        'Platina',
+    color:        '#E2E8FF',
+    colorAlpha:   'rgba(226,232,255,',
+    border:       '1px solid rgba(226,232,255,0.25)',
+    borderHover:  '1px solid rgba(226,232,255,0.5)',
+    glow:         '0 0 40px rgba(180,180,255,0.20)',
+    glowStrong:   '0 0 80px rgba(200,200,255,0.40)',
+    bg:           'rgba(226,232,255,0.05)',
+    medal:        '/platina.svg',
+    barColor:     '#C8D0FF',
+  },
+};
+
+const CATEGORY_LABELS = {
+  all:      'Todas',
+  tasks:    'Tarefas',
+  goals:    'Metas',
   finances: 'Finanças',
   routines: 'Rotinas',
   projects: 'Projetos',
-  teams: 'Times',
-  tempo: 'Tempo',
-  longevidade: 'Longevidade',
-  special: 'Especiais',
+  tempo:    'Tempo',
+  streak:   'Streak',
+  hidden:   'Especiais',
+  ultimate: 'Especiais',
 };
 
-const categoryColors = {
-  tasks: { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20', glow: 'rgba(59,130,246,0.15)' },
-  goals: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', glow: 'rgba(16,185,129,0.15)' },
-  finances: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20', glow: 'rgba(245,158,11,0.15)' },
-  routines: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', glow: 'rgba(168,85,247,0.15)' },
-  projects: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20', glow: 'rgba(6,182,212,0.15)' },
-  teams: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', glow: 'rgba(244,63,94,0.15)' },
-  tempo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', glow: 'rgba(99,102,241,0.15)' },
-  longevidade: { bg: 'bg-teal-500/10', text: 'text-teal-400', border: 'border-teal-500/20', glow: 'rgba(20,184,166,0.15)' },
-  special: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20', glow: 'rgba(234,179,8,0.15)' },
-};
-
-const tierColors = {
-  iniciante: { bg: 'bg-zinc-500/10', text: 'text-zinc-400', label: 'Iniciante' },
-  consistente: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Consistente' },
-  avançado: { bg: 'bg-purple-500/10', text: 'text-purple-400', label: 'Avançado' },
-  dominante: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Dominante' },
-};
-
-function formatProgressLabel(achievement) {
-  const { category, slug, current, threshold } = achievement;
-
-  // Tempo de sessão e total: mostrar em formato legível
-  if (slug === 'session_1h' || slug === 'session_3h') {
-    const curMin = Math.floor(current / 60);
-    const thrMin = Math.floor(threshold / 60);
-    if (curMin >= 60) {
-      return `${Math.floor(curMin / 60)}h ${curMin % 60}min / ${Math.floor(thrMin / 60)}h`;
-    }
-    return `${curMin}min / ${thrMin >= 60 ? `${Math.floor(thrMin / 60)}h` : `${thrMin}min`}`;
-  }
-
-  if (slug?.startsWith('total_')) {
-    const curH = Math.floor(current / 3600);
-    const curM = Math.floor((current % 3600) / 60);
-    const thrH = Math.floor(threshold / 3600);
-    return `${curH}h ${curM}min / ${thrH}h`;
-  }
-
-  if (slug?.startsWith('account_')) {
-    return `${current} / ${threshold} dias`;
-  }
-
-  // Finanças: formato monetário
-  if (category === 'finances' && threshold >= 1000) {
-    return `R$ ${current.toLocaleString('pt-BR')} / R$ ${threshold.toLocaleString('pt-BR')}`;
-  }
-
-  return `${current} / ${threshold}`;
-}
+// ─── Achievement Card ─────────────────────────────────────────────────────────
 
 function AchievementCard({ achievement, index }) {
-  const colors = categoryColors[achievement.category] || categoryColors.special;
-  const tier = tierColors[achievement.tier] || tierColors.iniciante;
   const isUnlocked = achievement.unlocked;
+  const isHidden   = achievement.hidden && !isUnlocked;
+  const tier       = TIERS[achievement.tier] || TIERS.bronze;
+  const isPlatina  = achievement.tier === 'platina';
+  const progress   = isUnlocked ? 100 : (achievement.progress || 0);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative group rounded-[24px] border overflow-hidden transition-all duration-500 ${
-        isUnlocked
-          ? `bg-[#1C1C1E] ${colors.border} hover:border-white/20 shadow-sm hover:shadow-lg`
-          : 'bg-[#1C1C1E]/60 border-white/[0.03] opacity-60 hover:opacity-80'
-      }`}
-      style={isUnlocked ? { boxShadow: `0 0 40px ${colors.glow}` } : {}}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0  }}
+      transition={{ delay: index * 0.025, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="relative overflow-hidden rounded-[22px] transition-all duration-300 group"
+      style={{
+        background: isUnlocked
+          ? `linear-gradient(145deg, #131316, #0e0e11)`
+          : '#0c0c0e',
+        border:     isUnlocked ? tier.border : '1px solid rgba(255,255,255,0.04)',
+        boxShadow:  isUnlocked ? tier.glow : 'none',
+        opacity:    isUnlocked ? 1 : 0.55,
+      }}
+      whileHover={isUnlocked ? { scale: 1.01 } : {}}
     >
-      {/* Glow effect for unlocked */}
-      {isUnlocked && (
-        <div
-          className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-[0.06] pointer-events-none transition-opacity group-hover:opacity-[0.12]"
-          style={{ background: colors.glow.replace('0.15', '1') }}
+      {/* Platina shimmer overlay */}
+      {isPlatina && isUnlocked && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(200,210,255,0.04) 50%, transparent 100%)',
+            backgroundSize: '200% 100%',
+          }}
         />
       )}
 
-      <div className="relative p-5 sm:p-6">
-        {/* Header */}
-        <div className="flex items-start gap-4">
-          <div className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-[18px] flex items-center justify-center text-2xl sm:text-3xl shrink-0 transition-transform group-hover:scale-105 ${
-            isUnlocked ? `${colors.bg} shadow-lg` : 'bg-white/[0.03]'
-          }`}>
-            {isUnlocked ? (
-              <span className="drop-shadow-lg">{achievement.icon}</span>
+      <div className="flex gap-4 p-5 relative z-10">
+        {/* Medal */}
+        <div className="relative shrink-0">
+          <div
+            className="w-[72px] h-[72px] rounded-[18px] flex items-center justify-center overflow-hidden transition-all duration-300"
+            style={{
+              background: isUnlocked ? tier.bg : 'rgba(255,255,255,0.03)',
+              boxShadow:  isUnlocked ? tier.glow : 'none',
+            }}
+          >
+            {isHidden ? (
+              <Lock size={22} className="text-zinc-700" />
             ) : (
-              <Lock size={22} className="text-[#48484A]" />
-            )}
-            {isUnlocked && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#30D158] flex items-center justify-center shadow-lg shadow-[#30D158]/30">
-                <Sparkles size={10} className="text-white" />
-              </div>
+              <img
+                src={tier.medal}
+                alt={tier.label}
+                className="w-12 h-12 object-contain transition-all duration-300"
+                style={{ filter: isUnlocked ? 'none' : 'grayscale(100%) brightness(0.3)' }}
+              />
             )}
           </div>
 
-          <div className="flex-1 min-w-0">
-            <h3 className={`text-[15px] sm:text-[17px] font-semibold tracking-tight truncate ${
-              isUnlocked ? 'text-[#F5F5F7]' : 'text-[#48484A]'
-            }`}>
-              {achievement.name}
-            </h3>
-            <p className={`text-[12px] sm:text-[13px] mt-0.5 line-clamp-2 ${
-              isUnlocked ? 'text-[#86868B]' : 'text-[#3A3A3C]'
-            }`}>
-              {achievement.description}
-            </p>
-
-            {/* Category + Tier tags */}
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className={`inline-block px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest ${
-                isUnlocked ? `${colors.bg} ${colors.text}` : 'bg-white/[0.02] text-[#3A3A3C]'
-              }`}>
-                {categoryLabels[achievement.category]}
-              </span>
-              {achievement.tier && (
-                <span className={`inline-block px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest ${
-                  isUnlocked ? `${tier.bg} ${tier.text}` : 'bg-white/[0.02] text-[#3A3A3C]'
-                }`}>
-                  {tier.label}
-                </span>
-              )}
-            </div>
-          </div>
+          {/* Unlock badge */}
+          {isUnlocked && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ background: tier.color }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 5.5L4 7.5L8 3" stroke="#000" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.div>
+          )}
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className={`text-[11px] font-medium ${isUnlocked ? 'text-[#86868B]' : 'text-[#3A3A3C]'}`}>
-              {isUnlocked ? 'Completa' : formatProgressLabel(achievement)}
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3
+            className="text-[15px] font-bold leading-tight mb-1 truncate"
+            style={{ color: isUnlocked ? '#F5F5F7' : '#3a3a3c' }}
+          >
+            {isHidden ? 'Conquista Oculta' : achievement.name}
+          </h3>
+          <p className="text-[12px] leading-snug line-clamp-2 mb-3" style={{ color: isUnlocked ? '#6e6e73' : '#2a2a2c' }}>
+            {isHidden ? 'Continue evoluindo para revelar este troféu.' : achievement.description}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* Tier badge */}
+            <span
+              className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+              style={{
+                background: isUnlocked ? `${tier.colorAlpha}0.12)` : 'rgba(255,255,255,0.04)',
+                color:      isUnlocked ? tier.color : '#3a3a3c',
+              }}
+            >
+              {tier.label}
             </span>
-            <span className={`text-[11px] font-bold ${isUnlocked ? colors.text : 'text-[#3A3A3C]'}`}>
-              {achievement.progress}%
-            </span>
+
+            {/* Category badge */}
+            {!isHidden && (
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-white/[0.04] text-zinc-600">
+                {CATEGORY_LABELS[achievement.category] || achievement.category}
+              </span>
+            )}
           </div>
-          <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      {!isUnlocked && progress > 0 && (
+        <div className="px-5 pb-4 relative z-10">
+          <div className="flex justify-between items-center mb-1.5">
+            <span className="text-[9px] font-black uppercase tracking-wider text-zinc-700">Progresso</span>
+            <span className="text-[9px] font-black text-zinc-600">{progress}%</span>
+          </div>
+          <div className="h-[3px] bg-white/[0.05] rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${achievement.progress}%` }}
-              transition={{ duration: 1.2, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-              className={`h-full rounded-full ${
-                isUnlocked ? 'bg-gradient-to-r from-[#30D158] to-[#34C759]' : 'bg-white/10'
-              }`}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: index * 0.02 }}
+              className="h-full rounded-full"
+              style={{ background: tier.barColor, opacity: 0.5 }}
             />
           </div>
         </div>
+      )}
 
-        {/* Unlock date */}
-        {isUnlocked && achievement.unlocked_at && (
-          <p className="text-[10px] text-[#48484A] mt-2.5 font-medium">
-            Desbloqueada em {new Date(achievement.unlocked_at).toLocaleDateString('pt-BR')}
-          </p>
-        )}
-      </div>
+      {/* Full-width shimmer line at top for unlocked */}
+      {isUnlocked && (
+        <div
+          className="absolute top-0 left-0 right-0 h-[1px]"
+          style={{ background: `linear-gradient(90deg, transparent, ${tier.colorAlpha}0.4), transparent)` }}
+        />
+      )}
     </motion.div>
   );
 }
 
+// ─── Tier Summary Card ────────────────────────────────────────────────────────
+
+function TierCard({ tierKey, unlocked, total }) {
+  const tier = TIERS[tierKey];
+  const pct  = total > 0 ? (unlocked / total) * 100 : 0;
+
+  return (
+    <div
+      className="flex flex-col items-center gap-3 p-4 rounded-[18px] border transition-all"
+      style={{
+        background: unlocked > 0 ? tier.bg : 'rgba(255,255,255,0.02)',
+        border:     unlocked > 0 ? tier.border : '1px solid rgba(255,255,255,0.04)',
+        boxShadow:  unlocked > 0 ? tier.glow : 'none',
+      }}
+    >
+      {/* Medal image */}
+      <img
+        src={tier.medal}
+        alt={tier.label}
+        className="w-10 h-10 object-contain"
+        style={{ filter: unlocked === 0 ? 'grayscale(100%) brightness(0.25)' : 'none' }}
+      />
+
+      <div className="text-center w-full">
+        <p
+          className="text-[10px] font-black uppercase tracking-[0.15em] mb-2"
+          style={{ color: unlocked > 0 ? tier.color : '#2c2c2e' }}
+        >
+          {tier.label}
+        </p>
+
+        {/* Progress bar */}
+        <div className="h-[3px] bg-white/[0.05] rounded-full overflow-hidden mb-1.5">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className="h-full rounded-full"
+            style={{ background: tier.barColor }}
+          />
+        </div>
+
+        <p className="text-[10px] font-bold" style={{ color: unlocked > 0 ? '#6e6e73' : '#2c2c2e' }}>
+          {unlocked} <span className="text-[#2c2c2e]">/ {total}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+const CATEGORIES = ['all', 'tasks', 'goals', 'finances', 'routines', 'projects', 'tempo', 'streak', 'hidden'];
+
 export default function Achievements() {
-  const [data, setData] = useState(null);
+  const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter,  setFilter]  = useState('all');
   const { error } = useToast();
   const { activeTeam } = useAuth();
 
+  // ── Load achievements ──
   useEffect(() => {
     setLoading(true);
     api('/achievements')
-      .then(setData)
+      .then(d => setData(d))
       .catch(err => error(err.message))
       .finally(() => setLoading(false));
   }, [activeTeam]);
 
-  const filteredAchievements = data?.achievements?.filter(a =>
-    filter === 'all' ? true : a.category === filter
-  ) || [];
-
-  const unlockedFirst = [...filteredAchievements].sort((a, b) => {
-    if (a.unlocked && !b.unlocked) return -1;
-    if (!a.unlocked && b.unlocked) return 1;
-    return b.progress - a.progress;
-  });
-
-  const categories = ['all', ...Object.keys(categoryLabels).filter(k => k !== 'all')];
-
-  // Tier progress summary
-  const tierSummary = data?.achievements ? (() => {
-    const tiers = { iniciante: { total: 0, unlocked: 0 }, consistente: { total: 0, unlocked: 0 }, avançado: { total: 0, unlocked: 0 }, dominante: { total: 0, unlocked: 0 } };
+  // ── Derived ──
+  const tierSummary = useMemo(() => {
+    if (!data?.achievements) return null;
+    const acc = { bronze: { u: 0, t: 0 }, prata: { u: 0, t: 0 }, ouro: { u: 0, t: 0 }, platina: { u: 0, t: 0 } };
     data.achievements.forEach(a => {
-      if (a.tier && tiers[a.tier]) {
-        tiers[a.tier].total++;
-        if (a.unlocked) tiers[a.tier].unlocked++;
+      if (acc[a.tier]) {
+        acc[a.tier].t++;
+        if (a.unlocked) acc[a.tier].u++;
       }
     });
-    return tiers;
-  })() : null;
+    return acc;
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    if (!data?.achievements) return [];
+    let list = data.achievements;
+    if (filter !== 'all') {
+      list = list.filter(a =>
+        filter === 'hidden'
+          ? (a.category === 'hidden' || a.category === 'ultimate')
+          : a.category === filter
+      );
+    }
+    // Unlocked first, then by tier rank (higher = earlier), then alpha
+    return [...list].sort((a, b) => {
+      if (b.unlocked !== a.unlocked) return b.unlocked ? 1 : -1;
+      const ra = TIERS[a.tier]?.rank || 0;
+      const rb = TIERS[b.tier]?.rank || 0;
+      return rb - ra;
+    });
+  }, [data, filter]);
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <div
-      className="max-w-5xl mx-auto pb-12 font-sans"
-      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
+      className="max-w-6xl mx-auto pb-32 px-4 md:px-6 font-sans select-none"
+      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' }}
     >
-      {/* Header */}
-      <div className="flex flex-col gap-6 mb-8 lg:mb-10 px-1 sm:px-0">
-        <div className="space-y-1">
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">
-            Conquistas
-          </h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Acompanhe seu progresso e evolua na plataforma</p>
-        </div>
-
-        {/* Stats card */}
-        {data && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="relative bg-[#1C1C1E] border border-white/[0.06] rounded-[28px] p-6 sm:p-8 overflow-hidden"
-          >
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#30D158]/[0.04] to-transparent rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#0A84FF]/[0.03] to-transparent rounded-full blur-2xl pointer-events-none" />
-
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              {/* Trophy icon */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-gradient-to-br from-[#FFD700]/20 to-[#FFA500]/10 border border-[#FFD700]/10 flex items-center justify-center shrink-0 shadow-lg shadow-[#FFD700]/5">
-                <Trophy size={32} className="sm:size-10 text-[#FFD700] drop-shadow-lg" />
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-[36px] sm:text-[48px] font-bold text-[#F5F5F7] tracking-tighter leading-none">
-                    {data.stats.unlocked}
-                  </span>
-                  <span className="text-[18px] sm:text-[22px] text-[#86868B] font-medium">
-                    / {data.stats.total}
-                  </span>
-                </div>
-                <p className="text-[13px] sm:text-[15px] text-[#86868B] mt-1">conquistas desbloqueadas</p>
-
-                {/* Progress bar */}
-                <div className="mt-4 max-w-md">
-                  <div className="h-2.5 bg-white/[0.05] rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${data.stats.percentage}%` }}
-                      transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                      className="h-full rounded-full bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FF8C00] shadow-[0_0_12px_rgba(255,215,0,0.3)]"
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1.5">
-                    <span className="text-[11px] text-[#48484A] font-medium">Progresso Geral</span>
-                    <span className="text-[11px] text-[#FFD700] font-bold">{data.stats.percentage}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tier Progress Bars */}
-            {tierSummary && (
-              <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/[0.05]">
-                {Object.entries(tierSummary).map(([key, val]) => {
-                  const tc = tierColors[key];
-                  const pct = val.total > 0 ? Math.round((val.unlocked / val.total) * 100) : 0;
-                  return (
-                    <div key={key} className="text-center">
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider ${tc.text}`}>{tc.label}</span>
-                        <span className="text-[10px] text-[#48484A] font-medium">{val.unlocked}/{val.total}</span>
-                      </div>
-                      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                          className={`h-full rounded-full ${
-                            key === 'iniciante' ? 'bg-zinc-400' :
-                            key === 'consistente' ? 'bg-blue-400' :
-                            key === 'avançado' ? 'bg-purple-400' :
-                            'bg-amber-400'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Category filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-3.5 py-2 rounded-full text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap shrink-0 ${
-                filter === cat
-                  ? 'bg-white text-zinc-950 shadow-lg shadow-white/10'
-                  : 'bg-white/[0.04] text-[#86868B] hover:bg-white/[0.08] hover:text-[#F5F5F7]'
-              }`}
-            >
-              {categoryLabels[cat]}
-            </button>
-          ))}
-        </div>
+      {/* ── Header ── */}
+      <div className="pt-10 pb-8">
+        <h1 className="text-[38px] md:text-[44px] font-black text-white tracking-tighter mb-1 leading-none">
+          Conquistas
+        </h1>
+        <p className="text-[15px] font-medium text-zinc-500">
+          Cada troféu é uma prova de que você foi além.
+        </p>
       </div>
 
-      {/* Content */}
+      {/* ── Stats Hero ── */}
+      {data && tierSummary && (
+        <div
+          className="rounded-[28px] p-7 md:p-10 mb-10 relative overflow-hidden"
+          style={{
+            background:  'linear-gradient(145deg, #111114, #0d0d10)',
+            border:      '1px solid rgba(255,255,255,0.05)',
+            boxShadow:   '0 30px 80px rgba(0,0,0,0.5)',
+          }}
+        >
+          {/* Subtle radial glow behind */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse, rgba(255,215,0,0.04) 0%, transparent 70%)' }}
+          />
+
+          {/* Score row */}
+          <div className="flex items-end gap-3 mb-2 relative z-10">
+            <span className="text-[60px] font-black text-white leading-none tracking-tighter">
+              {data.stats.unlocked}
+            </span>
+            <span className="text-[28px] font-bold text-zinc-700 mb-1.5">
+              / {data.stats.total}
+            </span>
+          </div>
+          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-600 mb-7 relative z-10">
+            Troféus desbloqueados
+          </p>
+
+          {/* Main progress bar */}
+          <div className="relative z-10 mb-10">
+            <div
+              className="h-[6px] rounded-full overflow-hidden mb-2"
+              style={{ background: 'rgba(255,255,255,0.05)' }}
+            >
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${data.stats.percentage}%` }}
+                transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full rounded-full"
+                style={{
+                  background: 'linear-gradient(90deg, #CD7F32, #FFD700, #E2E8FF)',
+                  boxShadow:  '0 0 12px rgba(255,215,0,0.3)',
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+              <span className="text-zinc-700">Progresso Total</span>
+              <span style={{ color: '#FFD700' }}>{data.stats.percentage}%</span>
+            </div>
+          </div>
+
+          {/* Tier grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
+            {Object.entries(tierSummary).map(([key, val]) => (
+              <TierCard key={key} tierKey={key} unlocked={val.u} total={val.t} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Filter Tabs ── */}
+      <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className="px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-wider transition-all border shrink-0"
+            style={{
+              background: filter === cat ? '#fff' : '#111',
+              color:      filter === cat ? '#000' : '#666',
+              border:     filter === cat ? '1px solid #fff' : '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {CATEGORY_LABELS[cat] || cat}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Grid ── */}
       {loading ? (
-        <div className="flex flex-col gap-4 items-center justify-center h-[40vh]">
-          <div className="w-10 h-10 border-2 border-[#FFD700] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[14px] text-[#86868B] font-medium">Carregando conquistas...</p>
+        <div className="flex flex-col items-center justify-center py-40 gap-4">
+          <div
+            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
+            style={{ borderColor: 'rgba(255,215,0,0.3)', borderTopColor: '#FFD700' }}
+          />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-700">
+            Carregando troféus...
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {unlockedFirst.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
-              <Trophy size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
-              <p className="text-[17px] font-medium text-[#F5F5F7]">Nenhuma conquista nesta categoria</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">
-                Continue usando o DevsBoard para desbloquear conquistas incríveis!
-              </p>
+        <motion.div
+          key={filter}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
+          {filtered.length === 0 ? (
+            <div className="col-span-full text-center py-20 text-zinc-700 text-[13px] font-medium">
+              Nenhuma conquista nesta categoria.
             </div>
           ) : (
-            unlockedFirst.map((a, i) => (
+            filtered.map((a, i) => (
               <AchievementCard key={a.slug} achievement={a} index={i} />
             ))
           )}
-        </div>
+        </motion.div>
       )}
+
     </div>
   );
 }

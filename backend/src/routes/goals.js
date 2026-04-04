@@ -117,6 +117,11 @@ router.put('/:id', [
 
       updates.saved_amount = Number(goal.saved_amount || 0) + amountToAdd;
 
+      // Auto-completar quando atingir a meta
+      if (updates.saved_amount >= Number(goal.target_value)) {
+        updates.completed = true;
+      }
+
       const tx = {
         user_id: userId,
         type: 'expense',

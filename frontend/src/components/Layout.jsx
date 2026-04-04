@@ -46,7 +46,7 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
-  const { formattedTime } = useSessionTracker(!!user);
+  const { formattedTime } = useSessionTracker(!!user, user?.id);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);

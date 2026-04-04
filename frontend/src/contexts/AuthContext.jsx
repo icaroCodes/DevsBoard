@@ -18,19 +18,33 @@ export function AuthProvider({ children }) {
   }, [activeTeam]);
 
   useEffect(() => {
-    // Agora não verificamos 'token' no localStorage, apenas tentamos pegar os dados
-    // Se o cookie existir, o fetch /settings irá funcionar.
     api('/settings')
       .then((data) => {
         setUser(data);
         localStorage.setItem('user', JSON.stringify(data));
       })
       .catch((err) => {
-        console.warn('[Session Verify Failed]', err.message);
-        setUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+        const msg = err.message || '';
+        // Só desloga em falha de autenticação explícita (401/sessão inválida)
+        // Erros de rede (ECONNRESET, ECONNREFUSED) NÃO devem deslogar
+        const isAuthFailure =
+          msg.includes('Sessão') ||
+          msg.includes('login') ||
+          msg.includes('inválid') ||
+          msg.includes('expirad');
+
+        if (isAuthFailure) {
+          console.warn('[Session Verify Failed]', msg);
+          setUser(null);
+          setActiveTeam(null);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('activeTeam');
+        } else {
+          console.warn('[Settings fetch failed — keeping session]', msg);
+          // Mantém o user do localStorage (erro de rede transitório)
+        }
       })
       .finally(() => setLoading(false));
   }, []);

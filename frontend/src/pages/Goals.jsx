@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, Target, Check, X, Target as TargetIcon, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Check, X, Target as TargetIcon, Loader2, Trophy } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -178,22 +178,24 @@ export default function Goals() {
 
               if (isNaN(progress)) progress = 0;
 
+              // Auto-complete financeira: completada quando atinge 100%
+              const isFinancialComplete = item.type === 'financial' && progress >= 100;
+              const isComplete = item.type === 'financial' ? isFinancialComplete : item.completed;
+
               return (
                 <motion.div
                   key={item.id}
                   variants={itemVariants}
-                  className={`relative p-6 bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] shadow-sm overflow-hidden group transition-all duration-300 hover:border-white/10 ${item.completed ? 'opacity-60' : ''}`}
+                  className={`relative p-6 bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] shadow-sm overflow-hidden group transition-all duration-300 hover:border-white/10 ${isComplete ? 'opacity-60' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-4 relative z-10">
-                    <div className="flex items-start gap-4 flex-1">
-                      <button
-                        onClick={() => toggleComplete(item)}
-                        className={`mt-1 w-8 h-8 rounded-full flex items-center justify-center transition-all ${item.completed ? 'bg-[#30D158] text-zinc-950 shadow-lg shadow-[#30D158]/20' : 'bg-white/5 text-[#86868B] hover:bg-white/10'}`}
-                      >
-                        {item.completed ? <Check size={18} strokeWidth={3} /> : <Target size={18} />}
-                      </button>
+                    <div className="flex items-start gap-3 flex-1">
+                      {/* Ícone de status — apenas visual para financeira, clicável para performance */}
+                      <div className={`mt-1 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${isComplete ? 'bg-[#30D158] text-zinc-950 shadow-lg shadow-[#30D158]/20' : 'bg-white/5 text-[#86868B]'}`}>
+                        {isComplete ? <Check size={18} strokeWidth={3} /> : <Target size={18} />}
+                      </div>
                       <div className="min-w-0">
-                        <p className={`text-[17px] font-semibold text-[#F5F5F7] tracking-tight truncate ${item.completed ? 'line-through text-[#86868B]' : ''}`}>{item.name}</p>
+                        <p className={`text-[17px] font-semibold text-[#F5F5F7] tracking-tight truncate ${isComplete ? 'line-through text-[#86868B]' : ''}`}>{item.name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[12px] font-bold uppercase tracking-wider text-[#86868B]">{item.type === 'performance' ? 'Pelo esforço' : 'Guardando dinheiro'}</span>
                           <span className="w-1 h-1 rounded-full bg-white/20" />
@@ -212,6 +214,7 @@ export default function Goals() {
                     </div>
                   </div>
 
+                  {/* META FINANCEIRA: barra de progresso + guardar dinheiro */}
                   {item.type === 'financial' && (
                     <div className="mt-6 relative z-10">
                       <div className="flex justify-between items-end mb-2.5">
@@ -219,18 +222,23 @@ export default function Goals() {
                           <p className="text-[12px] font-medium text-[#86868B]">Andamento</p>
                           <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {saved.toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ total de R$ {target.toFixed(0)}</span></p>
                         </div>
-                        <span className="text-[17px] font-bold text-[#F5F5F7] tracking-tight">{progress.toFixed(0)}%</span>
+                        <span className={`text-[17px] font-bold tracking-tight ${isFinancialComplete ? 'text-[#30D158]' : 'text-[#F5F5F7]'}`}>{progress.toFixed(0)}%</span>
                       </div>
                       <div className="h-3 bg-white/5 rounded-full overflow-hidden p-[2px] border border-white/[0.02]">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
                           transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                          className={`h-full rounded-full ${item.completed ? 'bg-[#30D158]' : 'bg-[#0A84FF]'} shadow-lg`}
+                          className={`h-full rounded-full ${isFinancialComplete ? 'bg-[#30D158]' : 'bg-[#0A84FF]'} shadow-lg`}
                         />
                       </div>
 
-                      {!item.completed && (
+                      {isFinancialComplete ? (
+                        <div className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#30D158]/10 border border-[#30D158]/20">
+                          <Trophy size={15} className="text-[#30D158]" />
+                          <span className="text-[13px] font-bold text-[#30D158]">Meta atingida! Parabéns!</span>
+                        </div>
+                      ) : (
                         <div className="mt-4">
                           {addAmount.id === item.id ? (
                             <form onSubmit={handleAddAmount} className="flex gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -257,8 +265,29 @@ export default function Goals() {
                     </div>
                   )}
 
+                  {/* META DE PERFORMANCE: botão "Concluir" claro na parte inferior */}
+                  {item.type === 'performance' && (
+                    <div className="mt-4 relative z-10">
+                      {item.completed ? (
+                        <button
+                          onClick={() => toggleComplete(item)}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#30D158]/10 border border-[#30D158]/20 text-[#30D158] text-[13px] font-bold hover:bg-[#30D158]/20 transition-all"
+                        >
+                          <Check size={14} strokeWidth={3} /> Concluída — desfazer
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => toggleComplete(item)}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-[#30D158]/10 border border-transparent hover:border-[#30D158]/20 text-[#86868B] hover:text-[#30D158] text-[13px] font-bold transition-all"
+                        >
+                          <Check size={14} strokeWidth={3} /> Marcar como concluída
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   {/* Aesthetic gradient blob */}
-                  <div className={`absolute -top-12 -right-12 w-32 h-32 blur-3xl opacity-[0.03] rounded-full pointer-events-none group-hover:opacity-[0.06] transition-opacity ${item.completed ? 'bg-[#30D158]' : 'bg-[#0A84FF]'}`} />
+                  <div className={`absolute -top-12 -right-12 w-32 h-32 blur-3xl opacity-[0.03] rounded-full pointer-events-none group-hover:opacity-[0.06] transition-opacity ${isComplete ? 'bg-[#30D158]' : 'bg-[#0A84FF]'}`} />
                 </motion.div>
               );
             })

@@ -21,6 +21,7 @@ import sessionsRoutes from './routes/sessions.js';
 import { interceptMembers } from './middleware/interceptMembers.js';
 import { authenticate, checksOwnership } from './middleware/auth.js';
 import { securityHeaders, apiRateLimiter } from './middleware/security.js';
+import { updateDailyStreak } from './utils/streak.js';
 
 const app = express();
 
@@ -41,6 +42,13 @@ app.use('/auth/github', githubRoutes);
 
 // Rotas protegidas (Pass through authenticate first)
 app.use(authenticate);
+
+// Streak diário: dispara em toda request autenticada, fire-and-forget
+app.use((req, _res, next) => {
+  if (req.userId) updateDailyStreak(req.userId);
+  next();
+});
+
 app.use(checksOwnership); // Anti-IDOR Centralizado
 
 app.use('/dashboard', dashboardRoutes);

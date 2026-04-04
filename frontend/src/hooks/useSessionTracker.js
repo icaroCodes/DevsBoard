@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../lib/api';
 
 const HEARTBEAT_INTERVAL = 30000; // 30 segundos
-const SESSION_KEY = 'devsboard_session_id';
+const SESSION_KEY = 'devsboard_session';
 
 function generateSessionId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
@@ -25,7 +25,7 @@ function sendHeartbeat(sessionId, activeSeconds) {
   }).catch(() => {});
 }
 
-export function useSessionTracker(isAuthenticated) {
+export function useSessionTracker(isAuthenticated, userId) {
   const [activeSeconds, setActiveSeconds] = useState(0);
   const activeSecondsRef = useRef(0);
   const isActiveRef = useRef(true);
@@ -39,12 +39,20 @@ export function useSessionTracker(isAuthenticated) {
     // Flag para cancelar callbacks assíncronos se o efeito for limpo antes
     let cancelled = false;
 
-    let sessionId = sessionStorage.getItem(SESSION_KEY);
-    const isExisting = !!sessionId;
+    // Reusa a sessão apenas se pertencer ao mesmo usuário
+    let sessionId = null;
+    let isExisting = false;
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (stored?.sessionId && stored?.userId && String(stored.userId) === String(userId)) {
+        sessionId = stored.sessionId;
+        isExisting = true;
+      }
+    } catch (_) {}
 
     if (!sessionId) {
       sessionId = generateSessionId();
-      sessionStorage.setItem(SESSION_KEY, sessionId);
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ sessionId, userId }));
     }
 
     sessionIdRef.current = sessionId;
@@ -95,8 +103,11 @@ export function useSessionTracker(isAuthenticated) {
       clearInterval(heartbeatRef.current);
       intervalRef.current = null;
       heartbeatRef.current = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      activeSecondsRef.current = 0;
+      setActiveSeconds(0);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, userId]);
 
   // Detectar visibilidade da aba
   useEffect(() => {

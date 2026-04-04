@@ -8,11 +8,22 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
+    // Query principal — colunas que sempre existem
     const { data, error } = await supabase
-      .from('users').select('id, name, email, avatar_url, created_at, current_streak, longest_streak').eq('id', req.userId).single();
+      .from('users')
+      .select('id, name, email, avatar_url, created_at')
+      .eq('id', req.userId)
+      .single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-    // Calcular tempo total de uso
+    // Streak — query separada; silenciosamente retorna 0 se colunas não existirem
+    const { data: streakRow } = await supabase
+      .from('users')
+      .select('current_streak, longest_streak, last_access_date')
+      .eq('id', req.userId)
+      .single();
+
+    // Tempo total — silenciosamente retorna 0 se tabela não existir
     const { data: sessions } = await supabase
       .from('user_sessions')
       .select('active_seconds')
@@ -25,6 +36,9 @@ router.get('/', async (req, res) => {
 
     res.json({
       ...data,
+      current_streak:   streakRow?.current_streak   || 0,
+      longest_streak:   streakRow?.longest_streak   || 0,
+      last_access_date: streakRow?.last_access_date || null,
       total_usage_seconds: totalSeconds,
       account_age_days: accountAgeDays,
     });

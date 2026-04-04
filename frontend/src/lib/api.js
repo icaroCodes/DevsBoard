@@ -43,14 +43,20 @@ export async function api(endpoint, options = {}, isRetry = false) {
             localStorage.setItem('token', resJson.token);
             localStorage.setItem('refreshToken', resJson.refreshToken);
           }
-          return api(endpoint, options, true); 
+          return api(endpoint, options, true);
         }
-      } catch (err) {
-        console.error('[Refresh Failed]', err);
+
+        // Refresh request chegou ao servidor mas falhou (refresh token inválido/expirado)
+        // → deslogar
+      } catch (networkErr) {
+        // Erro de REDE no refresh (ECONNRESET, ECONNREFUSED durante restart)
+        // Não deslogar — é transitório. Lançar erro genérico.
+        console.warn('[Refresh network error — keeping session]', networkErr.message);
+        throw new Error('Erro de conexão. Tente novamente.');
       }
     }
 
-    // Se falhar no refresh ou não for erro de expiração, limpa e desloga
+    // 401 explícito sem TOKEN_EXPIRED, ou refresh token inválido → deslogar
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
@@ -74,6 +80,12 @@ export async function api(endpoint, options = {}, isRetry = false) {
   if (!res.ok) {
     const errorMsg = data?.error || (data?.errors && (data.errors[0]?.message || data.errors[0]?.msg)) || 'Erro na requisição';
     throw new Error(errorMsg);
+  }
+
+  // Sinaliza mutação bem-sucedida para o sistema de conquistas
+  const method = (options?.method || 'GET').toUpperCase();
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && !endpoint.includes('/achievements')) {
+    window.dispatchEvent(new CustomEvent('devsboard:mutation'));
   }
 
   return data;
