@@ -83,7 +83,7 @@ router.get('/', async (req, res) => {
       supabase.from('projects').select('id', { count: 'exact' }).eq('user_id', userId),
       supabase.from('team_members').select('id', { count: 'exact' }).eq('user_id', userId),
       supabase.from('user_sessions').select('active_seconds').eq('user_id', userId),
-      supabase.from('users').select('created_at').eq('id', userId).single(),
+      supabase.from('users').select('created_at, current_streak, longest_streak').eq('id', userId).single(),
     ]);
 
     const completedTasks = tasksRes.count || 0;
@@ -105,6 +105,7 @@ router.get('/', async (req, res) => {
 
     // Dias de conta
     const createdAt = userRes.data?.created_at;
+    const currentStreak = userRes.data?.current_streak || 0;
     const accountAgeDays = createdAt
       ? Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24))
       : 0;
@@ -130,6 +131,7 @@ router.get('/', async (req, res) => {
         case 'first_project': current = Math.min(totalProjects, 1); break;
         case 'project_5': current = Math.min(totalProjects, 5); break;
         case 'first_team': current = Math.min(totalTeams, 1); break;
+        case 'streak_7': current = Math.min(currentStreak, 7); break;
         // Tempo de sessão (em segundos)
         case 'session_1h': current = Math.min(longestSessionSeconds, 3600); break;
         case 'session_3h': current = Math.min(longestSessionSeconds, 10800); break;

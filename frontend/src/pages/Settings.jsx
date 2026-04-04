@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Camera, Mail, ShieldAlert, Trash2, Clock, Calendar, Timer } from 'lucide-react';
+import { LogOut, User, Camera, Mail, ShieldAlert, Trash2, Clock, Calendar, Timer, Flame } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -32,6 +32,8 @@ export default function Settings() {
           accountAgeDays: settingsData.account_age_days || 0,
           createdAt: settingsData.created_at,
           longestSessionSeconds: statsData.longest_session_seconds || 0,
+          currentStreak: settingsData.current_streak || 0,
+          longestStreak: settingsData.longest_streak || 0,
         });
       })
       .catch(console.error)
@@ -182,6 +184,30 @@ export default function Settings() {
             <div className="flex items-center gap-2 mb-6">
               <Timer size={20} className="text-[#30D158]" />
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Sua Jornada</h2>
+            </div>
+
+            {/* Streak */}
+            <div className="flex items-center gap-4 mb-6 p-4 bg-[#2C2C2E] rounded-[20px] border border-white/4">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                <Flame size={24} className="text-orange-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider">Sequência Atual</p>
+                <p className="text-[22px] font-bold text-[#F5F5F7] leading-tight">
+                  {usageStats.currentStreak} {usageStats.currentStreak === 1 ? 'dia' : 'dias'}
+                  {usageStats.currentStreak >= 7 && <span className="ml-2 text-[13px] text-orange-400">🔥</span>}
+                </p>
+                <p className="text-[12px] text-[#86868B]">
+                  Maior sequência: <span className="text-[#F5F5F7] font-medium">{usageStats.longestStreak} {usageStats.longestStreak === 1 ? 'dia' : 'dias'}</span>
+                </p>
+              </div>
+              {usageStats.currentStreak > 0 && (
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(usageStats.currentStreak, 7) }).map((_, i) => (
+                    <div key={i} className="w-2 h-8 rounded-full bg-orange-400/80" style={{ opacity: 0.4 + (i / Math.min(usageStats.currentStreak, 7)) * 0.6 }} />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

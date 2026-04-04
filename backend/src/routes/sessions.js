@@ -37,6 +37,34 @@ router.post('/heartbeat', async (req, res) => {
   }
 });
 
+async function updateStreak(userId) {
+  try {
+    const { data: user } = await supabase
+      .from('users')
+      .select('current_streak, longest_streak, last_active_date')
+      .eq('id', userId)
+      .single();
+
+    if (!user) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    if (user.last_active_date === today) return; // Já registrado hoje
+
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const newStreak = user.last_active_date === yesterday
+      ? (user.current_streak || 0) + 1
+      : 1;
+    const newLongest = Math.max(newStreak, user.longest_streak || 0);
+
+    await supabase
+      .from('users')
+      .update({ current_streak: newStreak, longest_streak: newLongest, last_active_date: today })
+      .eq('id', userId);
+  } catch (e) {
+    console.error('Streak update error:', e);
+  }
+}
+
 // POST /sessions/start - Inicia nova sessão ou recupera existente
 router.post('/start', async (req, res) => {
   try {
@@ -46,6 +74,9 @@ router.post('/start', async (req, res) => {
     if (!session_id) {
       return res.status(400).json({ error: 'session_id é obrigatório' });
     }
+
+    // Atualizar streak do dia
+    updateStreak(userId);
 
     // Verificar se sessão já existe (reload de página)
     const { data: existing } = await supabase

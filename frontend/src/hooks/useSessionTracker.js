@@ -11,30 +11,18 @@ function generateSessionId() {
 function sendHeartbeat(sessionId, activeSeconds) {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   const token = localStorage.getItem('token');
-  const payload = JSON.stringify({
-    session_id: sessionId,
-    active_seconds: activeSeconds,
-  });
+  const payload = JSON.stringify({ session_id: sessionId, active_seconds: activeSeconds });
 
-  // fetch com keepalive funciona cross-origin com headers (sendBeacon não)
-  try {
-    fetch(`${apiUrl}/sessions/heartbeat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      credentials: 'include',
-      body: payload,
-      keepalive: true,
-    }).catch(() => {});
-  } catch {
-    // fallback para sendBeacon (sem auth, mas melhor que nada)
-    navigator.sendBeacon?.(
-      `${apiUrl}/sessions/heartbeat`,
-      new Blob([payload], { type: 'application/json' })
-    );
-  }
+  fetch(`${apiUrl}/sessions/heartbeat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    credentials: 'include',
+    body: payload,
+    keepalive: true,
+  }).catch(() => {});
 }
 
 export function useSessionTracker(isAuthenticated) {
@@ -44,14 +32,13 @@ export function useSessionTracker(isAuthenticated) {
   const intervalRef = useRef(null);
   const heartbeatRef = useRef(null);
   const sessionIdRef = useRef(null);
-  const initializedRef = useRef(false);
 
-  // Inicializar sessão
   useEffect(() => {
-    if (!isAuthenticated || initializedRef.current) return;
-    initializedRef.current = true;
+    if (!isAuthenticated) return;
 
-    // Criar ou recuperar session ID
+    // Flag para cancelar callbacks assíncronos se o efeito for limpo antes
+    let cancelled = false;
+
     let sessionId = sessionStorage.getItem(SESSION_KEY);
     const isExisting = !!sessionId;
 
@@ -62,29 +49,30 @@ export function useSessionTracker(isAuthenticated) {
 
     sessionIdRef.current = sessionId;
 
-    // Registrar/recuperar sessão no backend
     api('/sessions/start', {
       method: 'POST',
       body: JSON.stringify({ session_id: sessionId }),
     })
       .then((data) => {
+        if (cancelled) return;
         if (isExisting && data?.active_seconds > 0) {
-          // Restaurar tempo salvo no backend (caso de reload)
           activeSecondsRef.current = data.active_seconds;
           setActiveSeconds(data.active_seconds);
         }
       })
       .catch(() => {})
       .finally(() => {
-        // Iniciar contador apenas após restaurar o tempo
+        if (cancelled) return;
+
+        // Contador de 1 em 1 segundo
         intervalRef.current = setInterval(() => {
           if (isActiveRef.current) {
             activeSecondsRef.current += 1;
-            setActiveSeconds(activeSecondsRef.current);
+            setActiveSeconds(prev => prev + 1);
           }
         }, 1000);
 
-        // Heartbeat para persistir no backend
+        // Heartbeat para persistir no backend a cada 30s
         heartbeatRef.current = setInterval(() => {
           if (sessionIdRef.current && activeSecondsRef.current > 0) {
             api('/sessions/heartbeat', {
@@ -99,13 +87,14 @@ export function useSessionTracker(isAuthenticated) {
       });
 
     return () => {
-      // Enviar último heartbeat antes de desmontar
+      cancelled = true;
       if (sessionIdRef.current && activeSecondsRef.current > 0) {
         sendHeartbeat(sessionIdRef.current, activeSecondsRef.current);
       }
       clearInterval(intervalRef.current);
       clearInterval(heartbeatRef.current);
-      initializedRef.current = false;
+      intervalRef.current = null;
+      heartbeatRef.current = null;
     };
   }, [isAuthenticated]);
 
@@ -116,7 +105,6 @@ export function useSessionTracker(isAuthenticated) {
     const handleVisibilityChange = () => {
       isActiveRef.current = document.visibilityState === 'visible';
     };
-
     const handleFocus = () => { isActiveRef.current = true; };
     const handleBlur = () => { isActiveRef.current = false; };
 
@@ -131,7 +119,7 @@ export function useSessionTracker(isAuthenticated) {
     };
   }, [isAuthenticated]);
 
-  // Enviar heartbeat ao fechar/recarregar (com auth)
+  // Heartbeat final ao fechar a aba
   useEffect(() => {
     if (!isAuthenticated) return;
 
