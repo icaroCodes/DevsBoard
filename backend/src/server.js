@@ -17,6 +17,7 @@ import taskCardsRoutes from './routes/task-cards.js';
 import taskBoardsRoutes from './routes/task-boards.js';
 import teamsRoutes from './routes/teams.js';
 import achievementsRoutes from './routes/achievements.js';
+import sessionsRoutes from './routes/sessions.js';
 import { interceptMembers } from './middleware/interceptMembers.js';
 import { authenticate, checksOwnership } from './middleware/auth.js';
 import { securityHeaders, apiRateLimiter } from './middleware/security.js';
@@ -54,6 +55,7 @@ app.use('/task-cards', interceptMembers('task_cards'), taskCardsRoutes);
 app.use('/task-boards', interceptMembers('task_boards'), taskBoardsRoutes);
 app.use('/teams', teamsRoutes);
 app.use('/achievements', achievementsRoutes);
+app.use('/sessions', sessionsRoutes);
 
 // 404
 app.use((req, res) => {

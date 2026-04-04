@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Lock, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
+import { Trophy, Lock, Sparkles, Clock, Calendar } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +13,8 @@ const categoryLabels = {
   routines: 'Rotinas',
   projects: 'Projetos',
   teams: 'Times',
+  tempo: 'Tempo',
+  longevidade: 'Longevidade',
   special: 'Especiais',
 };
 
@@ -23,11 +25,53 @@ const categoryColors = {
   routines: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', glow: 'rgba(168,85,247,0.15)' },
   projects: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20', glow: 'rgba(6,182,212,0.15)' },
   teams: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', glow: 'rgba(244,63,94,0.15)' },
+  tempo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', glow: 'rgba(99,102,241,0.15)' },
+  longevidade: { bg: 'bg-teal-500/10', text: 'text-teal-400', border: 'border-teal-500/20', glow: 'rgba(20,184,166,0.15)' },
   special: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20', glow: 'rgba(234,179,8,0.15)' },
 };
 
+const tierColors = {
+  iniciante: { bg: 'bg-zinc-500/10', text: 'text-zinc-400', label: 'Iniciante' },
+  consistente: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Consistente' },
+  avançado: { bg: 'bg-purple-500/10', text: 'text-purple-400', label: 'Avançado' },
+  dominante: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Dominante' },
+};
+
+function formatProgressLabel(achievement) {
+  const { category, slug, current, threshold } = achievement;
+
+  // Tempo de sessão e total: mostrar em formato legível
+  if (slug === 'session_1h' || slug === 'session_3h') {
+    const curMin = Math.floor(current / 60);
+    const thrMin = Math.floor(threshold / 60);
+    if (curMin >= 60) {
+      return `${Math.floor(curMin / 60)}h ${curMin % 60}min / ${Math.floor(thrMin / 60)}h`;
+    }
+    return `${curMin}min / ${thrMin >= 60 ? `${Math.floor(thrMin / 60)}h` : `${thrMin}min`}`;
+  }
+
+  if (slug?.startsWith('total_')) {
+    const curH = Math.floor(current / 3600);
+    const curM = Math.floor((current % 3600) / 60);
+    const thrH = Math.floor(threshold / 3600);
+    return `${curH}h ${curM}min / ${thrH}h`;
+  }
+
+  if (slug?.startsWith('account_')) {
+    return `${current} / ${threshold} dias`;
+  }
+
+  // Finanças: formato monetário
+  if (category === 'finances' && threshold >= 1000) {
+    return `R$ ${current.toLocaleString('pt-BR')} / R$ ${threshold.toLocaleString('pt-BR')}`;
+  }
+
+  return `${current} / ${threshold}`;
+}
+
 function AchievementCard({ achievement, index }) {
   const colors = categoryColors[achievement.category] || categoryColors.special;
+  const tier = tierColors[achievement.tier] || tierColors.iniciante;
   const isUnlocked = achievement.unlocked;
 
   return (
@@ -44,7 +88,7 @@ function AchievementCard({ achievement, index }) {
     >
       {/* Glow effect for unlocked */}
       {isUnlocked && (
-        <div 
+        <div
           className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-[0.06] pointer-events-none transition-opacity group-hover:opacity-[0.12]"
           style={{ background: colors.glow.replace('0.15', '1') }}
         />
@@ -74,18 +118,27 @@ function AchievementCard({ achievement, index }) {
             }`}>
               {achievement.name}
             </h3>
-            <p className={`text-[12px] sm:text-[13px] mt-0.5 line-clamp-1 ${
+            <p className={`text-[12px] sm:text-[13px] mt-0.5 line-clamp-2 ${
               isUnlocked ? 'text-[#86868B]' : 'text-[#3A3A3C]'
             }`}>
               {achievement.description}
             </p>
 
-            {/* Category tag */}
-            <span className={`inline-block mt-2 px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest ${
-              isUnlocked ? `${colors.bg} ${colors.text}` : 'bg-white/[0.02] text-[#3A3A3C]'
-            }`}>
-              {categoryLabels[achievement.category]}
-            </span>
+            {/* Category + Tier tags */}
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className={`inline-block px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest ${
+                isUnlocked ? `${colors.bg} ${colors.text}` : 'bg-white/[0.02] text-[#3A3A3C]'
+              }`}>
+                {categoryLabels[achievement.category]}
+              </span>
+              {achievement.tier && (
+                <span className={`inline-block px-2 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-widest ${
+                  isUnlocked ? `${tier.bg} ${tier.text}` : 'bg-white/[0.02] text-[#3A3A3C]'
+                }`}>
+                  {tier.label}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -93,7 +146,7 @@ function AchievementCard({ achievement, index }) {
         <div className="mt-4">
           <div className="flex justify-between items-center mb-1.5">
             <span className={`text-[11px] font-medium ${isUnlocked ? 'text-[#86868B]' : 'text-[#3A3A3C]'}`}>
-              {isUnlocked ? 'Completa' : `${achievement.current} / ${achievement.threshold}`}
+              {isUnlocked ? 'Completa' : formatProgressLabel(achievement)}
             </span>
             <span className={`text-[11px] font-bold ${isUnlocked ? colors.text : 'text-[#3A3A3C]'}`}>
               {achievement.progress}%
@@ -149,6 +202,18 @@ export default function Achievements() {
 
   const categories = ['all', ...Object.keys(categoryLabels).filter(k => k !== 'all')];
 
+  // Tier progress summary
+  const tierSummary = data?.achievements ? (() => {
+    const tiers = { iniciante: { total: 0, unlocked: 0 }, consistente: { total: 0, unlocked: 0 }, avançado: { total: 0, unlocked: 0 }, dominante: { total: 0, unlocked: 0 } };
+    data.achievements.forEach(a => {
+      if (a.tier && tiers[a.tier]) {
+        tiers[a.tier].total++;
+        if (a.unlocked) tiers[a.tier].unlocked++;
+      }
+    });
+    return tiers;
+  })() : null;
+
   return (
     <div
       className="max-w-5xl mx-auto pb-12 font-sans"
@@ -160,7 +225,7 @@ export default function Achievements() {
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">
             Conquistas
           </h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Acompanhe seu progresso e desbloqueie recompensas</p>
+          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Acompanhe seu progresso e evolua na plataforma</p>
         </div>
 
         {/* Stats card */}
@@ -209,6 +274,37 @@ export default function Achievements() {
                 </div>
               </div>
             </div>
+
+            {/* Tier Progress Bars */}
+            {tierSummary && (
+              <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/[0.05]">
+                {Object.entries(tierSummary).map(([key, val]) => {
+                  const tc = tierColors[key];
+                  const pct = val.total > 0 ? Math.round((val.unlocked / val.total) * 100) : 0;
+                  return (
+                    <div key={key} className="text-center">
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${tc.text}`}>{tc.label}</span>
+                        <span className="text-[10px] text-[#48484A] font-medium">{val.unlocked}/{val.total}</span>
+                      </div>
+                      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                          className={`h-full rounded-full ${
+                            key === 'iniciante' ? 'bg-zinc-400' :
+                            key === 'consistente' ? 'bg-blue-400' :
+                            key === 'avançado' ? 'bg-purple-400' :
+                            'bg-amber-400'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         )}
 

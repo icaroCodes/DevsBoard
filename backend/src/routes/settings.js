@@ -11,7 +11,23 @@ router.get('/', async (req, res) => {
     const { data, error } = await supabase
       .from('users').select('id, name, email, avatar_url, created_at').eq('id', req.userId).single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
-    res.json(data);
+
+    // Calcular tempo total de uso
+    const { data: sessions } = await supabase
+      .from('user_sessions')
+      .select('active_seconds')
+      .eq('user_id', req.userId);
+
+    const totalSeconds = (sessions || []).reduce((sum, s) => sum + (s.active_seconds || 0), 0);
+    const accountAgeDays = data.created_at
+      ? Math.floor((Date.now() - new Date(data.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      : 0;
+
+    res.json({
+      ...data,
+      total_usage_seconds: totalSeconds,
+      account_age_days: accountAgeDays,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao carregar configurações' });

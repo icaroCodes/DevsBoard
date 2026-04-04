@@ -19,10 +19,12 @@ import {
   Heart,
   Briefcase,
   LogOut,
-  Trophy
+  Trophy,
+  Timer
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
+import { useSessionTracker } from '../hooks/useSessionTracker';
 import { api } from '../lib/api';
 
 const navItems = [
@@ -44,6 +46,7 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
+  const { formattedTime } = useSessionTracker(!!user);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);
@@ -100,7 +103,7 @@ export default function Layout({ children }) {
     show: { opacity: 1, x: 0 }
   };
 
-  const Sidebar = () => (
+  const sidebarContent = (
     <motion.aside
       initial={false}
       animate={{
@@ -219,6 +222,31 @@ export default function Layout({ children }) {
           ) : content;
         })}
       </motion.nav>
+
+      {/* Session Timer */}
+      {user && (
+        <div className="mx-3 mb-1 min-w-[200px]">
+          <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#1C1C1E]/60 border border-white/[0.04] ${isExpanded || isMobile ? '' : 'justify-center'}`}>
+            <div className="relative shrink-0">
+              <Timer size={14} className="text-[#30D158]" />
+              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
+            </div>
+            <AnimatePresence initial={false}>
+              {(isExpanded || isMobile) && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <p className="text-[11px] text-[#86868B] whitespace-nowrap">Ativo há <span className="text-[#30D158] font-semibold">{formattedTime}</span></p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
 
       {user && (
         <div className="relative border-t border-[#2C2C2C] mx-3 mb-3 mt-4">
@@ -445,7 +473,7 @@ export default function Layout({ children }) {
         )}
       </AnimatePresence>
 
-      <Sidebar />
+      {sidebarContent}
 
       {/* Main content */}
       <motion.main

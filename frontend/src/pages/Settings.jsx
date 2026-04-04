@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Camera, Mail, ShieldAlert, Trash2 } from 'lucide-react';
+import { LogOut, User, Camera, Mail, ShieldAlert, Trash2, Clock, Calendar, Timer } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -13,16 +13,26 @@ export default function Settings() {
   const [avatarBase64, setAvatarBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [usageStats, setUsageStats] = useState(null);
   const { user, logout, updateUser, refreshUser } = useAuth();
   const { success, error } = useToast();
   const { confirm } = useConfirm();
   const navigate = useNavigate();
 
   useEffect(() => {
-    api('/settings')
-      .then((data) => {
-        setForm({ name: data.name });
-        setAvatarUrl(data.avatar_url || null);
+    Promise.all([
+      api('/settings'),
+      api('/sessions/stats'),
+    ])
+      .then(([settingsData, statsData]) => {
+        setForm({ name: settingsData.name });
+        setAvatarUrl(settingsData.avatar_url || null);
+        setUsageStats({
+          totalSeconds: settingsData.total_usage_seconds || 0,
+          accountAgeDays: settingsData.account_age_days || 0,
+          createdAt: settingsData.created_at,
+          longestSessionSeconds: statsData.longest_session_seconds || 0,
+        });
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -165,6 +175,58 @@ export default function Settings() {
             </div>
           </form>
         </section>
+
+        {/* Usage Stats */}
+        {usageStats && (
+          <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
+            <div className="flex items-center gap-2 mb-6">
+              <Timer size={20} className="text-[#30D158]" />
+              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Sua Jornada</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Tempo total */}
+              <div className="p-5 bg-[#2C2C2E] rounded-[20px] border border-white/[0.04]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock size={16} className="text-[#0A84FF]" />
+                  <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider">Tempo Total</span>
+                </div>
+                <p className="text-[24px] font-bold text-[#F5F5F7] tracking-tight">
+                  {Math.floor(usageStats.totalSeconds / 3600)}h {Math.floor((usageStats.totalSeconds % 3600) / 60)}min
+                </p>
+                <p className="text-[12px] text-[#86868B] mt-1">investidos na plataforma</p>
+              </div>
+
+              {/* Idade da conta */}
+              <div className="p-5 bg-[#2C2C2E] rounded-[20px] border border-white/[0.04]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar size={16} className="text-[#FF9F0A]" />
+                  <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider">Conta criada</span>
+                </div>
+                <p className="text-[24px] font-bold text-[#F5F5F7] tracking-tight">
+                  {usageStats.accountAgeDays} {usageStats.accountAgeDays === 1 ? 'dia' : 'dias'}
+                </p>
+                <p className="text-[12px] text-[#86868B] mt-1">
+                  desde {usageStats.createdAt ? new Date(usageStats.createdAt).toLocaleDateString('pt-BR') : '—'}
+                </p>
+              </div>
+
+              {/* Maior sessão */}
+              <div className="p-5 bg-[#2C2C2E] rounded-[20px] border border-white/[0.04]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Timer size={16} className="text-[#BF5AF2]" />
+                  <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider">Maior sessão</span>
+                </div>
+                <p className="text-[24px] font-bold text-[#F5F5F7] tracking-tight">
+                  {usageStats.longestSessionSeconds >= 3600
+                    ? `${Math.floor(usageStats.longestSessionSeconds / 3600)}h ${Math.floor((usageStats.longestSessionSeconds % 3600) / 60)}min`
+                    : `${Math.floor(usageStats.longestSessionSeconds / 60)}min`}
+                </p>
+                <p className="text-[12px] text-[#86868B] mt-1">de foco contínuo</p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Danger Zone */}
         <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
