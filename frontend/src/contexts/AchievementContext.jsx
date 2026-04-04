@@ -177,13 +177,13 @@ export function AchievementProvider({ children }) {
   // Chama o backend e retorna conquistas recém-desbloqueadas
   const checkAchievements = useCallback(async () => {
     try {
-      if (!localStorage.getItem('token')) return;
+      if (!localStorage.getItem('user')) return;
       const data = await api('/achievements/check', { method: 'POST' });
       if (data?.newly_unlocked?.length) {
         showAchievements(data.newly_unlocked);
       }
-    } catch (_) {
-      // silent — nunca interrompe o fluxo do usuário
+    } catch (err) {
+      console.warn('[Achievements] checkAchievements falhou:', err?.message || err);
     }
   }, [showAchievements]);
 
