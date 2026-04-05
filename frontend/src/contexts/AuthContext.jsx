@@ -111,6 +111,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('activeTeam');
+    sessionStorage.removeItem('devsboard_session');
     setUser(null);
     setActiveTeam(null);
   };

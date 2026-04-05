@@ -52,7 +52,14 @@ export function useSessionTracker(isAuthenticated, userId) {
 
     if (!sessionId) {
       sessionId = generateSessionId();
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ sessionId, userId }));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ sessionId, userId, activeSeconds: 0 }));
+    } else {
+      // Se já existia no sessionStorage, carrega o tempo guardado imediatamente para evitar o "zero"
+      const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (stored?.activeSeconds > 0) {
+        activeSecondsRef.current = stored.activeSeconds;
+        setActiveSeconds(stored.activeSeconds);
+      }
     }
 
     sessionIdRef.current = sessionId;
@@ -76,7 +83,15 @@ export function useSessionTracker(isAuthenticated, userId) {
         intervalRef.current = setInterval(() => {
           if (isActiveRef.current) {
             activeSecondsRef.current += 1;
-            setActiveSeconds(prev => prev + 1);
+            setActiveSeconds(prev => {
+              const newVal = prev + 1;
+              // Salva no sessionStorage para persistir no refresh
+              try {
+                const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...stored, activeSeconds: newVal }));
+              } catch (_) {}
+              return newVal;
+            });
           }
         }, 1000);
 
@@ -103,7 +118,7 @@ export function useSessionTracker(isAuthenticated, userId) {
       clearInterval(heartbeatRef.current);
       intervalRef.current = null;
       heartbeatRef.current = null;
-      sessionStorage.removeItem(SESSION_KEY);
+      // DO NOT remove SESSION_KEY here to allow persistence across refreshes
       activeSecondsRef.current = 0;
       setActiveSeconds(0);
     };

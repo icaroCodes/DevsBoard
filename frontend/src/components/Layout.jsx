@@ -425,50 +425,57 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
-      {/* Mobile float menu button */}
-      <AnimatePresence>
-        {!sidebarOpen && isMobile && (
-          <motion.button
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            onClick={() => setSidebarOpen(true)}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3.5 rounded-full bg-zinc-950/80 backdrop-blur-xl border border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 group active:scale-95 transition-all duration-300"
-          >
-            <div className="flex flex-col gap-1 w-5">
-              <span className="w-5 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
-              <span className="w-3 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
-              <span className="w-4 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
-            </div>
-            <span className="font-bold text-[13px] tracking-widest uppercase ml-1">Menu</span>
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Hamburger — canto superior esquerdo, só mobile */}
+      {isMobile && (
+        <motion.button
+          onClick={() => setSidebarOpen(v => !v)}
+          className="fixed top-5 left-4 z-[60] w-10 h-10 rounded-[12px] flex items-center justify-center active:scale-90 transition-transform"
+          style={{
+            background: sidebarOpen ? 'rgba(255,255,255,0.1)' : 'rgba(28,28,30,0.85)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+          }}
+          animate={{ rotate: sidebarOpen ? 90 : 0 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {sidebarOpen ? (
+              <motion.div
+                key="close"
+                initial={{ opacity: 0, rotate: -90, scale: 0.6 }}
+                animate={{ opacity: 1, rotate: 0,   scale: 1   }}
+                exit={{   opacity: 0, rotate:  90,  scale: 0.6 }}
+                transition={{ duration: 0.18 }}
+              >
+                <X size={18} color="#fff" strokeWidth={2.5} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="open"
+                initial={{ opacity: 0, rotate: 90, scale: 0.6 }}
+                animate={{ opacity: 1, rotate: 0,  scale: 1   }}
+                exit={{   opacity: 0, rotate: -90, scale: 0.6 }}
+                transition={{ duration: 0.18 }}
+              >
+                <Menu size={18} color="#A1A1AA" strokeWidth={2} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      )}
 
-      {/* Mobile Close Button (on top when open) */}
-      <AnimatePresence>
-        {sidebarOpen && isMobile && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => setSidebarOpen(false)}
-            className="fixed top-8 right-8 z-[60] w-12 h-12 rounded-full bg-white text-zinc-950 flex items-center justify-center shadow-2xl active:scale-90 transition-transform"
-          >
-            <X size={24} strokeWidth={2.5} />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Overlay */}
+      {/* Overlay com desfoque */}
       <AnimatePresence>
         {sidebarOpen && isMobile && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 lg:hidden"
+            className="fixed inset-0 z-30 lg:hidden"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           />
         )}
       </AnimatePresence>

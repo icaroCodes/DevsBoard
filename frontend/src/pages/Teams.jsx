@@ -340,40 +340,59 @@ export default function Teams() {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 px-1">
           <button
             onClick={() => { setSelectedTeam(null); setSelectedTeamData(null); }}
-            className="flex items-center gap-2 text-[#86868B] hover:text-white transition-colors mb-4 group"
+            className="flex items-center gap-2 text-[#86868B] hover:text-white transition-all mb-6 group w-fit"
           >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-[14px]">Voltar</span>
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0A84FF]/20 to-[#5E5CE6]/20 border border-white/[0.06] flex items-center justify-center">
-              {team.type === 'family' ? <Heart size={24} className="text-pink-400" /> : <Briefcase size={24} className="text-blue-400" />}
+            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+              <ArrowLeft size={16} strokeWidth={3} />
             </div>
+            <span className="text-[14px] font-bold uppercase tracking-widest">Painel Geral</span>
+          </button>
+          
+          <div className="flex items-center gap-5">
+            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-[28px] flex items-center justify-center relative overflow-hidden ${
+              team.type === 'family' 
+                ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' 
+                : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
+            }`}>
+              {/* Subtle background glow */}
+              <div className={`absolute inset-0 opacity-20 blur-xl ${team.type === 'family' ? 'bg-pink-500' : 'bg-[#0A84FF]'}`} />
+              <div className="relative z-10 scale-125">
+                {team.type === 'family' ? <Heart size={28} /> : <Briefcase size={28} />}
+              </div>
+            </div>
+            
             <div>
-              <h1 className="text-[28px] font-semibold text-[#F5F5F7] tracking-tight">{team.name}</h1>
-              <p className="text-[14px] text-[#86868B]">
-                {team.type === 'family' ? 'Família' : 'Time'} · {team.member_count} {team.member_count === 1 ? 'membro' : 'membros'} · Seu papel: {getRoleLabel(team.my_role)}
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-[28px] sm:text-[36px] font-extrabold text-white tracking-tight leading-none">{team.name}</h1>
+                <div className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                  team.type === 'family' ? 'bg-pink-500/20 text-pink-400' : 'bg-[#0A84FF]/20 text-[#0A84FF]'
+                }`}>
+                  {team.type === 'family' ? 'Família' : 'Time'}
+                </div>
+              </div>
+              <p className="text-[14px] text-[#86868B] font-medium">
+                {team.member_count} {team.member_count === 1 ? 'membro conectado' : 'membros conectados'}
               </p>
             </div>
           </div>
         </div>
 
         {/* Members */}
-        <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[17px] font-semibold text-[#F5F5F7] flex items-center gap-2">
-              <Users size={18} className="text-[#86868B]" />
-              Membros
+        <section className="bg-transparent mb-8">
+          <div className="flex items-center justify-between mb-5 px-1">
+            <h2 className="text-[18px] font-bold text-white tracking-tight flex items-center gap-2">
+              Membros do grupo
+              <span className="text-[14px] text-[#86868B] font-medium">({team.member_count})</span>
             </h2>
             {['owner', 'admin'].includes(team.my_role) && (
               <button
                 onClick={() => setShowInviteModal(team.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0A84FF] text-white text-[13px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98]"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-[13px] font-bold hover:scale-105 active:scale-95 transition-all shadow-lg"
               >
-                <UserPlus size={15} />
+                <UserPlus size={14} strokeWidth={3} />
                 Convidar
               </button>
             )}
@@ -383,26 +402,29 @@ export default function Teams() {
             {team.members?.map((member) => (
               <div
                 key={member.user_id}
-                className="flex items-center justify-between p-4 rounded-2xl bg-[#2C2C2E]/50 border border-white/[0.03] hover:bg-[#2C2C2E] transition-colors"
+                className="flex items-center justify-between p-4 rounded-3xl bg-[#1C1C1E] border border-white/[0.03] hover:border-white/[0.1] transition-all group/member"
               >
-                <div className="flex items-center gap-3">
-                  {member.user?.avatar_url ? (
-                    <img src={member.user.avatar_url} alt="" className="w-10 h-10 rounded-full border border-white/10 object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#3A3A3C] flex items-center justify-center border border-white/10">
-                      <span className="text-sm font-bold text-zinc-300">{member.user?.name?.[0]?.toUpperCase() || '?'}</span>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {member.user?.avatar_url ? (
+                      <img src={member.user.avatar_url} alt="" className="w-11 h-11 rounded-full border-2 border-white/10 object-cover" />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#3A3A3C] to-[#2C2C2E] flex items-center justify-center border-2 border-white/10">
+                        <span className="text-sm font-black text-zinc-300">{member.user?.name?.[0]?.toUpperCase() || '?'}</span>
+                      </div>
+                    )}
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1C1C1E] flex items-center justify-center border border-white/5">
+                      {getRoleIcon(member.role)}
                     </div>
-                  )}
+                  </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-medium text-[#F5F5F7]">{member.user?.name || 'Usuário'}</span>
-                      {getRoleIcon(member.role)}
-                      <span className="text-[11px] text-[#86868B] uppercase tracking-wider">{getRoleLabel(member.role)}</span>
+                      <span className="text-[15px] font-bold text-white leading-none">{member.user?.name || 'Usuário'}</span>
                       {member.user_id === user.id && (
-                        <span className="text-[10px] bg-[#0A84FF]/15 text-[#0A84FF] px-2 py-0.5 rounded-full font-bold">VOCÊ</span>
+                        <span className="text-[9px] bg-white text-black px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">EU</span>
                       )}
                     </div>
-                    <span className="text-[12px] text-[#86868B]">{member.user?.email}</span>
+                    <span className="text-[12px] text-[#86868B] font-medium">{member.user?.email}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -410,29 +432,29 @@ export default function Teams() {
                     <select
                       value={member.role}
                       onChange={(e) => handleChangeRole(team.id, member.user_id, e.target.value)}
-                      className="bg-[#1C1C1E] border border-white/10 text-[#86868B] text-[12px] rounded-lg px-2 py-1 outline-none mr-2"
+                      className="bg-[#2C2C2E] border border-white/10 text-white text-[11px] font-bold rounded-lg px-2 py-1 outline-none mr-2 appearance-none cursor-pointer hover:bg-[#3A3A3C] transition-colors"
                     >
-                      <option value="admin">Admin</option>
-                      <option value="member">Membro</option>
+                      <option value="admin">ADMIN</option>
+                      <option value="member">MEMBRO</option>
                     </select>
                   )}
 
                   {member.user_id === user.id && member.role !== 'owner' && (
                     <button
                       onClick={() => handleLeaveTeam(team.id, team.name)}
-                      className="p-2 rounded-xl text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all active:scale-90"
                       title="Sair do time"
                     >
-                      <LogOut size={16} />
+                      <LogOut size={18} />
                     </button>
                   )}
                   {['owner', 'admin'].includes(team.my_role) && member.user_id !== user.id && member.role !== 'owner' && (
                     <button
                       onClick={() => handleRemoveMember(team.id, member.user_id, member.user?.name)}
-                      className="p-2 rounded-xl text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all active:scale-90"
                       title="Remover membro"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                   )}
                 </div>
@@ -467,51 +489,76 @@ export default function Teams() {
   // ============================================
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-[32px] font-semibold text-[#F5F5F7] tracking-tight">Times & Família</h1>
-          <p className="text-[15px] text-[#86868B] mt-1 flex items-center gap-2">
-            Gerencie seus grupos e convites
-            <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${realtimeConnected
-                ? 'bg-emerald-500/10 text-emerald-400'
-                : 'bg-amber-500/10 text-amber-400'
-              }`}>
-              {realtimeConnected ? <Wifi size={10} /> : <WifiOff size={10} />}
-              {realtimeConnected ? 'Tempo real' : 'Conectando...'}
+      <div className="mb-8 flex items-end justify-between px-1">
+        <div className="flex-1 min-w-0">
+          {/* Unified Header */}
+          <h1 className="text-[28px] sm:text-[32px] font-bold text-white tracking-tighter sm:tracking-tight mb-1">
+            Times <span className="font-light text-white/30">&</span> Família
+          </h1>
+          
+          <p className="text-[14px] sm:text-[15px] text-[#86868B] font-medium">Gerencie seus grupos e convites</p>
+        </div>
+        
+        <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center">
+          <div className={`px-2.5 py-1 rounded-full border flex items-center gap-1.5 transition-all duration-500 ${
+            realtimeConnected 
+              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' 
+              : 'bg-amber-500/5 border-amber-500/20 text-amber-400'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${realtimeConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+              {realtimeConnected ? 'Live' : 'Off'}
             </span>
-          </p>
+          </div>
+          
+          <button
+            onClick={() => setActiveTab('create')}
+            className="hidden sm:flex px-4 h-10 rounded-xl bg-white text-black items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/5 font-bold text-[13px]"
+          >
+            <Plus size={16} strokeWidth={3} />
+            Novo Grupo
+          </button>
         </div>
       </div>
 
-      {/* Tabs Switcher - Pill Style */}
-      <div className="flex p-1.5 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[20px] border border-white/[0.04] mb-10 w-fit mx-auto sm:mx-0">
-        {[
-          { id: 'teams', label: 'Meus Times', icon: Users, count: teams.length },
-          { id: 'inbox', label: 'Caixa de Entrada', icon: Inbox, count: (inbox.length + changeRequests.length) },
-          { id: 'create', label: 'Novo Time', icon: Plus, count: null },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`relative flex items-center gap-2.5 px-6 py-2.5 rounded-[14px] text-[13px] font-semibold transition-all duration-300 outline-none ${activeTab === tab.id ? 'text-white' : 'text-[#86868B] hover:text-[#A1A1A1]'}`}
-          >
-            {activeTab === tab.id && (
-              <motion.div
-                layoutId="activeTabBg"
-                className="absolute inset-0 bg-[#3A3A3C] rounded-[14px] shadow-sm -z-10"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
-            <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} className="shrink-0" />
-            <span className="whitespace-nowrap">{tab.label}</span>
-            {tab.count !== null && tab.count > 0 && (
-              <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black ${activeTab === tab.id ? 'bg-[#0A84FF] text-white shadow-[0_0_10px_rgba(10,132,255,0.4)]' : 'bg-white/5 text-[#86868B]'}`}>
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="sticky top-0 z-40 -mx-4 px-4 pb-4 pt-2 bg-transparent pointer-events-none mb-4">
+        <div className="overflow-x-auto scrollbar-hide pointer-events-auto">
+          <div className="flex p-1.5 bg-[#1C1C1E]/60 backdrop-blur-xl rounded-[24px] border border-white/[0.06] w-fit shadow-2xl">
+            {[
+              { id: 'teams', label: 'Meus Times',       labelShort: 'Times',   icon: Users, count: teams.length },
+              { id: 'inbox', label: 'Mensagens', labelShort: 'Inbox', icon: Inbox, count: inbox.length + changeRequests.length },
+              { id: 'create', label: 'Novo Grupo',       labelShort: 'Criar',    icon: Plus,  count: null },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center gap-2.5 px-5 py-2.5 rounded-[18px] text-[13px] font-bold transition-all duration-300 outline-none whitespace-nowrap ${
+                  activeTab === tab.id ? 'text-white' : 'text-[#86868B] hover:text-white/60'
+                }`}
+              >
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="activeTabBg"
+                    className="absolute inset-0 bg-[#323235] rounded-[18px] shadow-lg -z-10"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <tab.icon size={16} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                <span className="sm:hidden">{tab.labelShort}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+                {tab.count !== null && tab.count > 0 && (
+                  <span className={`inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full text-[10px] font-black border ${
+                    activeTab === tab.id
+                      ? 'bg-white text-black border-white'
+                      : 'bg-white/5 text-[#86868B] border-white/10'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ============================================ */}
@@ -527,12 +574,12 @@ export default function Teams() {
             transition={{ duration: 0.2 }}
           >
             {teams.length === 0 ? (
-              <div className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#2C2C2E] flex items-center justify-center mx-auto mb-4">
-                  <Users size={28} className="text-[#86868B]" />
+              <div className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-10 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#2C2C2E] flex items-center justify-center mx-auto mb-4">
+                  <Users size={24} className="text-[#86868B]" />
                 </div>
-                <h3 className="text-[18px] font-semibold text-[#F5F5F7] mb-2">Nenhum time ainda</h3>
-                <p className="text-[14px] text-[#86868B] mb-6">Crie um time ou família para começar a colaborar.</p>
+                <h3 className="text-[17px] font-semibold text-[#F5F5F7] mb-2">Nenhum time ainda</h3>
+                <p className="text-[13px] text-[#86868B] mb-6">Crie um time ou família para começar a colaborar.</p>
                 <button
                   onClick={() => setActiveTab('create')}
                   className="px-6 py-3 rounded-xl bg-[#0A84FF] text-white text-[14px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98]"
@@ -542,70 +589,85 @@ export default function Teams() {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {teams.map((team) => (
-                    <motion.div
-                      key={team.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      whileHover={{ y: -4 }}
-                      onClick={() => { setSelectedTeam(team.id); fetchTeamDetail(team.id); }}
-                      className="bg-[#1C1C1E] border border-white/[0.05] rounded-[28px] p-6 hover:bg-[#2C2C2E]/30 hover:border-white/[0.1] transition-all cursor-pointer group relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#0A84FF] opacity-[0.02] blur-3xl rounded-full -mr-10 -mt-10" />
-                      
-                      <div className="flex items-center justify-between relative z-10">
-                        <div className="flex items-center gap-5">
-                          <div className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-xl ${
-                            team.type === 'family' 
-                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
-                            : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
+              <div className="grid grid-cols-1 sm:grid-cols-1 gap-3">
+                {teams.map((team, idx) => (
+                  <motion.div
+                    key={team.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.05 }}
+                    onClick={() => { setSelectedTeam(team.id); fetchTeamDetail(team.id); }}
+                    className="group relative bg-[#1C1C1E] border border-white/[0.05] rounded-[24px] p-4 sm:p-5 hover:bg-[#242424] hover:border-white/[0.1] transition-all cursor-pointer overflow-hidden isolate active:scale-[0.99]"
+                  >
+                    {/* Mobile Only Decorative Background */}
+                    <div className="sm:hidden absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 pointer-events-none">
+                      <div className={`absolute -top-[50%] -right-[20%] w-[150%] h-[150%] blur-[80px] rounded-full opacity-[0.15] ${
+                        team.type === 'family' ? 'bg-pink-500' : 'bg-[#0A84FF]'
+                      }`} />
+                    </div>
+
+                    <div className="flex items-center gap-4 sm:gap-6 relative z-10 transition-transform">
+                      {/* Icon */}
+                      <div className={`w-14 h-14 sm:w-12 sm:h-12 rounded-[20px] sm:rounded-xl shrink-0 flex items-center justify-center transition-all duration-500 group-hover:scale-105 ${
+                        team.type === 'family'
+                          ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
+                          : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
+                      }`}>
+                        {getTypeIcon(team.type)}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h3 className="text-[17px] sm:text-[18px] font-bold text-white truncate">
+                            {team.name}
+                          </h3>
+                          <span className={`shrink-0 text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-md border ${
+                            team.my_role === 'owner' 
+                              ? 'bg-amber-400/10 text-amber-400 border-amber-400/20' 
+                              : 'bg-white/5 text-[#86868B] border-white/5'
                           }`}>
-                            {getTypeIcon(team.type)}
-                          </div>
-                          <div>
-                            <h3 className="text-[19px] font-bold text-[#F5F5F7] tracking-tight group-hover:text-white transition-colors">{team.name}</h3>
-                            <div className="flex items-center gap-4 mt-1.5">
-                              <span className="text-[12px] text-[#86868B] font-medium flex items-center gap-1.5">
-                                <Users size={12} strokeWidth={2.5} />
-                                {team.member_count} {team.member_count === 1 ? 'Membro' : 'Membros'}
-                              </span>
-                              <span className="w-1 h-1 rounded-full bg-[#2C2C2E] shrink-0" />
-                              <span className={`text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded-md ${
-                                team.my_role === 'owner' ? 'bg-amber-400/10 text-amber-400' : 'bg-white/5 text-[#86868B]'
-                              }`}>
-                                {getRoleLabel(team.my_role)}
-                              </span>
-                            </div>
-                          </div>
+                            {getRoleLabel(team.my_role)}
+                          </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-4">
-                          <div className="hidden sm:flex -space-x-2.5">
-                            {team.members?.slice(0, 3).map((m, i) => (
-                              <div key={m.user_id} className="relative transition-transform hover:-translate-y-1" style={{ zIndex: 5 - i }}>
+                          <div className="flex -space-x-2.5">
+                            {team.members?.slice(0, 4).map((m, i) => (
+                              <div key={m.user_id} className="relative z-0" style={{ zIndex: 10 - i }}>
                                 {m.user?.avatar_url ? (
-                                  <img src={m.user.avatar_url} className="w-9 h-9 rounded-full border-[3px] border-[#1C1C1E] object-cover" />
+                                  <img
+                                    src={m.user.avatar_url}
+                                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-[#1C1C1E] object-cover ring-1 ring-white/5"
+                                  />
                                 ) : (
-                                  <div className="w-9 h-9 rounded-full bg-[#3A3A3C] border-[3px] border-[#1C1C1E] flex items-center justify-center">
-                                    <span className="text-[10px] font-bold text-zinc-400 uppercase">{m.user?.name?.[0]}</span>
+                                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#3A3A3C] border-2 border-[#1C1C1E] ring-1 ring-white/5 flex items-center justify-center">
+                                    <span className="text-[9px] font-black text-zinc-400 uppercase">
+                                      {m.user?.name?.[0]}
+                                    </span>
                                   </div>
                                 )}
                               </div>
                             ))}
-                            {team.member_count > 3 && (
-                              <div className="w-9 h-9 rounded-full bg-[#2C2C2E] border-[3px] border-[#1C1C1E] flex items-center justify-center z-0">
-                                <span className="text-[10px] font-bold text-zinc-500">+{team.member_count - 3}</span>
+                            {team.member_count > 4 && (
+                              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#2C2C2E] border-2 border-[#1C1C1E] ring-1 ring-white/5 flex items-center justify-center">
+                                <span className="text-[8px] font-black text-[#86868B]">+{team.member_count - 4}</span>
                               </div>
                             )}
                           </div>
-                          <div className="w-10 h-10 rounded-full bg-white/[0.03] flex items-center justify-center text-[#86868B] group-hover:bg-white/10 group-hover:text-white transition-all">
-                            <ChevronDown size={20} className="-rotate-90" />
-                          </div>
+                          <span className="text-[12px] sm:text-[13px] font-medium text-[#86868B]">
+                            {team.member_count} {team.member_count === 1 ? 'membro' : 'membros'}
+                          </span>
                         </div>
                       </div>
-                    </motion.div>
+
+                      {/* Desktop Seta */}
+                      <div className="hidden sm:flex w-8 h-8 rounded-full bg-white/5 items-center justify-center text-[#86868B] group-hover:bg-white group-hover:text-black transition-all shrink-0">
+                        <ChevronDown size={14} strokeWidth={3} className="-rotate-90" />
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -651,55 +713,53 @@ export default function Teams() {
                           key={req.id} 
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="group relative bg-[#1C1C1E] border border-white/[0.05] rounded-[24px] p-5 shadow-sm overflow-hidden"
+                          className="group relative bg-[#1C1C1E] border border-white/[0.05] rounded-[32px] p-6 overflow-hidden transition-all hover:bg-[#242427]"
                         >
-                          <div className="flex flex-col sm:flex-row gap-5 items-start justify-between relative z-10">
+                          <div className="flex flex-col sm:flex-row gap-6 items-start justify-between relative z-10">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#3A3A3C] to-[#2C2C2E] flex items-center justify-center border border-white/5">
+                              <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3A3A3C] to-[#2C2C2E] flex items-center justify-center border border-white/10 shadow-lg">
                                    {req.user?.avatar_url ? (
-                                      <img src={req.user.avatar_url} className="w-full h-full rounded-full object-cover" />
+                                      <img src={req.user.avatar_url} className="w-full h-full rounded-2xl object-cover" />
                                    ) : (
-                                      <span className="text-[11px] font-bold text-zinc-400">{req.user?.name?.[0]}</span>
+                                      <span className="text-sm font-black text-white/50">{req.user?.name?.[0]}</span>
                                    )}
                                 </div>
                                 <div>
-                                   <p className="text-[14px] text-[#F5F5F7]">
-                                      <span className="font-bold underline decoration-[#0A84FF]/30">{req.user?.name}</span> no time <span className="font-semibold text-white/90">{req.team?.name}</span>
+                                   <p className="text-[15px] text-white font-bold leading-tight">
+                                      {req.user?.name}
                                    </p>
-                                   <p className="text-[11px] text-[#86868B] uppercase font-black tracking-widest mt-0.5">
-                                      {req.action_type === 'create' ? 'NOVO REGISTRO' : req.action_type === 'delete' ? 'EXCLUSÃO' : 'ATUALIZAÇÃO'} IN {req.entity_type}
+                                   <p className="text-[13px] text-[#86868B] font-medium">
+                                      no time <span className="text-white/80">{req.team?.name}</span>
                                    </p>
                                 </div>
                               </div>
                               
-                              {req.payload && (
-                                <div className="mt-4 bg-black/20 rounded-[18px] p-4 border border-white/[0.03] relative group-hover:bg-black/30 transition-colors">
-                                   <div className="flex items-center justify-between mb-2">
-                                      <span className="text-[10px] font-bold text-[#86868B] uppercase tracking-wider">Dados da Solicitação</span>
-                                      <div className="w-1.5 h-1.5 rounded-full bg-[#0A84FF] animate-pulse" />
-                                   </div>
-                                   <pre className="text-[12px] text-zinc-400 font-mono leading-relaxed overflow-x-auto max-h-[150px] custom-scrollbar">
-                                      {JSON.stringify(req.payload, null, 2)}
-                                   </pre>
-                                </div>
-                              )}
+                              <div className="bg-black/40 rounded-2xl p-4 border border-white/5 relative group-hover:border-white/10 transition-colors">
+                                 <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+                                    <span className="text-[10px] font-black text-[#86868B] uppercase tracking-[0.2em]">Detalhes da Alteração</span>
+                                    <div className="px-2 py-0.5 rounded bg-[#0A84FF]/10 text-[#0A84FF] text-[9px] font-black">
+                                       {req.action_type === 'create' ? 'CREATE' : req.action_type === 'delete' ? 'DELETE' : 'UPDATE'}
+                                    </div>
+                                 </div>
+                                 <div className="text-[12px] text-zinc-400 font-mono leading-relaxed overflow-x-auto max-h-[150px] custom-scrollbar">
+                                    {JSON.stringify(req.payload, null, 2)}
+                                 </div>
+                              </div>
                             </div>
 
-                            <div className="flex flex-row sm:flex-col gap-2 shrink-0 self-stretch sm:self-auto justify-end">
+                            <div className="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-auto">
                                <button 
                                   onClick={() => handleApproveChange(req.id)} 
-                                  className="flex-1 sm:flex-none h-11 px-6 rounded-[16px] bg-[#30D158] hover:bg-[#28C84E] text-white text-[13px] font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-[#30D158]/10"
+                                  className="flex-1 sm:w-32 h-12 rounded-2xl bg-white text-black text-[13px] font-extrabold transition-all hover:scale-[1.02] active:scale-95 shadow-xl"
                                >
-                                  <Check size={16} strokeWidth={3} />
-                                  <span>Aprovar</span>
+                                  Aprovar
                                </button>
                                <button 
                                   onClick={() => handleRejectChange(req.id)} 
-                                  className="flex-1 sm:flex-none h-11 px-6 rounded-[16px] bg-white/[0.04] hover:bg-[#FF453A]/10 text-[#86868B] hover:text-[#FF453A] text-[13px] font-bold transition-all border border-transparent hover:border-[#FF453A]/20"
+                                  className="flex-1 sm:w-32 h-12 rounded-2xl bg-[#2C2C2E] text-[#86868B] hover:text-white text-[13px] font-extrabold transition-all active:scale-95 border border-white/5"
                                >
-                                  <X size={16} strokeWidth={3} />
-                                  <span>Rejeitar</span>
+                                  Rejeitar
                                </button>
                             </div>
                           </div>
@@ -809,47 +869,61 @@ export default function Teams() {
               <h3 className="text-[20px] font-semibold text-[#F5F5F7] mb-6">Criar novo grupo</h3>
 
               <form onSubmit={handleCreateTeam} className="space-y-6">
-                {/* Type Selection */}
-                <div className="space-y-2">
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Tipo</label>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-4">
+                  <label className="text-[13px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Escolha o Tipo de Grupo</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { value: 'team', label: 'Time', icon: Briefcase, desc: 'Para projetos e trabalho', color: 'blue' },
-                      { value: 'family', label: 'Família', icon: Heart, desc: 'Para família e amigos', color: 'pink' },
+                      { value: 'team', label: 'Time Profissional', icon: Briefcase, desc: 'Ideal para projetos e colaboração.', color: 'blue' },
+                      { value: 'family', label: 'Grupo Familiar', icon: Heart, desc: 'Perfeito para família e amigos.', color: 'pink' },
                     ].map(opt => (
                       <button
                         key={opt.value}
                         type="button"
                         onClick={() => setNewTeam({ ...newTeam, type: opt.value })}
-                        className={`p-5 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${newTeam.type === opt.value
+                        className={`relative p-6 rounded-[32px] border-2 text-left transition-all overflow-hidden isolate ${newTeam.type === opt.value
                             ? opt.color === 'blue'
                               ? 'border-[#0A84FF] bg-[#0A84FF]/5'
                               : 'border-pink-500 bg-pink-500/5'
-                            : 'border-white/[0.06] bg-[#2C2C2E]/50 hover:border-white/[0.1]'
+                            : 'border-white/5 bg-[#1C1C1E] hover:border-white/10'
                           }`}
                       >
-                        <opt.icon size={22} className={
-                          newTeam.type === opt.value
-                            ? opt.color === 'blue' ? 'text-[#0A84FF]' : 'text-pink-400'
-                            : 'text-[#86868B]'
-                        } />
-                        <p className={`text-[15px] font-semibold mt-3 ${newTeam.type === opt.value ? 'text-[#F5F5F7]' : 'text-[#86868B]'
-                          }`}>{opt.label}</p>
-                        <p className="text-[12px] text-[#86868B] mt-0.5">{opt.desc}</p>
+                        {/* Selected Glow */}
+                        {newTeam.type === opt.value && (
+                          <div className={`absolute -inset-4 blur-[40px] opacity-[0.15] -z-10 ${opt.color === 'blue' ? 'bg-[#0A84FF]' : 'bg-pink-500'}`} />
+                        )}
+
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-500 ${
+                          newTeam.type === opt.value 
+                            ? opt.color === 'blue' ? 'bg-[#0A84FF] text-white' : 'bg-pink-500 text-white'
+                            : 'bg-white/5 text-[#86868B]'
+                        }`}>
+                          <opt.icon size={24} strokeWidth={2.5} />
+                        </div>
+                        
+                        <p className={`text-[17px] font-bold tracking-tight ${newTeam.type === opt.value ? 'text-white' : 'text-[#86868B]'}`}>
+                          {opt.label}
+                        </p>
+                        <p className="text-[13px] text-[#86868B] font-medium mt-1">{opt.desc}</p>
+                        
+                        {newTeam.type === opt.value && (
+                          <div className="absolute top-6 right-6 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                            <Check size={14} strokeWidth={4} className="text-black" />
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Name */}
-                <div className="space-y-1.5">
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Nome</label>
+                <div className="space-y-2">
+                  <label className="text-[13px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Nome do Grupo</label>
                   <input
                     type="text"
                     value={newTeam.name}
                     onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
                     placeholder={newTeam.type === 'family' ? 'Ex: Família Silva' : 'Ex: Squad Frontend'}
-                    className="w-full px-5 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-transparent text-[16px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/50"
+                    className="w-full px-6 py-5 rounded-[24px] bg-[#1C1C1E] border border-white/5 text-[18px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#242427] focus:outline-none transition-all placeholder:text-white/20 placeholder:font-medium"
                     required
                   />
                 </div>
@@ -857,9 +931,9 @@ export default function Teams() {
                 <button
                   type="submit"
                   disabled={creating || !newTeam.name.trim()}
-                  className="w-full px-6 py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all disabled:opacity-50 shadow-lg shadow-[#0A84FF]/10 active:scale-[0.98]"
+                  className="w-full h-16 rounded-[24px] bg-white text-black text-[16px] font-black hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50 shadow-2xl disabled:pointer-events-none"
                 >
-                  {creating ? 'Criando...' : `Criar ${newTeam.type === 'family' ? 'Família' : 'Time'}`}
+                  {creating ? 'Processando...' : `Criar ${newTeam.type === 'family' ? 'Família' : 'Time'}`}
                 </button>
               </form>
             </div>
@@ -884,54 +958,57 @@ export default function Teams() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-[#1C1C1E] border border-white/[0.06] rounded-[28px] p-8 w-full max-w-md shadow-2xl"
+              className="bg-[#1C1C1E] border border-white/10 rounded-[32px] p-8 w-full max-w-md shadow-2xl overflow-hidden relative isolate"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-[#0A84FF]/15 flex items-center justify-center">
-                  <UserPlus size={20} className="text-[#0A84FF]" />
+              {/* Background Glow */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#0A84FF] opacity-[0.05] blur-[60px] -z-10" />
+
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] border border-[#0A84FF]/20">
+                  <UserPlus size={24} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h3 className="text-[18px] font-semibold text-[#F5F5F7]">Convidar membro</h3>
-                  <p className="text-[13px] text-[#86868B]">
+                  <h3 className="text-[20px] font-bold text-white tracking-tight">Convidar Membro</h3>
+                  <p className="text-[14px] text-[#86868B] font-medium">
                     {teams.find(t => t.id === showInviteModal)?.name}
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handleInvite}>
-                <div className="space-y-1.5 mb-6">
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Email do membro</label>
+              <form onSubmit={handleInvite} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Endereço de E-mail</label>
                   <div className="relative">
-                    <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868B]" />
+                    <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B] group-focus-within:text-white transition-colors" />
                     <input
                       type="email"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="email@exemplo.com"
-                      className="w-full pl-12 pr-5 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-transparent text-[16px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/50"
+                      placeholder="usuario@email.com"
+                      className="w-full pl-14 pr-6 py-4.5 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
                       required
                       autoFocus
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setShowInviteModal(null)}
-                    className="flex-1 px-5 py-3 rounded-[14px] bg-[#2C2C2E] text-[#86868B] text-[14px] font-medium hover:text-white transition-all"
+                    className="flex-1 h-14 rounded-[20px] bg-white/5 text-[#86868B] text-[14px] font-bold hover:text-white transition-all active:scale-95"
                   >
-                    Cancelar
+                    Voltar
                   </button>
                   <button
                     type="submit"
                     disabled={inviting || !inviteEmail.trim()}
-                    className="flex-1 px-5 py-3 rounded-[14px] bg-[#0A84FF] text-white text-[14px] font-semibold hover:bg-[#007AFF] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
                   >
                     {inviting ? 'Enviando...' : (
                       <>
-                        <Send size={14} /> Enviar convite
+                        <Send size={16} strokeWidth={3} /> Enviar
                       </>
                     )}
                   </button>
@@ -941,6 +1018,15 @@ export default function Teams() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Floating Action Button (FAB) for Mobile */}
+      <div className="fixed bottom-24 right-6 z-50 sm:hidden">
+        <button
+          onClick={() => setActiveTab('create')}
+          className="w-14 h-14 rounded-full bg-white text-black shadow-2xl flex items-center justify-center active:scale-90 transition-transform ring-4 ring-black"
+        >
+          <Plus size={28} strokeWidth={3} />
+        </button>
+      </div>
     </motion.div>
   );
 }
