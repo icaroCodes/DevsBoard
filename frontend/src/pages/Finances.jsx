@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, X, BarChart3, Clock, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { Plus, Trash2, Pencil, Wallet, TrendingUp, TrendingDown, X, BarChart3, Clock, ArrowUpRight, ArrowDownRight, Loader2, Repeat, Calendar, AlertCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
@@ -12,6 +12,7 @@ const CATEGORIES = ['Salário', 'Ganhos Extras', 'Mercado/Comida', 'Ônibus/Carr
 
 export default function Finances() {
   const [items, setItems] = useState([]);
+  const [recurringItems, setRecurringItems] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -22,6 +23,10 @@ export default function Finances() {
     amount: '',
     type: 'expense',
     transaction_date: new Date().toISOString().slice(0, 10),
+    is_recurring: false,
+    recurrence_interval: 'monthly',
+    day_of_month: new Date().getDate(),
+    day_of_week: new Date().getDay(),
     submitting: false,
   });
   const { success, error: showError } = useToast();
@@ -29,7 +34,14 @@ export default function Finances() {
   const { activeTeam } = useAuth();
 
   const load = () => {
-    api('/finances').then(setItems).catch(err => showError(err.message)).finally(() => setLoading(false));
+    setLoading(true);
+    Promise.all([
+      api('/finances'),
+      api('/finances/recurring/list')
+    ]).then(([finances, recurring]) => {
+      setItems(finances);
+      setRecurringItems(recurring);
+    }).catch(err => showError(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -56,6 +68,17 @@ export default function Finances() {
           method: 'PUT',
           body: JSON.stringify(payload),
         });
+      } else if (form.is_recurring) {
+        // Criar transação recorrente
+        await api('/finances/recurring', {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            start_date: payload.transaction_date,
+            day_of_month: parseInt(form.day_of_month),
+            day_of_week: parseInt(form.day_of_week),
+          }),
+        });
       } else {
         await api('/finances', {
           method: 'POST',
@@ -64,7 +87,18 @@ export default function Finances() {
       }
       setModalOpen(false);
       setEditing(null);
-      setForm({ category: '', description: '', amount: '', type: 'expense', transaction_date: new Date().toISOString().slice(0, 10), submitting: false });
+      setForm({
+        category: '',
+        description: '',
+        amount: '',
+        type: 'expense',
+        transaction_date: new Date().toISOString().slice(0, 10),
+        is_recurring: false,
+        recurrence_interval: 'monthly',
+        day_of_month: new Date().getDate(),
+        day_of_week: new Date().getDay(),
+        submitting: false
+      });
       success(editing ? 'Pronto, atualizado!' : 'Pronto, anotado!');
       load();
     } catch (err) {
@@ -81,6 +115,35 @@ export default function Finances() {
         try {
           await api(`/finances/${id}`, { method: 'DELETE' });
           success('Anotação removida');
+          load();
+        } catch (err) {
+          showError(err.message);
+        }
+      }
+    });
+  };
+
+  const handleDeleteRecurring = async (id) => {
+    confirm({
+      title: 'O que deseja fazer?',
+      message: 'Deseja apagar apenas a regra de repetição (manter histórico) ou apagar todas as transações já geradas?',
+      confirmText: 'Apagar Tudo',
+      cancelText: 'Apenas Próximas (Manter histórico)',
+      onConfirm: async () => {
+        // Apaga tudo
+        try {
+          await api(`/finances/recurring/${id}?deleteAll=true`, { method: 'DELETE' });
+          success('Recorrência e histórico removidos');
+          load();
+        } catch (err) {
+          showError(err.message);
+        }
+      },
+      onCancel: async () => {
+        // Apaga apenas a regra
+        try {
+          await api(`/finances/recurring/${id}`, { method: 'DELETE' });
+          success('Apenas as próximas foram canceladas');
           load();
         } catch (err) {
           showError(err.message);
@@ -120,6 +183,8 @@ export default function Finances() {
     const [year, month, day] = dateString.split('T')[0].split('-');
     return `${day}/${month}/${year}`;
   };
+
+  const modalOverlayRef = useRef(null);
 
   // Apple dark mode aesthetic values
   // bg app: #000000
@@ -285,6 +350,37 @@ export default function Finances() {
             </div>
           </div>
 
+          {/* Seção de Recorrências se houver */}
+          {recurringItems.length > 0 && (
+            <div className="px-6 py-4 bg-[#0A84FF]/[0.02] border-b border-white/[0.04]">
+              <div className="flex items-center gap-2 mb-3">
+                <Repeat size={14} className="text-[#0A84FF]" />
+                <h3 className="text-[12px] font-bold text-[#F5F5F7] uppercase tracking-wider">Repetições Automáticas</h3>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {recurringItems.map(rec => (
+                  <div key={rec.id} className="flex items-center gap-3 bg-[#2C2C2E]/60 border border-white/5 py-2 px-3 rounded-[12px] relative group hover:border-[#0A84FF]/20 transition-all">
+                    <div className={`p-1.5 rounded-[8px] ${rec.type === 'income' ? 'bg-[#30D158]/20 text-[#30D158]' : 'bg-[#FF453A]/20 text-[#FF453A]'}`}>
+                      <Repeat size={12} />
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-medium text-[#F5F5F7] leading-none mb-1">{rec.category}</p>
+                      <p className="text-[10px] text-[#86868B] leading-none">
+                        R$ {Number(rec.amount).toFixed(2)} • {rec.recurrence_interval === 'monthly' ? `Dia ${rec.day_of_month}` : rec.recurrence_interval === 'weekly' ? 'Semanal' : 'Quinzenal'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteRecurring(rec.id)}
+                      className="ml-2 w-6 h-6 flex items-center justify-center rounded-full bg-[#FF453A]/10 text-[#FF453A] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF453A]/20"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
               <Clock size={40} strokeWidth={1.5} className="text-[#86868B]" />
@@ -393,13 +489,12 @@ export default function Finances() {
       {/* Modal */}
       <AnimatePresence>
         {modalOpen && (
-          <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 font-sans" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' }}>
+          <div className="fixed inset-0 bg-[#000000]/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
+              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative my-auto"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
@@ -410,94 +505,180 @@ export default function Finances() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Segmented Control */}
-                <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
-                  {['income', 'expense'].map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setForm({ ...form, type })}
-                      className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
-                        }`}
-                    >
-                      {form.type === type && (
-                        <motion.div
-                          layoutId="transactionTypeBg"
-                          className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10"
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                      {type === 'income' ? (
-                        <>
-                          <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
-                          Dinheiro que entrou
-                        </>
-                      ) : (
-                        <>
-                          <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
-                          Dinheiro que saiu
-                        </>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">O que é? (Ex: Mercado, Conta de Luz...)</label>
-                    <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Compra de pão" required />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Segmented Control */}
+                  <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
+                    {['income', 'expense'].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setForm({ ...form, type })}
+                        className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                          }`}
+                      >
+                        {form.type === type && (
+                          <motion.div
+                            layoutId="transactionTypeBg"
+                            className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10"
+                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          />
+                        )}
+                        {type === 'income' ? (
+                          <>
+                            <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
+                            Dinheiro que entrou
+                          </>
+                        ) : (
+                          <>
+                            <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
+                            Dinheiro que saiu
+                          </>
+                        )}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Quanto (Valor)?</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-3.5 text-[#86868B] text-[15px]">R$</span>
-                        <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full pl-11 pr-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="0,00" required />
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">O que é? (Ex: Mercado, Conta de Luz...)</label>
+                      <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Compra de pão" required />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-medium text-[#86868B] ml-1">Quanto (Valor)?</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-3.5 text-[#86868B] text-[15px]">R$</span>
+                          <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full pl-11 pr-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="0,00" required />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-medium text-[#86868B] ml-1">Quando (Data)?</label>
+                        <input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all [color-scheme:dark]" required />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Quando (Data)?</label>
-                      <input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all [color-scheme:dark]" required />
+
+                    {!editing && (
+                      <div className="p-4 bg-[#2C2C2E]/50 rounded-[20px] border border-white/[0.04] space-y-4">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={form.is_recurring}
+                              onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-10 h-6 bg-[#3A3A3C] rounded-full peer peer-checked:bg-[#0A84FF] transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#F5F5F7] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[14px] font-semibold text-[#F5F5F7]">Repetir automaticamente</span>
+                            <span className="text-[12px] text-[#86868B]">Crie uma transação recorrente</span>
+                          </div>
+                        </label>
+
+                        {form.is_recurring && (
+                          <div className="space-y-4 pt-2 border-t border-white/5">
+                            <div className="space-y-1.5">
+                              <label className="text-[13px] font-medium text-[#86868B] ml-1">Frequência</label>
+                              <div className="flex p-1 bg-[#1C1C1E] rounded-[12px] border border-white/[0.04]">
+                                {['weekly', 'biweekly', 'monthly'].map((int) => (
+                                  <button
+                                    key={int}
+                                    type="button"
+                                    onClick={() => setForm({ ...form, recurrence_interval: int })}
+                                    className={`flex-1 py-1.5 rounded-[8px] text-[11px] font-bold uppercase tracking-tight transition-all ${form.recurrence_interval === int
+                                      ? 'bg-[#3A3A3C] text-[#F5F5F7]'
+                                      : 'text-[#86868B] hover:text-[#F5F5F7]'
+                                      }`}
+                                  >
+                                    {int === 'weekly' ? 'Semanal' : int === 'biweekly' ? 'Quinzenal' : 'Mensal'}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {form.recurrence_interval === 'monthly' && (
+                              <div className="space-y-1.5">
+                                <label className="text-[13px] font-medium text-[#86868B] ml-1">Dia do mês (1-31)</label>
+                                 <input
+                                  type="number"
+                                  min="1"
+                                  max="31"
+                                  value={form.day_of_month}
+                                  onChange={(e) => {
+                                    let val = e.target.value;
+                                    if (val === '') {
+                                      setForm({ ...form, day_of_month: '' });
+                                      return;
+                                    }
+                                    let n = parseInt(val, 10);
+                                    if (n > 31) n = 31;
+                                    if (n < 1) n = 1;
+                                    setForm({ ...form, day_of_month: n });
+                                  }}
+                                  className="w-full px-4 py-3 rounded-[12px] bg-[#1C1C1E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all"
+                                />
+                              </div>
+                            )}
+
+                            {form.recurrence_interval === 'weekly' && (
+                              <div className="space-y-1.5">
+                                <label className="text-[13px] font-medium text-[#86868B] ml-1">Dia da semana</label>
+                                <select
+                                  value={form.day_of_week}
+                                  onChange={(e) => setForm({ ...form, day_of_week: e.target.value })}
+                                  className="w-full px-4 py-3 rounded-[12px] bg-[#1C1C1E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all"
+                                >
+                                  <option value="0">Domingo</option>
+                                  <option value="1">Segunda-feira</option>
+                                  <option value="2">Terça-feira</option>
+                                  <option value="3">Quarta-feira</option>
+                                  <option value="4">Quinta-feira</option>
+                                  <option value="5">Sexta-feira</option>
+                                  <option value="6">Sábado</option>
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Tipo da anotação (Categoria)</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {CATEGORIES.map(c => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => setForm({ ...form, category: c })}
+                            className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
+                              ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
+                              : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
+                              }`}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Tipo da anotação (Categoria)</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {CATEGORIES.map(c => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setForm({ ...form, category: c })}
-                          className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
-                            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
-                            : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
-                            }`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="pt-4 pb-2">
+                    <button
+                      type="submit"
+                      disabled={form.submitting}
+                      className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
+                    >
+                      {form.submitting ? (
+                        <>
+                          <Loader2 size={20} className="animate-spin" />
+                          <span>Guardando anotação...</span>
+                        </>
+                      ) : editing ? 'Salvar mudanças' : 'Pronto, anotar'}
+                    </button>
                   </div>
-                </div>
-
-                <div className="pt-4">
-                  <button
-                    type="submit"
-                    disabled={form.submitting}
-                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
-                  >
-                    {form.submitting ? (
-                      <>
-                        <Loader2 size={20} className="animate-spin" />
-                        <span>Guardando anotação...</span>
-                      </>
-                    ) : editing ? 'Salvar mudanças' : 'Pronto, anotar'}
-                  </button>
-                </div>
-              </form>
+                </form>
             </motion.div>
           </div>
         )}

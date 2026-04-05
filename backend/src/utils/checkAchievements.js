@@ -33,7 +33,7 @@ export const ACHIEVEMENTS = [
   { id: 23, slug: 'streak_7',       name: 'Focado',                 description: '7 dias seguidos',                               icon: '⚡', category: 'streak',   threshold: 7,      tier: 'prata'   },
   { id: 24, slug: 'streak_21',      name: 'Obcecado',               description: '21 dias seguidos',                              icon: '👁️', category: 'streak',   threshold: 21,     tier: 'ouro'    },
   // SECRETAS
-  { id: 25, slug: 'night_mode',     name: 'Coruja',                 description: 'Use o sistema de madrugada',                    icon: '🌙', category: 'hidden',   threshold: 1,      tier: 'prata',  hidden: true },
+  { id: 25, slug: 'night_mode',     name: 'Coruja',                 description: 'Acesse a plataforma entre 00:00 e 05:00 (Brasília)', icon: '🌙', category: 'hidden',   threshold: 1,      tier: 'prata',  hidden: true },
   { id: 26, slug: 'speed_run',      name: 'Speedrunner',            description: 'Complete 5 tarefas em menos de 10 minutos',     icon: '💨', category: 'hidden',   threshold: 5,      tier: 'ouro',   hidden: true },
   // PLATINA
   { id: 27, slug: 'platinum',       name: 'DEVSBOARD GOD',          description: 'Desbloqueie TODAS as conquistas',               icon: '💀', category: 'ultimate', threshold: 1,      tier: 'platina' },
@@ -56,8 +56,12 @@ export async function checkAndUnlock(userId) {
 
   // 2. Métricas do usuário (mesmo conjunto de queries do GET /achievements)
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-  const currentHour   = new Date().getHours();
-  const isNightTime   = currentHour >= 0 && currentHour < 5;
+  const brasiliaHour = parseInt(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    hour: 'numeric',
+    hour12: false
+  }).format(new Date()));
+  const isNightTime = brasiliaHour >= 0 && brasiliaHour < 5;
 
   const [
     tasksRes, goalsRes, goalsCompletedRes,
