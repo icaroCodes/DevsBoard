@@ -29,6 +29,14 @@ export async function api(endpoint, options = {}, isRetry = false) {
   if (res.status === 401 && !isRetry) {
     const errorData = await res.json().catch(() => null);
 
+    // Rotas de autenticação que intencionalmente retornam 401 (credenciais erradas)
+    // não devem ser tratadas como "sessão expirada"
+    const isAuthRoute = endpoint.includes('/auth/login') || endpoint.includes('/auth/register');
+    if (isAuthRoute) {
+      const errorMsg = errorData?.error || (errorData?.errors?.[0]?.message) || 'Credenciais inválidas';
+      throw new Error(errorMsg);
+    }
+
     if (errorData?.error === 'TOKEN_EXPIRED') {
       try {
         const refreshReq = await fetch(`${API_URL}/auth/refresh`, {

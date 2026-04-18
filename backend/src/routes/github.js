@@ -30,6 +30,7 @@ const setAuthCookies = (res, { accessToken, refreshToken }) => {
 
 // GET /auth/github — redireciona para o GitHub
 router.get('/', (req, res) => {
+  console.log('[GitHub Auth] Iniciando OAuth — CALLBACK_URL:', CALLBACK_URL);
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: CALLBACK_URL,
@@ -44,14 +45,16 @@ router.get('/callback', async (req, res) => {
   if (!code) return res.redirect(`${FRONTEND_URL}/auth?error=codigo_invalido`);
 
   try {
+    console.log('[GitHub Auth] Trocando code por token. CLIENT_ID:', GITHUB_CLIENT_ID?.substring(0, 8) + '...', 'SECRET_SET:', !!GITHUB_CLIENT_SECRET);
     const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, client_secret: GITHUB_CLIENT_SECRET, code }),
+      body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, client_secret: GITHUB_CLIENT_SECRET, code, redirect_uri: CALLBACK_URL }),
     });
     const tokenData = await tokenRes.json();
 
     if (!tokenData.access_token) {
+      console.error('[GitHub Auth] Falha na troca de token. Resposta do GitHub:', tokenData);
       return res.redirect(`${FRONTEND_URL}/auth?error=github_falhou`);
     }
 
