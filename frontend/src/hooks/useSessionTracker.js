@@ -9,7 +9,7 @@ function generateSessionId() {
 }
 
 function sendHeartbeat(sessionId, activeSeconds) {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
   const token = localStorage.getItem('token');
   const payload = JSON.stringify({ session_id: sessionId, active_seconds: activeSeconds });
 
