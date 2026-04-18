@@ -6,6 +6,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useTranslation } from '../utils/translations';
 
 export default function Settings() {
   const [form, setForm] = useState({ name: '' });
@@ -18,6 +19,7 @@ export default function Settings() {
   const { success, error } = useToast();
   const { confirm } = useConfirm();
   const navigate = useNavigate();
+  const { t, lang, setLang } = useTranslation();
 
   useEffect(() => {
     Promise.all([
@@ -44,7 +46,7 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) return error('Imagem muito grande (máximo 2MB)');
+    if (file.size > 2 * 1024 * 1024) return error(t.settingsImgMax);
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -74,11 +76,11 @@ export default function Settings() {
 
       const updatedUser = await refreshUser();
 
-      success('Perfil atualizado!');
+      success(t.settingsProfileUpdated);
       setAvatarUrl(updatedUser?.avatar_url || null);
       setAvatarBase64(null);
     } catch (err) {
-      error(`Erro ao salvar perfil: ${err.message}`);
+      error(`${t.settingsUpdateError} ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -86,8 +88,8 @@ export default function Settings() {
 
   const handleDelete = async () => {
     confirm({
-      title: 'Excluir conta?',
-      message: 'Esta ação é irreversível e excluirá todos os seus dados. Tem certeza?',
+      title: t.settingsConfirmDelAcc,
+      message: t.settingsConfirmDelMsg,
       onConfirm: async () => {
         try {
           await api('/settings', { method: 'DELETE' });
@@ -111,15 +113,15 @@ export default function Settings() {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="max-w-2xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
       <div className="mb-10">
-        <h1 className="text-[32px] font-semibold text-[#F5F5F7] tracking-tight">Configurações</h1>
-        <p className="text-[17px] text-[#86868B] mt-1">Gerencie sua identidade e preferências</p>
+        <h1 className="text-[32px] font-semibold text-[#F5F5F7] tracking-tight">{t.settingsTitle}</h1>
+        <p className="text-[17px] text-[#86868B] mt-1">{t.settingsSubtitle}</p>
       </div>
 
       <div className="space-y-6">
@@ -127,7 +129,7 @@ export default function Settings() {
         <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
           <div className="flex flex-col sm:flex-row items-center gap-8 mb-10">
             <div className="relative group">
-              <div 
+              <div
                 className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/5 bg-[#2C2C2E] flex items-center justify-center cursor-pointer transition-all hover:border-[#0A84FF]"
                 onClick={() => document.getElementById('avatar-input').click()}
               >
@@ -137,26 +139,26 @@ export default function Settings() {
                   <User size={40} className="text-[#86868B]" />
                 )}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <Camera size={24} className="text-white" />
+                  <Camera size={24} className="text-white" />
                 </div>
               </div>
               <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
-            
+
             <div className="text-center sm:text-left">
               <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">{form.name}</h2>
               <p className="text-[14px] text-[#86868B] flex items-center justify-center sm:justify-start gap-1.5 mt-1">
                 <Mail size={14} /> {user?.email}
               </p>
               {avatarBase64 && (
-                <span className="inline-block mt-3 px-3 py-1 bg-[#FF9F0A]/10 text-[#FF9F0A] text-[11px] font-bold uppercase rounded-full">Nova imagem pendente</span>
+                <span className="inline-block mt-3 px-3 py-1 bg-[#FF9F0A]/10 text-[#FF9F0A] text-[11px] font-bold uppercase rounded-full">{t.settingsNewImg}</span>
               )}
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Seu Nome</label>
+              <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.settingsYourName}</label>
               <input
                 type="text"
                 value={form.name}
@@ -165,19 +167,20 @@ export default function Settings() {
                 required
               />
             </div>
-            
+
             <div className="pt-2">
-               <button
+              <button
                 type="submit"
                 disabled={saving}
                 className="px-8 py-3.5 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all disabled:opacity-50 shadow-lg shadow-[#0A84FF]/10 active:scale-[0.98]"
               >
-                {saving ? 'Atualizando...' : 'Salvar Alterações'}
+                {saving ? t.settingsUpdating : t.settingsSave}
               </button>
             </div>
           </form>
         </section>
 
+<<<<<<< HEAD
         {/* Usage Stats */}
         {usageStats && (
           <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
@@ -253,40 +256,61 @@ export default function Settings() {
             </div>
           </section>
         )}
+=======
+        {/* Language Section */}
+        <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
+          <h2 className="text-[17px] font-semibold text-[#F5F5F7] mb-4">{t.settingsLang}</h2>
+          <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative max-w-xs">
+            {['pt', 'en'].map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setLang(l)}
+                className={`relative flex-1 py-2.5 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none cursor-pointer ${lang === l ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
+              >
+                {lang === l && (
+                  <motion.div layoutId="activeLang" className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10" transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }} />
+                )}
+                {l === 'pt' ? 'Português' : 'English'}
+              </button>
+            ))}
+          </div>
+        </section>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 
         {/* Danger Zone */}
         <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
-           <div className="flex items-center gap-2 mb-6">
-              <ShieldAlert size={20} className="text-[#FF453A]" />
-              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Zona de Perigo</h2>
-           </div>
-           
-           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-[#FF453A]/5 border border-[#FF453A]/10 rounded-[20px]">
-              <div>
-                <p className="text-[15px] font-medium text-[#F5F5F7]">Excluir minha conta</p>
-                <p className="text-[13px] text-[#86868B] mt-0.5">Todos os seus projetos, rotinas e finanças serão apagados.</p>
-              </div>
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FF453A] text-white text-[13px] font-bold hover:bg-[#FF3B30] transition-colors whitespace-nowrap"
-              >
-                <Trash2 size={16} /> Excluir permanentemente
-              </button>
-           </div>
+          <div className="flex items-center gap-2 mb-6">
+            <ShieldAlert size={20} className="text-[#FF453A]" />
+            <h2 className="text-[17px] font-semibold text-[#F5F5F7]">{t.settingsDangerZone}</h2>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-[#FF453A]/5 border border-[#FF453A]/10 rounded-[20px]">
+            <div>
+              <p className="text-[15px] font-medium text-[#F5F5F7]">{t.settingsDelAccount}</p>
+              <p className="text-[13px] text-[#86868B] mt-0.5">{t.settingsDelWarning}</p>
+            </div>
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FF453A] text-white text-[13px] font-bold hover:bg-[#FF3B30] transition-colors whitespace-nowrap"
+            >
+              <Trash2 size={16} /> {t.settingsDelBtn}
+            </button>
+          </div>
         </section>
 
         <div className="pt-4 flex justify-center">
-           <button
+          <button
             onClick={() => {
               confirm({
-                title: 'Sair da conta?',
-                message: 'Deseja realmente encerrar sua sessão?',
+                title: t.settingsConfirmSignOut,
+                message: t.settingsConfirmSignOutMsg,
                 onConfirm: () => { logout(); navigate('/'); }
               });
             }}
             className="flex items-center gap-2 text-[#86868B] hover:text-[#F5F5F7] font-medium transition-colors p-2"
           >
-            <LogOut size={18} /> Encerrar Sessão
+            <LogOut size={18} /> {t.settingsSignOutText}
           </button>
         </div>
       </div>

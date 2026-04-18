@@ -33,7 +33,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-team-id']
 }));
-app.use(express.json({ limit: '10kb' })); // Reduzido Payload para evitar DoS
+app.use(express.json({ limit: '50mb' })); // Aumentado para permitir upload de imagens base64
 app.use(apiRateLimiter);
 
 // Rotas públicas

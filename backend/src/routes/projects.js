@@ -11,14 +11,20 @@ const IMAGE_FIELDS = ['logo_url', 'figma_url'];
 
 // Helper: upload base64 image to Supabase Storage
 async function uploadProjectImage(base64, userId, projectId, type) {
-  const buffer = Buffer.from(base64.split(',')[1], 'base64');
+  if (!base64 || typeof base64 !== 'string' || !base64.includes(';base64,')) {
+    return (typeof base64 === 'string' && base64.startsWith('http')) ? base64 : null;
+  }
+
+  const parts = base64.split(',');
+  if (parts.length < 2) return null;
+
+  const buffer = Buffer.from(parts[1], 'base64');
   const fileExt = base64.split(';')[0].split('/')[1] || 'png';
   const fileName = `${userId}/${projectId}-${type}-${Date.now()}.${fileExt}`;
-  const filePath = fileName;
 
   const { error: uploadError } = await supabase.storage
     .from('project-assets')
-    .upload(filePath, buffer, {
+    .upload(fileName, buffer, {
       contentType: `image/${fileExt}`,
       upsert: true,
     });
@@ -30,14 +36,20 @@ async function uploadProjectImage(base64, userId, projectId, type) {
 
   const { data: { publicUrl } } = supabase.storage
     .from('project-assets')
-    .getPublicUrl(filePath);
+    .getPublicUrl(fileName);
 
   return publicUrl;
 }
 
+// ─── Projects ────────────────────────────────────────────────
+
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('projects').select('*').eq('user_id', req.userId).order('id', { ascending: false });
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*, project_images(*), project_references(*)')
+      .eq('user_id', req.userId)
+      .order('id', { ascending: false });
     if (error) throw error;
     res.json(data);
   } catch (err) {
@@ -56,11 +68,9 @@ router.post('/', [
     const insert = { user_id: req.userId };
     PROJECT_FIELDS.forEach(f => { insert[f] = req.body[f] || null; });
 
-    // Create project first to get its ID
     const { data, error } = await supabase.from('projects').insert(insert).select().single();
     if (error) throw error;
 
-    // Handle image uploads after creation
     const imageUpdates = {};
     if (req.body.logo_base64) {
       imageUpdates.logo_url = await uploadProjectImage(req.body.logo_base64, req.userId, data.id, 'logo');
@@ -73,10 +83,10 @@ router.post('/', [
       const { data: updated, error: updateError } = await supabase
         .from('projects').update(imageUpdates).eq('id', data.id).select().single();
       if (updateError) throw updateError;
-      return res.status(201).json(updated);
+      return res.status(201).json({ ...updated, project_images: [], project_references: [] });
     }
 
-    res.status(201).json(data);
+    res.status(201).json({ ...data, project_images: [], project_references: [] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao criar projeto' });
@@ -95,7 +105,6 @@ router.put('/:id', [
     PROJECT_FIELDS.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
     IMAGE_FIELDS.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
 
-    // Handle base64 image uploads
     if (req.body.logo_base64) {
       updates.logo_url = await uploadProjectImage(req.body.logo_base64, req.userId, req.params.id, 'logo');
     }
@@ -124,6 +133,98 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao excluir projeto' });
+  }
+});
+
+// ─── Project Images ───────────────────────────────────────────
+
+router.post('/:id/images', async (req, res) => {
+  try {
+    const { title, image_base64 } = req.body;
+    if (!title || !image_base64) return res.status(400).json({ error: 'Título e imagem são obrigatórios' });
+
+    // Verify project ownership
+    const { data: proj } = await supabase.from('projects').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    if (!proj) return res.status(404).json({ error: 'Projeto não encontrado' });
+
+    const image_url = await uploadProjectImage(image_base64, req.userId, req.params.id, `img-${Date.now()}`);
+
+    const { data, error } = await supabase
+      .from('project_images')
+      .insert({ project_id: req.params.id, user_id: req.userId, title, image_url })
+      .select()
+      .single();
+    if (error) throw error;
+
+    res.status(201).json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao adicionar imagem' });
+  }
+});
+
+router.delete('/:id/images/:imageId', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('project_images')
+      .delete()
+      .eq('id', req.params.imageId)
+      .eq('project_id', req.params.id)
+      .eq('user_id', req.userId)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Imagem não encontrada' });
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao remover imagem' });
+  }
+});
+
+// ─── Project References ───────────────────────────────────────
+
+router.post('/:id/references', async (req, res) => {
+  try {
+    const { title, url, image_base64 } = req.body;
+    if (!title) return res.status(400).json({ error: 'Título é obrigatório' });
+
+    const { data: proj } = await supabase.from('projects').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    if (!proj) return res.status(404).json({ error: 'Projeto não encontrado' });
+
+    let image_url = null;
+    if (image_base64) {
+      image_url = await uploadProjectImage(image_base64, req.userId, req.params.id, `ref-${Date.now()}`);
+    }
+
+    const { data, error } = await supabase
+      .from('project_references')
+      .insert({ project_id: req.params.id, user_id: req.userId, title, url: url || null, image_url })
+      .select()
+      .single();
+    if (error) throw error;
+
+    res.status(201).json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao adicionar referência' });
+  }
+});
+
+router.delete('/:id/references/:refId', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('project_references')
+      .delete()
+      .eq('id', req.params.refId)
+      .eq('project_id', req.params.id)
+      .eq('user_id', req.userId)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Referência não encontrada' });
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao remover referência' });
   }
 });
 

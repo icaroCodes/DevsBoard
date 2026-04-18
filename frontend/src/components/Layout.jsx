@@ -26,7 +26,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
 import { useSessionTracker } from '../hooks/useSessionTracker';
 import { api } from '../lib/api';
+import { useTranslation } from '../utils/translations';
 
+<<<<<<< HEAD
 const navItems = [
   { to: '/dashboard', icon: Home, label: 'Início' },
   { to: '/finances', icon: Wallet, label: 'Finanças' },
@@ -37,6 +39,17 @@ const navItems = [
   { to: '/teams', icon: Users, label: 'Times' },
   { to: '/achievements', icon: Trophy, label: 'Conquistas' },
   { to: '/settings', icon: Settings, label: 'Configurações' },
+=======
+const navRoutes = [
+  { to: '/dashboard', icon: Home, key: 'navHome' },
+  { to: '/finances', icon: Wallet, key: 'navFinances' },
+  { to: '/tasks', icon: CheckSquare, key: 'navTasks' },
+  { to: '/routines', icon: RefreshCw, key: 'navRoutines' },
+  { to: '/goals', icon: Target, key: 'navGoals' },
+  { to: '/projects', icon: Folder, key: 'navProjects' },
+  { to: '/teams', icon: Users, key: 'navTeams' },
+  { to: '/settings', icon: Settings, key: 'navSettings' },
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 ];
 
 export default function Layout({ children }) {
@@ -46,7 +59,11 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
+<<<<<<< HEAD
   const { formattedTime } = useSessionTracker(!!user, user?.id);
+=======
+  const { t } = useTranslation();
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);
@@ -142,7 +159,7 @@ export default function Layout({ children }) {
                   <div className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'} shadow-[0_0_8px_rgba(10,132,255,0.4)]`} />
                     <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">
-                      {activeTeam.type === 'family' ? 'Família' : 'Equipe'}
+                      {activeTeam.type === 'family' ? t.layoutFamily : t.layoutTeam}
                     </span>
                   </div>
                 </motion.div>
@@ -166,13 +183,14 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      <motion.nav 
+      <motion.nav
         variants={isMobile ? containerVariants : {}}
         initial="hidden"
         animate="show"
         className="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden min-w-[224px]"
       >
-        {navItems.map(({ to, icon: Icon, label }) => {
+        {navRoutes.map(({ to, icon: Icon, key }) => {
+          const label = t[key] || key;
           const isActive = location.pathname === to;
           const content = (
             <Link
@@ -276,7 +294,7 @@ export default function Layout({ children }) {
                   <div className="whitespace-nowrap flex flex-col justify-center text-left">
                     <p className="text-[14px] font-medium text-zinc-200 truncate">
                       {activeTeam ? activeTeam.name : user.name}
-                      {activeTeam && <span className="ml-2 text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Time</span>}
+                      {activeTeam && <span className="ml-2 text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded uppercase tracking-wider">{t.layoutTeamBadge}</span>}
                     </p>
                     <p className="text-[12px] text-zinc-500 truncate">{user.email}</p>
                   </div>
@@ -304,11 +322,11 @@ export default function Layout({ children }) {
               >
                 {/* Section: Accounts */}
                 <div className="px-3 pt-3 pb-2 flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.05em]">Perfis Disponíveis</span>
+                  <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-[0.05em]">{t.layoutProfiles}</span>
                   <Link
                     to="/auth"
                     className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90"
-                    title="Adicionar Conta"
+                    title={t.layoutAddAccount}
                   >
                     <Plus size={14} />
                   </Link>
@@ -350,12 +368,12 @@ export default function Layout({ children }) {
                 {/* Section: Teams */}
                 <div className="mt-3 pt-3 border-t border-white/[0.05]">
                   <div className="px-3 pb-2 text-[11px] font-bold text-[#86868B] uppercase tracking-[0.05em]">
-                    Espaços de Equipe
+                    {t.layoutTeamSpaces}
                   </div>
                   <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
                     {teams.length === 0 ? (
                       <div className="px-3 py-4 text-center">
-                        <p className="text-[12px] text-zinc-600 italic">Nenhum time disponível</p>
+                        <p className="text-[12px] text-zinc-600 italic">{t.layoutNoTeams}</p>
                       </div>
                     ) : (
                       teams.map((team) => {
@@ -375,7 +393,7 @@ export default function Layout({ children }) {
                             <div className="flex-1 text-left min-w-0">
                               <p className={`text-[13px] truncate ${isSelected ? 'font-semibold text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{team.name}</p>
                               <div className="flex items-center gap-2">
-                                <span className="text-[9px] text-zinc-600 uppercase font-bold tracking-tight">{team.type === 'family' ? 'Família' : 'Business'}</span>
+                                <span className="text-[9px] text-zinc-600 uppercase font-bold tracking-tight">{team.type === 'family' ? t.layoutFamily : 'Business'}</span>
                               </div>
                             </div>
                             {isSelected && (
@@ -397,7 +415,7 @@ export default function Layout({ children }) {
                         <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:rotate-90 transition-transform">
                           <X size={14} />
                         </div>
-                        <span className="text-[12px] font-medium">Conta Pessoal</span>
+                        <span className="text-[12px] font-medium">{t.layoutPersonal}</span>
                       </button>
                     )}
                   </div>
@@ -412,7 +430,7 @@ export default function Layout({ children }) {
                     <div className="w-8 h-8 flex items-center justify-center">
                       <LogOut size={14} />
                     </div>
-                    Encerrar Sessão
+                    {t.layoutSignOut}
                   </button>
                 </div>
               </motion.div>
@@ -425,6 +443,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
+<<<<<<< HEAD
       {/* Hamburger — canto superior esquerdo, só mobile */}
       {isMobile && (
         <motion.button
@@ -464,6 +483,27 @@ export default function Layout({ children }) {
           </AnimatePresence>
         </motion.button>
       )}
+=======
+      {/* Mobile float menu button */}
+      <AnimatePresence>
+        {!sidebarOpen && isMobile && (
+          <motion.button
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            onClick={() => setSidebarOpen(true)}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3.5 rounded-full bg-zinc-950/80 backdrop-blur-xl border border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 group active:scale-95 transition-all duration-300"
+          >
+            <div className="flex flex-col gap-1 w-5">
+              <span className="w-5 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
+              <span className="w-3 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
+              <span className="w-4 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
+            </div>
+            <span className="font-bold text-[13px] tracking-widest uppercase ml-1">{t.layoutMenu}</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 
       {/* Overlay com desfoque */}
       <AnimatePresence>
@@ -517,13 +557,13 @@ export default function Layout({ children }) {
               <div className="pointer-events-auto bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 pr-2">
                 <div className={`w-2 h-2 rounded-full ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'} animate-pulse`} />
                 <span className="text-[12px] font-semibold text-white/90">
-                  Modo de Equipe: <span className="text-white font-bold">{activeTeam.name}</span>
+                  {t.layoutTeamMode} <span className="text-white font-bold">{activeTeam.name}</span>
                 </span>
                 <button
                   onClick={() => switchTeam(null)}
                   className="bg-white/5 hover:bg-white/10 text-white/40 hover:text-white px-3 py-1 rounded-full text-[10px] font-bold transition-all border border-white/5 active:scale-95"
                 >
-                  Voltar para Pessoal
+                  {t.layoutBackPersonal}
                 </button>
               </div>
             </motion.div>

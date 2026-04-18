@@ -17,7 +17,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
-import { globalTranslations } from '../utils/translations';
+import { useTranslation } from '../utils/translations';
 
 /* Note: Routine/Goal labels are now dynamic inside the component! */
 
@@ -50,14 +50,7 @@ export default function Dashboard() {
   const [routineTab, setRoutineTab] = useState('daily');
   const { error: showError } = useToast();
   const { user, activeTeam } = useAuth();
-  const [lang, setLang] = useState('pt');
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem('lang');
-    if (savedLang) setLang(savedLang);
-  }, []);
-
-  const t = globalTranslations[lang] || globalTranslations['pt'];
+  const { t } = useTranslation();
 
   const load = () => {
     api('/dashboard')

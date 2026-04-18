@@ -5,10 +5,10 @@ import config from '../config/index.js';
 
 const router = Router();
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:3001/auth/github/callback';
+const GITHUB_CLIENT_ID = (process.env.GITHUB_CLIENT_ID || '').trim();
+const GITHUB_CLIENT_SECRET = (process.env.GITHUB_CLIENT_SECRET || '').trim();
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:5173').trim();
+const CALLBACK_URL = (process.env.GITHUB_CALLBACK_URL || 'http://localhost:3001/auth/github/callback').trim();
 
 const generateTokens = (userId) => {
   const accessToken = jwt.sign({ userId }, config.jwt.accessSecret, { expiresIn: config.jwt.accessExpires });

@@ -7,8 +7,26 @@ import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
+import { useTranslation } from '../utils/translations';
 
+<<<<<<< HEAD
 const CATEGORIES = ['Salário', 'Ganhos Extras', 'Mercado/Comida', 'Ônibus/Carro', 'Luz/Água/Casa', 'Saúde/Médico', 'Lazer/Diversão', 'Presentes', 'Outros'];
+=======
+// Raw category values stored in DB (always PT)
+const CATEGORIES = ['Salário', 'Freelance', 'Investimentos', 'Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Lazer', 'Outros'];
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
+
+const CAT_KEY_MAP = {
+  'Salário': 'catSalary',
+  'Freelance': 'catFreelance',
+  'Investimentos': 'catInvestments',
+  'Alimentação': 'catFood',
+  'Transporte': 'catTransport',
+  'Moradia': 'catHousing',
+  'Saúde': 'catHealth',
+  'Lazer': 'catLeisure',
+  'Outros': 'catOthers',
+};
 
 export default function Finances() {
   const [items, setItems] = useState([]);
@@ -32,6 +50,9 @@ export default function Finances() {
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
+  const { t } = useTranslation();
+
+  const getCatLabel = (raw) => t[CAT_KEY_MAP[raw]] || raw;
 
   const load = () => {
     setLoading(true);
@@ -87,6 +108,7 @@ export default function Finances() {
       }
       setModalOpen(false);
       setEditing(null);
+<<<<<<< HEAD
       setForm({
         category: '',
         description: '',
@@ -100,6 +122,10 @@ export default function Finances() {
         submitting: false
       });
       success(editing ? 'Pronto, atualizado!' : 'Pronto, anotado!');
+=======
+      setForm({ category: '', description: '', amount: '', type: 'expense', transaction_date: new Date().toISOString().slice(0, 10), submitting: false });
+      success(editing ? t.finUpdated : t.finCreated);
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       load();
     } catch (err) {
       showError(err.message);
@@ -109,6 +135,7 @@ export default function Finances() {
 
   const handleDelete = async (id) => {
     confirm({
+<<<<<<< HEAD
       title: 'Apagar esta anotação?',
       message: 'Você tem certeza? Isso vai remover o valor dos seus cálculos.',
       onConfirm: async () => {
@@ -144,6 +171,14 @@ export default function Finances() {
         try {
           await api(`/finances/recurring/${id}`, { method: 'DELETE' });
           success('Apenas as próximas foram canceladas');
+=======
+      title: t.finDelConfirm,
+      message: t.finDelText,
+      onConfirm: async () => {
+        try {
+          await api(`/finances/${id}`, { method: 'DELETE' });
+          success(t.finDeleted);
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           load();
         } catch (err) {
           showError(err.message);
@@ -204,7 +239,11 @@ export default function Finances() {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
         />
+<<<<<<< HEAD
         <p className="text-[14px] text-[#86868B] font-medium tracking-wide font-sans">Organizando suas contas...</p>
+=======
+        <p className="text-[14px] text-[#86868B] font-medium tracking-wide font-sans">{t.finLoading}</p>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       </div>
     );
   }
@@ -258,8 +297,13 @@ export default function Finances() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">
+<<<<<<< HEAD
           <h1 className="text-[32px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meu Dinheiro</h1>
           <p className="text-[15px] text-[#86868B]">Veja para onde seu dinheiro está indo e quanto você ainda tem.</p>
+=======
+          <h1 className="text-[32px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{t.finTitle}</h1>
+          <p className="text-[15px] text-[#86868B]">{t.finSubtitle}</p>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -280,7 +324,11 @@ export default function Finances() {
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
+<<<<<<< HEAD
                 {f === 'all' ? 'Tudo' : f === 'income' ? 'O que entrou' : 'O que saiu'}
+=======
+                {f === 'all' ? t.finFilterAll : f === 'income' ? t.finFilterIncome : t.finFilterExpense}
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
               </button>
             ))}
           </div>
@@ -292,7 +340,11 @@ export default function Finances() {
             }}
             className="flex items-center gap-1.5 px-5 py-2 rounded-[12px] bg-[#F5F5F7] text-[#000000] text-[14px] font-medium hover:bg-white transition-colors cursor-pointer shadow-sm"
           >
+<<<<<<< HEAD
             <Plus size={16} strokeWidth={2.5} /> Anotar novo gasto ou ganho
+=======
+            <Plus size={16} strokeWidth={2.5} /> {t.finNewRecord}
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           </button>
         </div>
       </motion.div>
@@ -303,7 +355,11 @@ export default function Finances() {
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <Wallet size={16} />
+<<<<<<< HEAD
               <span className="text-[14px] font-medium">Quanto tenho agora</span>
+=======
+              <span className="text-[14px] font-medium">{t.finBalance}</span>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           </div>
           <p className={`text-[36px] font-semibold tracking-tight z-10 ${balance >= 0 ? 'text-[#F5F5F7]' : 'text-[#FF453A]'}`}>
@@ -317,7 +373,11 @@ export default function Finances() {
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowUpRight size={16} className="text-[#30D158]" />
+<<<<<<< HEAD
               <span className="text-[14px] font-medium">O que entrou</span>
+=======
+              <span className="text-[14px] font-medium">{t.finIncome}</span>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           </div>
           <p className="text-[32px] font-medium text-[#F5F5F7] tracking-tight z-10">
@@ -330,7 +390,11 @@ export default function Finances() {
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowDownRight size={16} className="text-[#FF453A]" />
+<<<<<<< HEAD
               <span className="text-[14px] font-medium">O que saiu</span>
+=======
+              <span className="text-[14px] font-medium">{t.finExpense}</span>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           </div>
           <p className="text-[32px] font-medium text-[#F5F5F7] tracking-tight z-10">
@@ -344,9 +408,15 @@ export default function Finances() {
         {/* Transactions Formatted specifically for SaaS look */}
         <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
+<<<<<<< HEAD
             <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Últimas anotações</h2>
             <div className="text-[13px] text-[#86868B] bg-[#2C2C2E] px-3 py-1 rounded-full">
               {filtered.length} anotação{filtered.length !== 1 && 'ões'}
+=======
+            <h2 className="text-[17px] font-semibold text-[#F5F5F7]">{t.finRecent}</h2>
+            <div className="text-[13px] text-[#86868B] bg-[#2C2C2E] px-3 py-1 rounded-full">
+              {filtered.length} {filtered.length === 1 ? t.finRecord : t.finRecords}
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           </div>
 
@@ -384,7 +454,11 @@ export default function Finances() {
           {filtered.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
               <Clock size={40} strokeWidth={1.5} className="text-[#86868B]" />
+<<<<<<< HEAD
               <p className="text-[15px] text-[#86868B]">Você ainda não anotou nada sobre seu dinheiro.</p>
+=======
+              <p className="text-[15px] text-[#86868B]">{t.finNoTrans}</p>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto px-2 py-2">
@@ -394,9 +468,15 @@ export default function Finances() {
                     <div className={`w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-[12px] flex items-center justify-center ${item.type === 'income' ? 'bg-[#30D158]/[0.08] text-[#30D158]' : 'bg-[#FF453A]/[0.08] text-[#FF453A]'}`}>
                       {item.type === 'income' ? <ArrowUpRight size={18} className="sm:w-5 sm:h-5" /> : <ArrowDownRight size={18} className="sm:w-5 sm:h-5" />}
                     </div>
+<<<<<<< HEAD
                     <div className="flex flex-col min-w-0 w-full">
                       <span className="text-[14px] sm:text-[15px] font-medium text-[#F5F5F7] truncate">{item.description || 'Gasto ou Ganho'}</span>
                       <span className="text-[12px] sm:text-[13px] text-[#86868B] mt-0.5 truncate">{item.category} • {formatDate(item.transaction_date)}</span>
+=======
+                    <div className="flex flex-col">
+                      <span className="text-[15px] font-medium text-[#F5F5F7] truncate max-w-[200px] sm:max-w-xs">{item.description || t.finGeneric}</span>
+                      <span className="text-[13px] text-[#86868B] mt-0.5">{getCatLabel(item.category)} • {formatDate(item.transaction_date)}</span>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-5 ml-2 sm:ml-4 shrink-0">
@@ -424,12 +504,20 @@ export default function Finances() {
           <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowDownRight size={18} className="text-[#FF453A]" />
+<<<<<<< HEAD
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Onde gastei mais</h2>
+=======
+              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">{t.finTopExpense}</h2>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
             <div className="p-6 h-[250px] w-full mt-2">
               {expensesData.length === 0 ? (
                 <div className="flex items-center justify-center opacity-60 h-full">
+<<<<<<< HEAD
                   <p className="text-[14px] text-[#86868B]">Ainda não há gastos anotados.</p>
+=======
+                  <p className="text-[14px] text-[#86868B]">{t.finNoExpense}</p>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -459,12 +547,20 @@ export default function Finances() {
           <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowUpRight size={18} className="text-[#30D158]" />
+<<<<<<< HEAD
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">De onde veio mais dinheiro</h2>
+=======
+              <h2 className="text-[17px] font-semibold text-[#F5F5F7]">{t.finTopIncome}</h2>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
             <div className="p-6 h-[250px] w-full mt-2">
               {incomesData.length === 0 ? (
                 <div className="flex items-center justify-center opacity-60 h-full">
+<<<<<<< HEAD
                   <p className="text-[14px] text-[#86868B]">Ainda não há ganhos anotados.</p>
+=======
+                  <p className="text-[14px] text-[#86868B]">{t.finNoIncome}</p>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -498,13 +594,18 @@ export default function Finances() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
+<<<<<<< HEAD
                   {editing ? 'Editar anotação' : 'Anotar novo gasto ou ganho'}
+=======
+                  {editing ? t.finEditObj : t.finNewObj}
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </h2>
                 <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer">
                   <X size={18} />
                 </button>
               </div>
 
+<<<<<<< HEAD
                 <form onSubmit={handleSubmit} className="space-y-5">
                   {/* Segmented Control */}
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
@@ -536,10 +637,50 @@ export default function Finances() {
                         )}
                       </button>
                     ))}
+=======
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Segmented Control */}
+                <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
+                  {['income', 'expense'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setForm({ ...form, type })}
+                      className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                        }`}
+                    >
+                      {form.type === type && (
+                        <motion.div
+                          layoutId="transactionTypeBg"
+                          className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      {type === 'income' ? (
+                        <>
+                          <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
+                          {t.finIncomeBtn}
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
+                          {t.finExpenseBtn}
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.finDesc}</label>
+                    <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder={t.finDescPlaceholder} required />
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   </div>
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
+<<<<<<< HEAD
                       <label className="text-[13px] font-medium text-[#86868B] ml-1">O que é? (Ex: Mercado, Conta de Luz...)</label>
                       <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Compra de pão" required />
                     </div>
@@ -679,6 +820,54 @@ export default function Finances() {
                     </button>
                   </div>
                 </form>
+=======
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.finValue}</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-3.5 text-[#86868B] text-[15px]">R$</span>
+                        <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full pl-11 pr-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="0,00" required />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.finDate}</label>
+                      <input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all [color-scheme:dark]" required />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.finCategory}</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CATEGORIES.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setForm({ ...form, category: c })}
+                          className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
+                            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
+                            : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
+                            }`}
+                        >
+                          {getCatLabel(c)}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>{t.finSaving}</span>
+                      </>
+                    ) : editing ? t.finSaveEdits : t.finAddTrans}
+                  </button>
+                </div>
+              </form>
+>>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </motion.div>
           </div>
         )}
