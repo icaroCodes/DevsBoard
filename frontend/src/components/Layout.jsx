@@ -28,16 +28,16 @@ import { useSessionTracker } from '../hooks/useSessionTracker';
 import { api } from '../lib/api';
 import { useTranslation } from '../utils/translations';
 
-const navItems = [
-  { to: '/dashboard', icon: Home, label: 'Início' },
-  { to: '/finances', icon: Wallet, label: 'Finanças' },
-  { to: '/tasks', icon: CheckSquare, label: 'Tarefas' },
-  { to: '/routines', icon: RefreshCw, label: 'Rotinas' },
-  { to: '/goals', icon: Target, label: 'Metas' },
-  { to: '/projects', icon: Folder, label: 'Projetos' },
-  { to: '/teams', icon: Users, label: 'Times' },
-  { to: '/achievements', icon: Trophy, label: 'Conquistas' },
-  { to: '/settings', icon: Settings, label: 'Configurações' },
+const navRoutes = [
+  { to: '/dashboard', icon: Home, key: 'navHome' },
+  { to: '/finances', icon: Wallet, key: 'navFinances' },
+  { to: '/tasks', icon: CheckSquare, key: 'navTasks' },
+  { to: '/routines', icon: RefreshCw, key: 'navRoutines' },
+  { to: '/goals', icon: Target, key: 'navGoals' },
+  { to: '/projects', icon: Folder, key: 'navProjects' },
+  { to: '/teams', icon: Users, key: 'navTeams' },
+  { to: '/achievements', icon: Trophy, key: 'navAchievements' },
+  { to: '/settings', icon: Settings, key: 'navSettings' },
 ];
 
 export default function Layout({ children }) {
@@ -48,6 +48,7 @@ export default function Layout({ children }) {
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
   const { formattedTime } = useSessionTracker(!!user, user?.id);
+  const { t } = useTranslation();
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);
