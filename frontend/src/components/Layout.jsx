@@ -28,7 +28,6 @@ import { useSessionTracker } from '../hooks/useSessionTracker';
 import { api } from '../lib/api';
 import { useTranslation } from '../utils/translations';
 
-<<<<<<< HEAD
 const navItems = [
   { to: '/dashboard', icon: Home, label: 'Início' },
   { to: '/finances', icon: Wallet, label: 'Finanças' },
@@ -39,17 +38,6 @@ const navItems = [
   { to: '/teams', icon: Users, label: 'Times' },
   { to: '/achievements', icon: Trophy, label: 'Conquistas' },
   { to: '/settings', icon: Settings, label: 'Configurações' },
-=======
-const navRoutes = [
-  { to: '/dashboard', icon: Home, key: 'navHome' },
-  { to: '/finances', icon: Wallet, key: 'navFinances' },
-  { to: '/tasks', icon: CheckSquare, key: 'navTasks' },
-  { to: '/routines', icon: RefreshCw, key: 'navRoutines' },
-  { to: '/goals', icon: Target, key: 'navGoals' },
-  { to: '/projects', icon: Folder, key: 'navProjects' },
-  { to: '/teams', icon: Users, key: 'navTeams' },
-  { to: '/settings', icon: Settings, key: 'navSettings' },
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 ];
 
 export default function Layout({ children }) {
@@ -59,11 +47,7 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
-<<<<<<< HEAD
   const { formattedTime } = useSessionTracker(!!user, user?.id);
-=======
-  const { t } = useTranslation();
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);
@@ -443,7 +427,6 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
-<<<<<<< HEAD
       {/* Hamburger — canto superior esquerdo, só mobile */}
       {isMobile && (
         <motion.button
@@ -483,27 +466,6 @@ export default function Layout({ children }) {
           </AnimatePresence>
         </motion.button>
       )}
-=======
-      {/* Mobile float menu button */}
-      <AnimatePresence>
-        {!sidebarOpen && isMobile && (
-          <motion.button
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            onClick={() => setSidebarOpen(true)}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3.5 rounded-full bg-zinc-950/80 backdrop-blur-xl border border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 group active:scale-95 transition-all duration-300"
-          >
-            <div className="flex flex-col gap-1 w-5">
-              <span className="w-5 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
-              <span className="w-3 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
-              <span className="w-4 h-0.5 bg-white rounded-full group-hover:w-full transition-all" />
-            </div>
-            <span className="font-bold text-[13px] tracking-widest uppercase ml-1">{t.layoutMenu}</span>
-          </motion.button>
-        )}
-      </AnimatePresence>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 
       {/* Overlay com desfoque */}
       <AnimatePresence>

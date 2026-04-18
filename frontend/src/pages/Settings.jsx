@@ -180,7 +180,6 @@ export default function Settings() {
           </form>
         </section>
 
-<<<<<<< HEAD
         {/* Usage Stats */}
         {usageStats && (
           <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
@@ -256,27 +255,6 @@ export default function Settings() {
             </div>
           </section>
         )}
-=======
-        {/* Language Section */}
-        <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">
-          <h2 className="text-[17px] font-semibold text-[#F5F5F7] mb-4">{t.settingsLang}</h2>
-          <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative max-w-xs">
-            {['pt', 'en'].map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLang(l)}
-                className={`relative flex-1 py-2.5 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none cursor-pointer ${lang === l ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
-              >
-                {lang === l && (
-                  <motion.div layoutId="activeLang" className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10" transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }} />
-                )}
-                {l === 'pt' ? 'Português' : 'English'}
-              </button>
-            ))}
-          </div>
-        </section>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 
         {/* Danger Zone */}
         <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-8">

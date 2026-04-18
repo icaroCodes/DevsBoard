@@ -175,10 +175,7 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
                 <div
                   className="w-1.5 h-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: priorityColors[task.priority] }}
-<<<<<<< HEAD
                   title={`Importância ${task.priority === 'high' ? 'Urgente' : task.priority === 'medium' ? 'Importante' : 'Normal'}`}
-=======
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 />
               )}
             </div>
@@ -263,11 +260,7 @@ function SortableRoutine({
   sensors,
   visualLabels
 }) {
-<<<<<<< HEAD
   const [activeTaskId, setActiveTaskId] = useState(null);
-=======
-  const { t } = useTranslation();
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
   const {
     attributes,
     listeners,
@@ -326,11 +319,7 @@ function SortableRoutine({
               </span>
             </div>
             <p className="text-[14px] text-[#86868B] mt-0.5">
-<<<<<<< HEAD
               {r.tasks?.length || 0} {(r.tasks?.length === 1) ? 'atividade' : 'atividades'}
-=======
-              {r.tasks?.length || 0} {(r.tasks?.length === 1) ? t.routineTask : t.routineTasks}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </p>
           </div>
         </div>
@@ -422,11 +411,7 @@ function SortableRoutine({
                   <div className="space-y-3">
                     <input
                       type="text"
-<<<<<<< HEAD
                       placeholder="O que você faz? (Ex: Tomar remédio)"
-=======
-                      placeholder={t.routineTaskNamePh}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                       value={taskForm.title}
                       autoFocus
                       onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
@@ -434,11 +419,7 @@ function SortableRoutine({
                       required
                     />
                     <textarea
-<<<<<<< HEAD
                       placeholder="Quer escrever alguma anotação sobre isso?"
-=======
-                      placeholder={t.routineTaskDescPh}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                       value={taskForm.description}
                       onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
                       className="w-full bg-transparent border-none outline-none text-[15px] text-[#86868B] placeholder:text-[#86868B]/50 resize-none h-16"
@@ -447,11 +428,7 @@ function SortableRoutine({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-<<<<<<< HEAD
                       <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-1.5 ml-1">Em qual horário você começa?</label>
-=======
-                      <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-1.5 ml-1">{t.routineTimeLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                       <input
                         type="time"
                         value={taskForm.start_time || ''}
@@ -460,13 +437,8 @@ function SortableRoutine({
                       />
                     </div>
                     {r.visual_type === 'weekly' && (
-<<<<<<< HEAD
                       <div className="col-span-1 sm:col-span-2">
                         <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2.5 ml-1">Em qual dia da semana ocorre?</label>
-=======
-                      <div className="col-span-2">
-                        <label className="block text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2.5 ml-1">{t.routineWeekdayLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                         <div className="flex justify-between items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
                           {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, idx) => (
                             <button
@@ -486,7 +458,6 @@ function SortableRoutine({
                     )}
                   </div>
 
-<<<<<<< HEAD
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-white/[0.04]">
                     <div className="w-full sm:w-auto">
                       <label className="block sm:hidden text-[11px] font-bold text-[#86868B] uppercase tracking-wider mb-2 ml-1">Qual a importância disso?</label>
@@ -505,23 +476,6 @@ function SortableRoutine({
                           </button>
                         ))}
                       </div>
-=======
-                  <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
-                    <div className="flex gap-1.5">
-                      {['none', 'low', 'medium', 'high'].map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setTaskForm({ ...taskForm, priority: p })}
-                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${taskForm.priority === p
-                              ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
-                              : 'bg-white/5 text-[#86868B] hover:bg-white/10'
-                            }`}
-                        >
-                          {p === 'high' ? t.priorityHigh : p === 'medium' ? t.priorityMedium : p === 'low' ? t.priorityLow : t.priorityNone}
-                        </button>
-                      ))}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     </div>
 
                     <div className="flex gap-2 w-full sm:w-auto">
@@ -552,11 +506,7 @@ function SortableRoutine({
                   onClick={() => setTaskForm({ ...taskForm, routineId: r.id })}
                   className="flex items-center gap-2 mt-2 px-3 py-2 text-[14px] font-medium text-[#8E9C78] hover:bg-[#8E9C78]/10 rounded-[12px] transition-colors"
                 >
-<<<<<<< HEAD
                   <Plus size={16} /> Nova atividade na rotina
-=======
-                  <Plus size={16} /> {t.routineNewTask}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </button>
               )}
             </div>
@@ -650,11 +600,7 @@ export default function Routines() {
       }
 
       setTaskForm({ routineId: null, id: null, title: '', description: '', priority: 'medium', start_time: '', day_of_week: null, submitting: false });
-<<<<<<< HEAD
       success(taskForm.id ? 'Anotação atualizada!' : 'Legal, atividade colocada na rotina!');
-=======
-      success(taskForm.id ? t.routineTaskUpdated : t.routineTaskAdded);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       load();
     } catch (err) {
       error(err.message);
@@ -740,21 +686,12 @@ export default function Routines() {
 
   const deleteTask = async (routineId, taskId) => {
     confirm({
-<<<<<<< HEAD
       title: 'Remover isso da rotina?',
       message: 'Você quer mesmo tirar isso da sua rotina?',
       onConfirm: async () => {
         try {
           await api(`/routines/${routineId}/tasks/${taskId}`, { method: 'DELETE' });
           success('Atividade removida!');
-=======
-      title: t.routineTaskDelConfirm,
-      message: t.routineTaskDelText,
-      onConfirm: async () => {
-        try {
-          await api(`/routines/${routineId}/tasks/${taskId}`, { method: 'DELETE' });
-          success(t.routineTaskDeleted);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           load();
         } catch (err) {
           error(err.message);
@@ -765,13 +702,8 @@ export default function Routines() {
 
   const handleDelete = async (id) => {
     confirm({
-<<<<<<< HEAD
       title: 'Apagar esta rotina inteira?',
       message: 'Você tem certeza? Todas as atividades dessa rotina serão apagadas também.',
-=======
-      title: t.routineDelConfirm,
-      message: t.routineDelText,
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       onConfirm: async () => {
         try {
           await api(`/routines/${id}`, { method: 'DELETE' });
@@ -784,11 +716,7 @@ export default function Routines() {
     });
   };
 
-<<<<<<< HEAD
   const visualLabels = { daily: 'Todo dia', weekly: 'Toda semana' };
-=======
-  const visualLabels = t.routineType;
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -806,26 +734,16 @@ export default function Routines() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8 lg:mb-10 px-1 sm:px-0">
         <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">
-<<<<<<< HEAD
             Minha Rotina
           </h1>
           <p className="text-[15px] sm:text-[17px] text-[#86868B]">Acompanhe o que você faz no seu dia a dia.</p>
-=======
-            {t.routinesTitle}
-          </h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">{t.routinesSubtitle}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </div>
 
         <button
           onClick={() => { setEditing(null); setForm({ name: '', visual_type: 'daily' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#0A84FF] text-white text-[12px] sm:text-[14px] font-bold sm:font-medium hover:bg-[#5E94FF] transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-95 self-start sm:self-auto"
         >
-<<<<<<< HEAD
           <Plus size={16} strokeWidth={3} className="sm:size-[18px] sm:stroke-[2.5]" /> Criar Nova Rotina
-=======
-          <Plus size={16} strokeWidth={3} className="sm:size-[18px] sm:stroke-[2.5]" /> {t.routinesNewBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </button>
       </div>
 
@@ -840,13 +758,8 @@ export default function Routines() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
               <Repeat size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
-<<<<<<< HEAD
               <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhuma rotina.</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">Coloque aqui as coisas que você faz sempre para não esquecer (como remédios, exercícios ou limpar a casa).</p>
-=======
-              <p className="text-[17px] font-medium text-[#F5F5F7]">{t.routinesEmpty}</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">{t.routinesEmptySubtitle}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           ) : (
             <DndContext

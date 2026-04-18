@@ -231,11 +231,7 @@ export default function Projects() {
       setModalOpen(false);
       setEditing(null);
       resetForm();
-<<<<<<< HEAD
       success(editing ? 'Legal, as informações do projeto foram salvas!' : 'Muito bom! Seu novo projeto foi iniciado.');
-=======
-      success(editing ? t.projUpdated : t.projCreated);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       load();
     } catch (err) {
       error(err.message);
@@ -245,13 +241,8 @@ export default function Projects() {
 
   const handleDelete = async (id) => {
     confirm({
-<<<<<<< HEAD
       title: 'Apagar este projeto inteiro?',
       message: 'Você tem certeza? Tudo o que você planejou aqui será apagado para sempre.',
-=======
-      title: t.projDelConfirm,
-      message: t.projDelText,
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       onConfirm: async () => {
         try {
           await api(`/projects/${id}`, { method: 'DELETE' });
@@ -349,23 +340,14 @@ export default function Projects() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
-<<<<<<< HEAD
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Projetos</h1>
           <p className="text-[17px] text-[#86868B] mt-1">Organize coisas maiores, como uma reforma ou uma viagem longa.</p>
-=======
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{t.projTitle}</h1>
-          <p className="text-[17px] text-[#86868B] mt-1">{t.projSubtitle}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </div>
         <button
           onClick={openNew}
           className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
         >
-<<<<<<< HEAD
           <Plus size={18} strokeWidth={2.5} /> Criar Novo Projeto
-=======
-          <Plus size={18} strokeWidth={2.5} /> {t.projNewBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </button>
       </div>
 
@@ -383,13 +365,8 @@ export default function Projects() {
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
               <FolderKanban size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
-<<<<<<< HEAD
               <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhum projeto.</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-xs">Aqui você pode planejar as etapas de algo grande que queira fazer.</p>
-=======
-              <p className="text-[17px] font-medium text-[#F5F5F7]">{t.projEmpty}</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-xs">{t.projEmptySubtitle}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             </div>
           ) : (
             items.map((p) => (
@@ -414,11 +391,7 @@ export default function Projects() {
                     )}
                     <div>
                       <p className="font-semibold text-[18px] text-[#F5F5F7] tracking-tight">{p.name}</p>
-<<<<<<< HEAD
                       <p className="text-[13px] text-[#86868B] mt-0.5">Tudo organizado aqui</p>
-=======
-                      <p className="text-[13px] text-[#86868B] mt-0.5">{t.projDetailed}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     </div>
                   </div>
 
@@ -468,17 +441,10 @@ export default function Projects() {
                                 <div className="space-y-1 text-center sm:text-left">
                                   <div className="flex items-center justify-center sm:justify-start gap-2 text-[#86868B] mb-1">
                                     <Image size={14} className="opacity-60" />
-<<<<<<< HEAD
                                     <p className="text-[11px] font-bold uppercase tracking-[0.1em]">Foto ou Símbolo</p>
                                   </div>
                                   <h4 className="text-[18px] font-semibold text-[#F5F5F7]">Imagem do Projeto</h4>
                                   <p className="text-[14px] text-[#86868B]">A representação visual central e o DNA da marca.</p>
-=======
-                                    <p className="text-[11px] font-bold uppercase tracking-[0.1em]">{t.projBrandSection}</p>
-                                  </div>
-                                  <h4 className="text-[18px] font-semibold text-[#F5F5F7]">{t.projLogoTitle}</h4>
-                                  <p className="text-[14px] text-[#86868B]">{t.projLogoDesc}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                                 </div>
                               </motion.div>
                             )}
@@ -491,11 +457,7 @@ export default function Projects() {
                               >
                                 <div className="flex items-center gap-2 text-[#86868B] ml-1">
                                   <Figma size={14} className="opacity-60" />
-<<<<<<< HEAD
                                   <p className="text-[11px] font-bold uppercase tracking-[0.1em]">Desenhos ou Fotos extras</p>
-=======
-                                  <p className="text-[11px] font-bold uppercase tracking-[0.1em]">{t.projInterfaceSection}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                                 </div>
                                 <div
                                   className="rounded-[24px] overflow-hidden border border-white/[0.08] bg-[#1A1A1C] shadow-2xl cursor-pointer hover:border-white/20 hover:bg-[#212124] transition-all group relative aspect-video"
@@ -620,11 +582,7 @@ export default function Projects() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-<<<<<<< HEAD
                   {editing ? 'Mudar Projeto' : 'Novo Projeto'}
-=======
-                  {editing ? t.projEditTitle : t.projNewTitle}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </h2>
                 <button onClick={() => { setModalOpen(false); setEditing(null); resetForm(); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-full bg-white/[0.04] hover:bg-white/[0.08]">
                   <X size={18} />
@@ -634,11 +592,7 @@ export default function Projects() {
               <form onSubmit={handleSubmit} className="space-y-5 max-h-[70vh] overflow-y-auto pr-3 thin-scrollbar">
                 {/* Name */}
                 <div className="space-y-1.5">
-<<<<<<< HEAD
                   <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Qual o nome desse projeto?</label>
-=======
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.projNameLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   <input
                     type="text"
                     value={form.name}
@@ -652,11 +606,7 @@ export default function Projects() {
                 {/* Logo + Figma */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <ImageUploadField
-<<<<<<< HEAD
                     label="Foto ou Símbolo"
-=======
-                    label={t.projLogoLabel}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     icon={<Image size={14} />}
                     value={editing?.logo_url}
                     preview={logoPreview}
@@ -664,11 +614,7 @@ export default function Projects() {
                     onRemove={handleRemoveLogo}
                   />
                   <ImageUploadField
-<<<<<<< HEAD
                     label="Outra imagem (opcional)"
-=======
-                    label={t.projFigmaLabel}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     icon={<Figma size={14} />}
                     value={editing?.figma_url}
                     preview={figmaPreview}
@@ -811,11 +757,7 @@ export default function Projects() {
                         <Loader2 size={20} className="animate-spin" />
                         <span>Salvando tudo...</span>
                       </>
-<<<<<<< HEAD
                     ) : editing ? 'Pronto, salvar tudo' : 'Começar agora'}
-=======
-                    ) : editing ? t.projSaveBtn : t.projCreateBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   </button>
                 </div>
               </form>

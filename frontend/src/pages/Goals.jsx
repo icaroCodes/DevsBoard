@@ -71,11 +71,7 @@ export default function Goals() {
       setModalOpen(false);
       setEditing(null);
       setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '', submitting: false });
-<<<<<<< HEAD
       success(editing ? 'Pronto, tudo atualizado!' : 'Legal! Você começou um novo objetivo!');
-=======
-      success(editing ? t.goalUpdated : t.goalCreated);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       load();
     } catch (err) {
       error(err.message);
@@ -100,11 +96,7 @@ export default function Goals() {
         body: JSON.stringify({ add_amount: parseFloat(addAmount.value) }),
       });
       setAddAmount({ id: null, value: '' });
-<<<<<<< HEAD
       success('Muito bem! Esse dinheiro foi guardado.');
-=======
-      success(t.goalAmountAdded);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       load();
     } catch (err) {
       error(err.message);
@@ -113,7 +105,6 @@ export default function Goals() {
 
   const handleDelete = async (item) => {
     confirm({
-<<<<<<< HEAD
       title: 'Apagar este objetivo?',
       message: item.saved_amount > 0
         ? `Você já guardou R$ ${Number(item.saved_amount).toFixed(2)} para isso. Se apagar agora, esse dinheiro volta para o seu saldo total. Quer mesmo apagar?`
@@ -122,16 +113,6 @@ export default function Goals() {
         try {
           await api(`/goals/${item.id}`, { method: 'DELETE' });
           success('Objetivo apagado e o dinheiro voltou para o saldo.');
-=======
-      title: t.goalDelConfirm,
-      message: item.saved_amount > 0
-        ? `R$ ${Number(item.saved_amount).toFixed(2)} — ${t.goalDelMsgEmpty}`
-        : t.goalDelMsgEmpty,
-      onConfirm: async () => {
-        try {
-          await api(`/goals/${item.id}`, { method: 'DELETE' });
-          success(t.goalDeleted);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           load();
         } catch (err) {
           error(err.message);
@@ -140,11 +121,7 @@ export default function Goals() {
     });
   };
 
-<<<<<<< HEAD
   const deadlineLabels = { monthly: 'Todo mês', yearly: 'Todo ano', indefinite: 'Sem pressa' };
-=======
-  const deadlineLabels = t.deadlineType;
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
@@ -158,24 +135,15 @@ export default function Goals() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-<<<<<<< HEAD
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Objetivos</h1>
           <p className="text-[17px] text-[#86868B] mt-1">Escolha o que você quer conquistar e acompanhe o progresso.</p>
-=======
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{t.goalTitle}</h1>
-          <p className="text-[17px] text-[#86868B] mt-1">{t.goalSubtitle}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </div>
 
         <button
           onClick={() => { setEditing(null); setForm({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '' }); setModalOpen(true); }}
           className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
         >
-<<<<<<< HEAD
           <Plus size={18} strokeWidth={2.5} /> Novo Objetivo
-=======
-          <Plus size={18} strokeWidth={2.5} /> {t.goalNewBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </button>
       </div>
 
@@ -193,15 +161,9 @@ export default function Goals() {
               <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mb-6">
                 <TargetIcon size={32} className="text-[#86868B]" />
               </div>
-<<<<<<< HEAD
               <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">Você ainda não criou nenhum objetivo</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-[280px] leading-relaxed">
                 Escolha algo que você quer conquistar (como uma viagem ou ler um livro) para começar.
-=======
-              <p className="text-[19px] font-semibold text-[#F5F5F7] tracking-tight">{t.goalEmptyTitle}</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-[280px] leading-relaxed">
-                {t.goalEmptySubtitle}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
               </p>
             </div>
           ) : (
@@ -237,11 +199,7 @@ export default function Goals() {
                       <div className="min-w-0">
                         <p className={`text-[17px] font-semibold text-[#F5F5F7] tracking-tight truncate ${isComplete ? 'line-through text-[#86868B]' : ''}`}>{item.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-<<<<<<< HEAD
                           <span className="text-[12px] font-bold uppercase tracking-wider text-[#86868B]">{item.type === 'performance' ? 'Pelo esforço' : 'Guardando dinheiro'}</span>
-=======
-                          <span className="text-[12px] font-bold uppercase tracking-wider text-[#86868B]">{item.type === 'performance' ? t.goalPerf : t.goalFin}</span>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                           <span className="w-1 h-1 rounded-full bg-white/20" />
                           <span className="text-[12px] font-bold uppercase tracking-wider text-[#8E9C78]">{deadlineLabels[item.deadline_type]}</span>
                         </div>
@@ -263,13 +221,8 @@ export default function Goals() {
                     <div className="mt-6 relative z-10">
                       <div className="flex justify-between items-end mb-2.5">
                         <div className="space-y-0.5">
-<<<<<<< HEAD
                           <p className="text-[12px] font-medium text-[#86868B]">Andamento</p>
                           <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {saved.toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ total de R$ {target.toFixed(0)}</span></p>
-=======
-                          <p className="text-[12px] font-medium text-[#86868B]">{t.goalProgress}</p>
-                          <p className="text-[15px] font-semibold text-[#F5F5F7]">R$ {saved.toFixed(0)} <span className="text-[#86868B] font-normal text-[13px]">/ R$ {target.toFixed(0)}</span></p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                         </div>
                         <span className={`text-[17px] font-bold tracking-tight ${isFinancialComplete ? 'text-[#30D158]' : 'text-[#F5F5F7]'}`}>{progress.toFixed(0)}%</span>
                       </div>
@@ -306,11 +259,7 @@ export default function Goals() {
                             </form>
                           ) : (
                             <button onClick={() => setAddAmount({ id: item.id, value: '' })} className="px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-[13px] font-bold text-[#86868B] hover:text-[#F5F5F7] transition-all">
-<<<<<<< HEAD
                               + Guardar mais um pouco
-=======
-                              {t.goalAddAmount}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                             </button>
                           )}
                         </div>
@@ -361,11 +310,7 @@ export default function Goals() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-<<<<<<< HEAD
                   {editing ? 'Editar Objetivo' : 'Novo Objetivo'}
-=======
-                  {editing ? t.goalEditTitle : t.goalNewTitle}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </h2>
                 <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-full bg-white/[0.04] hover:bg-white/[0.08] transition-colors">
                   <X size={18} />
@@ -374,31 +319,19 @@ export default function Goals() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-1.5">
-<<<<<<< HEAD
                   <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">O que você quer conquistar?</label>
-=======
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.goalTargetLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="w-full px-5 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-transparent text-[16px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50"
-<<<<<<< HEAD
                     placeholder="Ex: Ler 12 livros, Guardar para viagem"
-=======
-                    placeholder={t.goalTargetPh}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-<<<<<<< HEAD
                   <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Como você quer medir?</label>
-=======
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.goalTypeLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
                     {['performance', 'financial'].map((type) => (
                       <button
@@ -415,11 +348,7 @@ export default function Goals() {
                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                           />
                         )}
-<<<<<<< HEAD
                         {type === 'performance' ? 'Pelo esforço' : 'Guardando dinheiro'}
-=======
-                        {type === 'performance' ? t.goalPerf : t.goalFin}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                       </button>
                     ))}
                   </div>
@@ -427,11 +356,7 @@ export default function Goals() {
 
                 <div className="space-y-1.5">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center justify-between ml-1 mb-1">
-<<<<<<< HEAD
                     <label className="text-[13px] font-medium text-[#86868B] uppercase tracking-wider">Até quando você quer conseguir?</label>
-=======
-                    <label className="text-[13px] font-medium text-[#86868B] uppercase tracking-wider">{t.goalDeadlineLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   </div>
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
                     {['monthly', 'yearly', 'indefinite'].map((dType) => (
@@ -457,11 +382,7 @@ export default function Goals() {
 
                 {form.type === 'financial' && (
                   <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-<<<<<<< HEAD
                     <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Quanto dinheiro você precisa juntar? (R$)</label>
-=======
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.goalValueLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     <div className="relative">
                       <span className="absolute left-4 top-3.5 text-[#86868B] text-[16px]">R$</span>
                       <input
@@ -488,11 +409,7 @@ export default function Goals() {
                         <Loader2 size={20} className="animate-spin" />
                         <span>Salvando...</span>
                       </>
-<<<<<<< HEAD
                     ) : editing ? 'Pronto, salvar' : 'Começar agora'}
-=======
-                    ) : editing ? t.goalSaveBtn : t.goalCreateBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   </button>
                 </div>
               </form>

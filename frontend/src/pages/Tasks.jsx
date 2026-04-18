@@ -41,13 +41,8 @@ function ViewToggle({ view, onChange }) {
   return (
     <div className="flex p-1 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
       {[
-<<<<<<< HEAD
         { id: 'list', label: 'Ver em Lista', Icon: LayoutList },
         { id: 'board', label: 'Ver em Blocos', Icon: Kanban },
-=======
-        { id: 'list', label: t.viewList, Icon: LayoutList },
-        { id: 'board', label: t.viewBoard, Icon: Kanban },
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       ].map(({ id, label, Icon }) => (
         <button
           key={id}
@@ -96,11 +91,7 @@ function TaskStatusCheck({ completed, priority, onClick }) {
   );
 }
 
-<<<<<<< HEAD
 const priorityLabels = { none: 'Não marcado', low: 'Pode esperar', medium: 'Importante', high: 'Muito Urgente' };
-=======
-const getPriorityLabels = (t) => ({ none: t.priorityNone, low: t.priorityLow, medium: t.priorityMedium, high: t.priorityHigh });
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
 const priorityColors = { none: 'text-[#86868B]', low: 'text-[#32D74B]', medium: 'text-[#FF9F0A]', high: 'text-[#FF453A]' };
 const priorityBg = { none: 'bg-[#86868B]/10', low: 'bg-[#32D74B]/10', medium: 'bg-[#FF9F0A]/10', high: 'bg-[#FF453A]/10' };
 
@@ -165,11 +156,7 @@ function ListView() {
       setModalOpen(false);
       setEditing(null);
       setFormParams({ title: '', description: '', priority: 'medium', submitting: false });
-<<<<<<< HEAD
       success(editing ? 'Pronto, atualizado!' : 'Pronto, criado!');
-=======
-      success(editing ? t.taskUpdated : t.taskCreated);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       load();
     } catch (err) {
       showError(err.message);
@@ -190,21 +177,12 @@ function ListView() {
 
   const handleDelete = async (id) => {
     confirm({
-<<<<<<< HEAD
       title: 'Apagar esta atividade?',
       message: 'Você tem certeza? Isso vai remover a atividade da lista para sempre.',
       onConfirm: async () => {
         try {
           await api(`/tasks/${id}`, { method: 'DELETE' });
           success('Atividade removida');
-=======
-      title: t.taskDelConfirm,
-      message: t.taskDelText,
-      onConfirm: async () => {
-        try {
-          await api(`/tasks/${id}`, { method: 'DELETE' });
-          success(t.taskDeleted);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           load();
         } catch (err) {
           showError(err.message);
@@ -227,11 +205,7 @@ function ListView() {
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
         />
-<<<<<<< HEAD
         <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Organizando suas atividades...</p>
-=======
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.taskLoading}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       </div>
     );
   }
@@ -240,13 +214,8 @@ function ListView() {
     <>
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 lg:mb-10">
         <div className="space-y-1">
-<<<<<<< HEAD
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Minhas Atividades</h1>
           <p className="text-[15px] sm:text-[17px] text-[#86868B]">Você tem {pendingCount} atividade{pendingCount !== 1 && 's'} para concluir.</p>
-=======
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{t.taskTitle}</h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">{pendingCount} {pendingCount !== 1 ? t.taskFilterPending.toLowerCase() : t.taskFilterPending.toLowerCase()}.</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -260,11 +229,7 @@ function ListView() {
                 {filter === f && (
                   <motion.div layoutId="activeTaskFilter" className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
                 )}
-<<<<<<< HEAD
                 <span className="whitespace-nowrap">{f === 'all' ? 'Tudo' : f === 'pending' ? 'Para fazer' : 'Terminadas'}</span>
-=======
-                <span className="whitespace-nowrap">{f === 'all' ? t.taskFilterAll : f === 'pending' ? t.taskFilterPending : t.taskFilterCompleted}</span>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
               </button>
             ))}
           </div>
@@ -276,11 +241,7 @@ function ListView() {
             }}
             className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-3 sm:py-2 rounded-[12px] sm:rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[14px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95"
           >
-<<<<<<< HEAD
             <Plus size={16} strokeWidth={3} className="sm:w-4 sm:h-4" /> Nova Atividade
-=======
-            <Plus size={14} strokeWidth={3} /> {t.taskNewBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           </button>
         </div>
       </motion.div>
@@ -288,11 +249,7 @@ function ListView() {
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-5 mb-8">
         <div className="bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
-<<<<<<< HEAD
             <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Para fazer</span>
-=======
-            <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">{t.taskPendingLabel}</span>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{pendingCount}</p>
           </div>
           <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] z-10 transition-transform group-hover:scale-110">
@@ -303,11 +260,7 @@ function ListView() {
         </div>
         <div className="bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
-<<<<<<< HEAD
             <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Terminadas</span>
-=======
-            <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">{t.taskCompletedLabel}</span>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{items.length - pendingCount}</p>
           </div>
           <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#30D158]/10 flex items-center justify-center text-[#30D158] z-10 transition-transform group-hover:scale-110">
@@ -322,11 +275,7 @@ function ListView() {
         {filteredItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
             <ListTodo size={48} strokeWidth={1} className="text-[#86868B]" />
-<<<<<<< HEAD
             <p className="text-[15px] text-[#86868B]">Ainda não há atividades aqui.</p>
-=======
-            <p className="text-[15px] text-[#86868B]">{t.taskNone}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 space-y-1">
@@ -387,11 +336,7 @@ function ListView() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-<<<<<<< HEAD
                   {editing ? 'Mudar Atividade' : 'Nova Atividade'}
-=======
-                  {editing ? t.taskEditTitle : t.taskNewTitle}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 </h2>
                 <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer">
                   <X size={18} />
@@ -401,7 +346,6 @@ function ListView() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-<<<<<<< HEAD
                     <label className="text-[13px] font-medium text-[#86868B] ml-1">O que precisa ser feito?</label>
                     <input type="text" value={formParams.title} onChange={(e) => setFormParams({ ...formParams, title: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Comprar pão, Pagar conta..." required />
                   </div>
@@ -413,19 +357,6 @@ function ListView() {
 
                   <div className="space-y-1.5">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1">Importância</label>
-=======
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.taskTitleLabel}</label>
-                    <input type="text" value={formParams.title} onChange={(e) => setFormParams({ ...formParams, title: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder={t.taskTitlePh} required />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.taskDescLabel}</label>
-                    <textarea value={formParams.description} onChange={(e) => setFormParams({ ...formParams, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50 resize-none" rows={3} placeholder={t.taskDescPh} />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.taskPriorityLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                     <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.02] relative">
                       {['low', 'medium', 'high'].map(pLevel => (
                         <button type="button" key={pLevel} onClick={() => setFormParams({ ...formParams, priority: pLevel })} className={`relative flex-1 py-3 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${formParams.priority === pLevel ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}>
@@ -450,11 +381,7 @@ function ListView() {
                         <Loader2 size={20} className="animate-spin" />
                         <span>{t.taskSaving}</span>
                       </>
-<<<<<<< HEAD
                     ) : editing ? 'Salvar mudanças' : 'Criar Atividade'}
-=======
-                    ) : editing ? t.taskSaveEdits : t.taskCreateBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                   </button>
                 </div>
               </form>
@@ -673,11 +600,7 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
             <div className="pt-1 pb-2">
               <button type="button" onClick={() => setShowAdd(true)}
                 className="w-full flex items-center justify-between px-3 py-2 rounded-[12px] text-[14px] font-medium text-[#A1A1AA] hover:text-[#F5F5F7] hover:bg-white/5 transition-colors outline-none cursor-pointer group/add">
-<<<<<<< HEAD
                 <span className="flex items-center gap-2"><Plus size={16} strokeWidth={2} className="opacity-80 group-hover/add:opacity-100 transition-opacity" /> Colocar um novo recado</span>
-=======
-                <span className="flex items-center gap-2"><Plus size={16} strokeWidth={2} className="opacity-80 group-hover/add:opacity-100 transition-opacity" /> {t.boardAddCard}</span>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
                 <CopyPlus size={15} strokeWidth={1.5} className="opacity-60 group-hover/add:opacity-100 transition-opacity" />
               </button>
             </div>
@@ -722,28 +645,16 @@ function EditCardModal({ card, onSave, onClose }) {
         className="w-full max-w-sm rounded-[22px] p-6 shadow-2xl border border-white/[0.08]"
         style={{ background: '#1C1C1E' }}>
         <div className="flex justify-between items-center mb-5">
-<<<<<<< HEAD
           <h2 className="text-[18px] font-semibold text-[#F5F5F7]">Editar Recado</h2>
-=======
-          <h2 className="text-[18px] font-semibold text-[#F5F5F7]">{t.cardEditTitle}</h2>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           <button type="button" onClick={onClose} className="p-1.5 rounded-[8px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer"><X size={16} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-<<<<<<< HEAD
             <label className="text-[13px] font-medium text-[#86868B] ml-1">O que está escrito no recado?</label>
             <input autoFocus value={name} onChange={e => setName(e.target.value)} required
               className="w-full px-4 py-3 rounded-[14px] text-[15px] text-[#F5F5F7] outline-none border border-transparent focus:border-[#0A84FF] transition-all"
               style={{ background: '#2C2C2E' }}
               placeholder="Ex: Não esquecer de levar o documento" />
-=======
-            <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.cardNameLabel}</label>
-            <input autoFocus value={name} onChange={e => setName(e.target.value)} required
-              className="w-full px-4 py-3 rounded-[14px] text-[15px] text-[#F5F5F7] outline-none border border-transparent focus:border-[#0A84FF] transition-all"
-              style={{ background: '#2C2C2E' }}
-              placeholder={t.cardNamePh} />
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           </div>
 
           <div className="space-y-1.5 flex flex-col">
@@ -845,24 +756,15 @@ function BoardGallery({ onOpenBoard }) {
       setBoardName('');
       setBoardColor('#2C2C2E');
       setShowAdd(false);
-<<<<<<< HEAD
       success('Mural criado com sucesso');
-=======
-      success(t.boardCreated);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
     } catch (err) { showError(err.message); }
     finally { setAdding(false); }
   }
 
   function deleteBoard(id) {
     confirm({
-<<<<<<< HEAD
       title: 'Apagar este mural?',
       message: 'Todos os recados e colunas deste mural serão removidos permanentemente.',
-=======
-      title: t.boardDelConfirm,
-      message: t.boardDelText,
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       onConfirm: async () => {
         try {
           await api(`/task-boards/${id}`, { method: 'DELETE' });
@@ -876,11 +778,7 @@ function BoardGallery({ onOpenBoard }) {
   async function handleUpdateBoard(updatedBoard) {
     setBoards(prev => prev.map(b => b.id === updatedBoard.id ? updatedBoard : b));
     setEditingBoard(null);
-<<<<<<< HEAD
     success('Mural atualizado');
-=======
-    success(t.boardUpdated);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
   }
 
   if (loading) {
@@ -888,11 +786,7 @@ function BoardGallery({ onOpenBoard }) {
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full" />
-<<<<<<< HEAD
         <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Organizando seus murais...</p>
-=======
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.boardLoading}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       </div>
     );
   }
@@ -902,21 +796,12 @@ function BoardGallery({ onOpenBoard }) {
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 lg:mb-10">
         <div className="space-y-1">
-<<<<<<< HEAD
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Murais</h1>
           <p className="text-[15px] sm:text-[17px] text-[#86868B]">{boards.length} mural de recados{boards.length !== 1 ? 's' : ''}</p>
         </div>
         <button type="button" onClick={() => setShowAdd(true)}
           className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
           <Plus size={14} strokeWidth={3} /> Novo Mural
-=======
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{t.boardTitle}</h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">{boards.length} {boards.length !== 1 ? t.boardsUnit : t.boardUnit}</p>
-        </div>
-        <button type="button" onClick={() => setShowAdd(true)}
-          className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
-          <Plus size={14} strokeWidth={3} /> {t.boardNewBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </button>
       </motion.div>
 
@@ -949,11 +834,7 @@ function BoardGallery({ onOpenBoard }) {
           <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg flex flex-col gap-3" style={{ background: '#111111' }}>
             <input ref={inputRef} value={boardName} onChange={e => setBoardName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addBoard(); if (e.key === 'Escape') { setShowAdd(false); setBoardName(''); } }}
-<<<<<<< HEAD
               placeholder="Nome do seu mural..."
-=======
-              placeholder={t.boardNamePh}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
               className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
               style={{ background: '#222224' }} />
             <div className="flex flex-wrap gap-2">
@@ -982,11 +863,7 @@ function BoardGallery({ onOpenBoard }) {
                 className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
                 style={{ background: '#0A84FF' }}>
                 {adding && <Loader2 size={14} className="animate-spin" />}
-<<<<<<< HEAD
                 Criar Mural
-=======
-                {t.boardCreateBtn}
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
               </button>
               <button type="button" onClick={() => { setShowAdd(false); setBoardName(''); }}
                 className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
@@ -999,11 +876,7 @@ function BoardGallery({ onOpenBoard }) {
             className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 rounded-[16px] text-[12px] sm:text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.02] transition-all cursor-pointer outline-none"
             style={{ minHeight: 84 }}>
             <Plus size={18} strokeWidth={1.5} />
-<<<<<<< HEAD
             <span className="text-center line-clamp-1 px-2">Novo mural</span>
-=======
-            <span className="text-center line-clamp-1 px-2">{t.boardNewInlineBtn}</span>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           </button>
         )}
       </motion.div>
@@ -1013,11 +886,7 @@ function BoardGallery({ onOpenBoard }) {
           <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
             <Kanban size={28} strokeWidth={1.2} className="text-[#86868B]" />
           </div>
-<<<<<<< HEAD
           <p className="text-[15px] text-[#86868B]">Crie seu primeiro mural de recados para começar.</p>
-=======
-          <p className="text-[15px] text-[#86868B]">{t.boardFirstHint}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         </div>
       )}
 
@@ -1053,20 +922,12 @@ function EditBoardModal({ board, onSave, onClose }) {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
         className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
         <div className="flex justify-between items-center mb-6">
-<<<<<<< HEAD
           <h2 className="text-[20px] font-semibold text-[#F5F5F7]">Editar Mural</h2>
-=======
-          <h2 className="text-[20px] font-semibold text-[#F5F5F7]">{t.boardEditTitle}</h2>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           <button onClick={onClose} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] transition-colors outline-none cursor-pointer"><X size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1.5">
-<<<<<<< HEAD
             <label className="text-[13px] font-medium text-[#86868B] ml-1">Nome do mural</label>
-=======
-            <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.boardNameLabel}</label>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
             <input autoFocus value={name} onChange={e => setName(e.target.value)}
               className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all" />
           </div>
@@ -1184,11 +1045,7 @@ function BoardKanban({ board, onBack }) {
         load();
       }
       if (table === 'task_boards' && payload?.eventType === 'DELETE' && payload?.old?.id === board.id) {
-<<<<<<< HEAD
         success('Este mural foi apagado.');
-=======
-        success(t.boardDeleted);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         onBack();
       }
     },
@@ -1241,22 +1098,13 @@ function BoardKanban({ board, onBack }) {
 
   function handleDeleteCard(cardId) {
     confirm({
-<<<<<<< HEAD
       title: 'Apagar este recado?',
       message: 'Este recado será removido permanentemente.',
-=======
-      title: t.boardCardDelConfirm,
-      message: t.boardCardDelText,
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       onConfirm: async () => {
         try {
           await api(`/task-cards/${cardId}`, { method: 'DELETE' });
           setLists(prev => prev.map(l => ({ ...l, cards: l.cards.filter(c => c.id !== cardId) })));
-<<<<<<< HEAD
           success('Recado apagado');
-=======
-          success(t.boardCardDeleted);
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
         } catch (err) { showError(err.message); }
       },
     });
@@ -1429,11 +1277,7 @@ function BoardKanban({ board, onBack }) {
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full" />
-<<<<<<< HEAD
         <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Organizando o mural...</p>
-=======
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.boardLoadingBoard}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
       </div>
     );
   }
@@ -1451,11 +1295,7 @@ function BoardKanban({ board, onBack }) {
               <div className="w-4 h-4 rounded-[4px] shrink-0" style={{ background: board.color || '#2C2C2E' }} />
               <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{board.name}</h1>
             </div>
-<<<<<<< HEAD
             <p className="text-[17px] text-[#86868B] pl-7">{lists.length} coluna{lists.length !== 1 ? 's' : ''} · {lists.reduce((a, l) => a + l.cards.length, 0)} recados</p>
-=======
-            <p className="text-[17px] text-[#86868B] pl-7">{lists.length} {lists.length !== 1 ? t.boardListsUnit : t.boardListUnit} · {lists.reduce((a, l) => a + l.cards.length, 0)} {t.boardCardsUnit}</p>
->>>>>>> be25828 ([FIX] Adicionar ponto de entrada index.js para o deploy do Render.)
           </div>
         </div>
 
