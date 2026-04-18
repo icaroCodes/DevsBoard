@@ -8,6 +8,7 @@ import {
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 // ─── Tier config ─────────────────────────────────────────────────────────────
 
@@ -467,15 +468,7 @@ export default function Achievements() {
 
       {/* ── Grid ── */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-40 gap-4">
-          <div
-            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: 'rgba(255,215,0,0.3)', borderTopColor: '#FFD700' }}
-          />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-700">
-            Carregando troféus...
-          </p>
-        </div>
+        <LoadingSkeleton fullScreen={false} />
       ) : (
         <motion.div
           key={filter}

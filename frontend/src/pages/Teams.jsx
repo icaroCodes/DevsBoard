@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useRealtime, useRealtimeSubscription } from '../contexts/RealtimeContext';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 // ============================================
 // TEAMS PAGE — Times & Família com WebSocket
@@ -316,15 +317,7 @@ export default function Teams() {
   // ============================================
   // LOADING STATE
   // ============================================
-  if (loading) {
-    return (
-      <div className="flex gap-2 items-center justify-center h-[40vh]">
-        <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton fullScreen={false} />;
 
   // ============================================
   // TEAM DETAIL VIEW

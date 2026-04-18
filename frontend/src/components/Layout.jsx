@@ -82,8 +82,8 @@ export default function Layout({ children }) {
     setIsExpanded(!isExpanded);
   };
 
-  const sidebarWidth = isMobile 
-    ? (window.innerWidth < 640 ? 'calc(100vw - 48px)' : '340px') 
+  const sidebarWidth = isMobile
+    ? (window.innerWidth < 640 ? 'calc(100vw - 48px)' : '340px')
     : (isExpanded ? 224 : 84);
   const sidebarX = isMobile ? (sidebarOpen ? 24 : -500) : 0;
   const contentMargin = isMobile ? 0 : (isExpanded ? 224 : 84);
@@ -115,11 +115,10 @@ export default function Layout({ children }) {
         height: isMobile ? 'calc(100dvh - 48px)' : '100dvh',
       }}
       transition={{ type: 'spring', stiffness: 400, damping: 40, mass: 1 }}
-      className={`fixed z-40 flex flex-col overflow-visible ${
-        isMobile 
-          ? 'bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.6)]' 
+      className={`fixed z-40 flex flex-col overflow-visible ${isMobile
+          ? 'bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.6)]'
           : 'inset-y-0 left-0 bg-[#161717] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
-      }`}
+        }`}
     >
       <div className="p-6 border-b border-transparent flex items-center justify-start h-[88px] shrink-0 min-w-[240px]">
         <div className="flex items-center gap-4 w-full">
@@ -182,22 +181,20 @@ export default function Layout({ children }) {
               key={to}
               to={to}
               onClick={() => isMobile && setSidebarOpen(false)}
-              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative ${
-                isMobile 
+              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative ${isMobile
                   ? (isActive ? 'bg-white text-zinc-950 shadow-[0_8px_20px_rgba(255,255,255,0.1)]' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
                   : (isActive ? 'bg-white/5 text-white' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
-              }`}
+                }`}
               title={(!isExpanded && !isMobile) ? label : ''}
               style={{ width: isExpanded || isMobile ? '100%' : '60px' }}
             >
-              <Icon 
-                size={22} 
-                className={`shrink-0 ${
-                  isActive 
-                    ? (isMobile ? 'text-zinc-950' : 'text-white') 
+              <Icon
+                size={22}
+                className={`shrink-0 ${isActive
+                    ? (isMobile ? 'text-zinc-950' : 'text-white')
                     : 'text-[#A1A1A1] group-hover:text-white'
-                }`} 
-                strokeWidth={isActive ? 2 : 1.5} 
+                  }`}
+                strokeWidth={isActive ? 2 : 1.5}
               />
               <AnimatePresence initial={false}>
                 {(isExpanded || isMobile) && (
@@ -447,8 +444,8 @@ export default function Layout({ children }) {
               <motion.div
                 key="close"
                 initial={{ opacity: 0, rotate: -90, scale: 0.6 }}
-                animate={{ opacity: 1, rotate: 0,   scale: 1   }}
-                exit={{   opacity: 0, rotate:  90,  scale: 0.6 }}
+                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                exit={{ opacity: 0, rotate: 90, scale: 0.6 }}
                 transition={{ duration: 0.18 }}
               >
                 <X size={18} color="#fff" strokeWidth={2.5} />
@@ -457,8 +454,8 @@ export default function Layout({ children }) {
               <motion.div
                 key="open"
                 initial={{ opacity: 0, rotate: 90, scale: 0.6 }}
-                animate={{ opacity: 1, rotate: 0,  scale: 1   }}
-                exit={{   opacity: 0, rotate: -90, scale: 0.6 }}
+                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                exit={{ opacity: 0, rotate: -90, scale: 0.6 }}
                 transition={{ duration: 0.18 }}
               >
                 <Menu size={18} color="#A1A1AA" strokeWidth={2} />

@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 import { useTranslation } from '../utils/translations';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 /* Note: Routine/Goal labels are now dynamic inside the component! */
 
@@ -112,18 +113,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
-        />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.dashPrep}</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton fullScreen={false} />;
 
   if (!data) return null;
 

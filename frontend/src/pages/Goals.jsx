@@ -7,6 +7,7 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 export default function Goals() {
   const [items, setItems] = useState([]);
@@ -148,10 +149,7 @@ export default function Goals() {
       </div>
 
       {loading ? (
-        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4 py-12">
-          <div className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.goalLoading}</p>
-        </div>
+        <LoadingSkeleton fullScreen={false} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[200px]">
           {(!items || !Array.isArray(items) || items.length === 0) ? (

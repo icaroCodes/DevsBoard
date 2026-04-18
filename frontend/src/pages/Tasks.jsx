@@ -30,6 +30,7 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -197,18 +198,7 @@ function ListView() {
     setModalOpen(true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
-        />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Organizando suas atividades...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton fullScreen={false} />;
 
   return (
     <>
@@ -781,15 +771,7 @@ function BoardGallery({ onOpenBoard }) {
     success('Mural atualizado');
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full" />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Organizando seus murais...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton fullScreen={false} />;
 
   return (
     <>
@@ -1272,15 +1254,7 @@ function BoardKanban({ board, onBack }) {
   const listIds = lists.map(l => `list-${l.id}`);
   const dropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full" />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide">Organizando o mural...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton fullScreen={false} />;
 
   return (
     <>

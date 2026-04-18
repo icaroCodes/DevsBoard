@@ -8,6 +8,7 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const CATEGORIES = ['Salário', 'Ganhos Extras', 'Mercado/Comida', 'Ônibus/Carro', 'Luz/Água/Casa', 'Saúde/Médico', 'Lazer/Diversão', 'Presentes', 'Outros'];
 
@@ -212,18 +213,7 @@ export default function Finances() {
   // green accent: #30D158
   // red accent: #FF453A
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
-        />
-        <p className="text-[14px] text-[#86868B] font-medium tracking-wide font-sans">Organizando suas contas...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeleton fullScreen={false} />;
 
   const categoryStats = items.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = { income: 0, expense: 0 };

@@ -62,6 +62,7 @@ body {
   0% {
     transform: translateX(0%);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -113,7 +114,8 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  color: transparent; /* Fallback */
+  color: transparent;
+  /* Fallback */
 }
 
 /* Force Light/Dark consistency */
@@ -134,4 +136,156 @@ body {
     line-height: 1.0;
     letter-spacing: -0.04em;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Per-theme CSS overrides
+   These target the hardcoded Tailwind arbitrary-value classes used
+   across all pages, making themes work without refactoring components.
+   Obsidian (default) = no overrides needed.
+   To add a new theme: add a [data-theme="newtheme"] block below.
+══════════════════════════════════════════════════════════════════ */
+
+/* ─── MIDNIGHT ─────────────────────────────────────── */
+[data-theme="midnight"] .bg-zinc-950,
+[data-theme="midnight"] .bg-zinc-900 {
+  background-color: #070B14 !important;
+}
+
+[data-theme="midnight"] .bg-\[\#161717\] {
+  background-color: #131C2E !important;
+}
+
+[data-theme="midnight"] .bg-\[\#1C1C1E\] {
+  background-color: #1A2540 !important;
+}
+
+[data-theme="midnight"] .bg-\[\#1C1C1E\]\/60,
+[data-theme="midnight"] .bg-\[\#1C1C1E\]\/80,
+[data-theme="midnight"] .bg-\[\#1C1C1E\]\/95 {
+  background-color: rgba(26, 37, 64, 0.85) !important;
+}
+
+[data-theme="midnight"] .bg-\[\#2C2C2E\],
+[data-theme="midnight"] .bg-\[\#2C2C2E\]\/60 {
+  background-color: #243050 !important;
+}
+
+[data-theme="midnight"] .border-\[\#2C2C2C\] {
+  border-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+[data-theme="midnight"] .text-\[\#F5F5F7\],
+[data-theme="midnight"] .text-\[\#E4E4E7\] {
+  color: #E2E8F0 !important;
+}
+
+[data-theme="midnight"] .text-\[\#86868B\],
+[data-theme="midnight"] .text-\[\#A1A1AA\] {
+  color: #94A3B8 !important;
+}
+
+/* ─── ARCTIC (light) ────────────────────────────────── */
+[data-theme="arctic"] .bg-zinc-950,
+[data-theme="arctic"] .bg-zinc-900 {
+  background-color: #F0F4F8 !important;
+}
+
+[data-theme="arctic"] .bg-\[\#161717\] {
+  background-color: #FFFFFF !important;
+}
+
+[data-theme="arctic"] .bg-\[\#1C1C1E\] {
+  background-color: #F7F9FC !important;
+}
+
+[data-theme="arctic"] .bg-\[\#1C1C1E\]\/60,
+[data-theme="arctic"] .bg-\[\#1C1C1E\]\/80,
+[data-theme="arctic"] .bg-\[\#1C1C1E\]\/95 {
+  background-color: rgba(247, 249, 252, 0.92) !important;
+}
+
+[data-theme="arctic"] .bg-\[\#2C2C2E\],
+[data-theme="arctic"] .bg-\[\#2C2C2E\]\/60 {
+  background-color: #EDF0F5 !important;
+}
+
+[data-theme="arctic"] .border-\[\#2C2C2C\] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="arctic"] .border-white\/\[0\.04\],
+[data-theme="arctic"] .border-white\/\[0\.08\] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="arctic"] .text-\[\#F5F5F7\],
+[data-theme="arctic"] .text-\[\#E4E4E7\] {
+  color: #111827 !important;
+}
+
+[data-theme="arctic"] .text-\[\#86868B\],
+[data-theme="arctic"] .text-\[\#A1A1AA\] {
+  color: #6B7280 !important;
+}
+
+[data-theme="arctic"] .text-white {
+  color: #111827 !important;
+}
+
+[data-theme="arctic"] .text-zinc-200,
+[data-theme="arctic"] .text-zinc-300,
+[data-theme="arctic"] .text-zinc-400 {
+  color: #374151 !important;
+}
+
+/* ─── FOREST ─────────────────────────────────────────── */
+[data-theme="forest"] .bg-zinc-950,
+[data-theme="forest"] .bg-zinc-900 {
+  background-color: #0D1A10 !important;
+}
+
+[data-theme="forest"] .bg-\[\#161717\] {
+  background-color: #172A1C !important;
+}
+
+[data-theme="forest"] .bg-\[\#1C1C1E\] {
+  background-color: #1E3524 !important;
+}
+
+[data-theme="forest"] .bg-\[\#1C1C1E\]\/60,
+[data-theme="forest"] .bg-\[\#1C1C1E\]\/80,
+[data-theme="forest"] .bg-\[\#1C1C1E\]\/95 {
+  background-color: rgba(30, 53, 36, 0.85) !important;
+}
+
+[data-theme="forest"] .bg-\[\#2C2C2E\],
+[data-theme="forest"] .bg-\[\#2C2C2E\]\/60 {
+  background-color: #26422C !important;
+}
+
+[data-theme="forest"] .border-\[\#2C2C2C\] {
+  border-color: rgba(74, 222, 128, 0.10) !important;
+}
+
+[data-theme="forest"] .border-white\/\[0\.04\],
+[data-theme="forest"] .border-white\/\[0\.08\] {
+  border-color: rgba(74, 222, 128, 0.08) !important;
+}
+
+[data-theme="forest"] .text-\[\#F5F5F7\],
+[data-theme="forest"] .text-\[\#E4E4E7\] {
+  color: #DCFCE7 !important;
+}
+
+[data-theme="forest"] .text-\[\#86868B\],
+[data-theme="forest"] .text-\[\#A1A1AA\] {
+  color: #86EFAC !important;
+}
+
+[data-theme="forest"] .text-zinc-200,
+[data-theme="forest"] .text-zinc-300,
+[data-theme="forest"] .text-zinc-400,
+[data-theme="forest"] .text-zinc-500 {
+  color: #86EFAC !important;
 }

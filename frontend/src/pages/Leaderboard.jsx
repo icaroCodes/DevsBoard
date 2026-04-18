@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Trophy } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const TIER_CONFIG = {
   platina: { color: '#E2E8FF', medal: '/platina.svg', label: 'Platina' },
@@ -250,15 +251,7 @@ export default function Leaderboard() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-40 gap-4">
-          <div
-            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: 'rgba(255,215,0,0.3)', borderTopColor: '#FFD700' }}
-          />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-700">
-            Carregando ranking...
-          </p>
-        </div>
+        <LoadingSkeleton fullScreen={false} />
       ) : leaderboard.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-40 gap-3 text-zinc-700">
           <Trophy size={40} strokeWidth={1} />

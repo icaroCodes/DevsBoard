@@ -22,6 +22,13 @@ export function AuthProvider({ children }) {
       .then((data) => {
         setUser(data);
         localStorage.setItem('user', JSON.stringify(data));
+        // Keep _userName in sync for useTranslation's setLang
+        if (data.name) localStorage.setItem('_userName', data.name);
+        // Sync language from DB — overrides any stale localStorage value
+        if (data.language) {
+          localStorage.setItem('lang', data.language);
+          window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: data.language } }));
+        }
       })
       .catch((err) => {
         const msg = err.message || '';
@@ -68,6 +75,11 @@ export function AuthProvider({ children }) {
     if (data.token) localStorage.setItem('token', data.token);
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
+    if (data.user?.name) localStorage.setItem('_userName', data.user.name);
+    if (data.user?.language) {
+      localStorage.setItem('lang', data.user.language);
+      window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: data.user.language } }));
+    }
     setUser(data.user);
     setActiveTeam(null);
     return data;
@@ -81,6 +93,11 @@ export function AuthProvider({ children }) {
     if (data.token) localStorage.setItem('token', data.token);
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
+    if (data.user?.name) localStorage.setItem('_userName', data.user.name);
+    if (data.user?.language) {
+      localStorage.setItem('lang', data.user.language);
+      window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: data.user.language } }));
+    }
     setUser(data.user);
     setActiveTeam(null);
     return data;
@@ -117,17 +134,17 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
+    <AuthContext.Provider value={{
+      user,
       activeTeam,
-      loading, 
-      login, 
-      register, 
+      loading,
+      login,
+      register,
       switchAccount,
       switchTeam,
-      logout, 
-      updateUser, 
-      refreshUser 
+      logout,
+      updateUser,
+      refreshUser
     }}>
       {children}
     </AuthContext.Provider>

@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from '../utils/translations';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const dropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -748,11 +749,7 @@ export default function Routines() {
       </div>
 
       {loading ? (
-        <div className="flex gap-2 items-center justify-center h-[40vh]">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#86868B] animate-bounce" style={{ animationDelay: '300ms' }} />
-        </div>
+        <LoadingSkeleton fullScreen={false} />
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (

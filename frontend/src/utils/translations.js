@@ -430,23 +430,38 @@ export const globalTranslations = {
 export function useTranslation() {
   const [lang, setLangState] = useState(() => localStorage.getItem('lang') || 'pt');
 
+  // Sync whenever any component broadcasts a language change (DB or local)
   useEffect(() => {
-    const handler = () => {
-      const sl = localStorage.getItem('lang');
-      if (sl) setLangState(sl);
+    const handler = (e) => {
+      const newLang = e?.detail?.lang || localStorage.getItem('lang');
+      if (newLang) setLangState(newLang);
     };
-    window.addEventListener('storage', handler);
     window.addEventListener('langchange', handler);
-    return () => {
-      window.removeEventListener('storage', handler);
-      window.removeEventListener('langchange', handler);
-    };
+    return () => window.removeEventListener('langchange', handler);
   }, []);
 
-  const setLang = (newLang) => {
+  const setLang = async (newLang) => {
+    // Optimistic update
     localStorage.setItem('lang', newLang);
     setLangState(newLang);
-    window.dispatchEvent(new Event('langchange'));
+    window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: newLang } }));
+
+    // Persist to database (requires token — silent fail if not logged in)
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const base = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      await fetch(`${base}/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ language: newLang, name: localStorage.getItem('_userName') || '' }),
+      });
+    } catch (err) {
+      console.warn('[useTranslation] failed to persist language to DB', err);
+    }
   };
 
   return { t: globalTranslations[lang] || globalTranslations['pt'], lang, setLang };

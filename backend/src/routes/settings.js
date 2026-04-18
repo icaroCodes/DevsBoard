@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     // Query principal — colunas que sempre existem
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url, created_at')
+      .select('id, name, email, avatar_url, created_at, language')
       .eq('id', req.userId)
       .single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -36,8 +36,8 @@ router.get('/', async (req, res) => {
 
     res.json({
       ...data,
-      current_streak:   streakRow?.current_streak   || 0,
-      longest_streak:   streakRow?.longest_streak   || 0,
+      current_streak: streakRow?.current_streak || 0,
+      longest_streak: streakRow?.longest_streak || 0,
       last_access_date: streakRow?.last_access_date || null,
       total_usage_seconds: totalSeconds,
       account_age_days: accountAgeDays,
@@ -51,13 +51,15 @@ router.get('/', async (req, res) => {
 router.put('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
   body('avatar_url').optional().isURL().withMessage('Avatar inválido'),
+  body('language').optional().isIn(['pt', 'en']).withMessage('Idioma inválido'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { name, avatar_url, avatar_base64 } = req.body;
+    const { name, avatar_url, avatar_base64, language } = req.body;
     const updateData = { name };
+    if (language !== undefined) updateData.language = language;
 
     // Se houver uma imagem em base64, fazer o upload para o Supabase Storage
     if (avatar_base64) {
@@ -96,7 +98,7 @@ router.put('/', [
       .from('users')
       .update(updateData)
       .eq('id', req.userId)
-      .select('id, name, email, avatar_url')
+      .select('id, name, email, avatar_url, language')
       .single();
 
     if (error) throw error;

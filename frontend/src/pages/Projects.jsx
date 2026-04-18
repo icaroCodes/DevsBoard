@@ -7,6 +7,7 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -352,14 +353,7 @@ export default function Projects() {
       </div>
 
       {loading ? (
-        <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-10 h-10 border-2 border-[#0A84FF] border-t-transparent rounded-full"
-          />
-          <p className="text-[14px] text-[#86868B] font-medium tracking-wide">{t.projLoading}</p>
-        </div>
+        <LoadingSkeleton fullScreen={false} />
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (
