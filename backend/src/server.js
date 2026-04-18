@@ -25,6 +25,10 @@ import { updateDailyStreak } from './utils/streak.js';
 
 const app = express();
 
+// Confia no proxy reverso (Render, Vercel) — necessário para rate-limit
+// e para que `secure: true` em cookies funcione corretamente.
+app.set('trust proxy', 1);
+
 app.use(securityHeaders);
 app.use(cookieParser());
 app.use(cors({ 
