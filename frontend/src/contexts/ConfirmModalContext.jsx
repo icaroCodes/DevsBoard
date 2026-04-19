@@ -43,7 +43,7 @@ export function ConfirmProvider({ children }) {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 1.05, y: 10, transition: { duration: 0.15, ease: "easeIn" } }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="relative w-full max-w-[340px] bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] rounded-[22px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                            className="solid-modal relative w-full max-w-[340px] bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] rounded-[22px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
                             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' }}
                         >
                             <div className="p-6 text-center">

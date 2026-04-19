@@ -87,6 +87,29 @@ export const THEMES = {
       '--db-red': '#FF453A',
       '--db-sidebar': '#0B120F'
     }
+  },
+  liquidglass: {
+    label: 'Liquid Glass',
+    preview: ['#0E0E12', '#1A1A2E', '#7B61FF'],
+    isGlass: true,
+    vars: {
+      '--db-bg': '#0E0E12',
+      '--db-surface': 'rgba(255, 255, 255, 0.04)',
+      '--db-surface-2': 'rgba(255, 255, 255, 0.06)',
+      '--db-surface-3': 'rgba(255, 255, 255, 0.08)',
+      '--db-bg-secondary': 'rgba(255, 255, 255, 0.03)',
+      '--db-text': '#F0EFF4',
+      '--db-text-2': '#A1A1B5',
+      '--db-text-3': '#636380',
+      '--db-accent': '#7B61FF',
+      '--db-accent-hover': '#6B4FE0',
+      '--db-accent-muted': 'rgba(123, 97, 255, 0.12)',
+      '--db-border': 'rgba(255, 255, 255, 0.08)',
+      '--db-border-2': 'rgba(255, 255, 255, 0.12)',
+      '--db-blue': '#7B61FF',
+      '--db-red': '#FF453A',
+      '--db-sidebar': '#0C0C10'
+    }
   }
 };
 

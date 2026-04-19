@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     // Query principal — colunas que sempre existem
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url, created_at, language')
+      .select('id, name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type')
       .eq('id', req.userId)
       .single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -41,6 +41,9 @@ router.get('/', async (req, res) => {
       last_access_date: streakRow?.last_access_date || null,
       total_usage_seconds: totalSeconds,
       account_age_days: accountAgeDays,
+      wallpaper_url: data.wallpaper_url || null,
+      wallpaper_opacity: data.wallpaper_opacity ?? 15,
+      wallpaper_type: data.wallpaper_type || 'image',
     });
   } catch (err) {
     console.error(err);
@@ -49,7 +52,7 @@ router.get('/', async (req, res) => {
 });
 
 router.put('/', [
-  body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
+  body('name').optional().trim().notEmpty().withMessage('Nome é obrigatório'),
   body('avatar_url').optional().isURL().withMessage('Avatar inválido'),
   body('language').optional().isIn(['pt', 'en']).withMessage('Idioma inválido'),
 ], async (req, res) => {
@@ -57,9 +60,12 @@ router.put('/', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { name, avatar_url, avatar_base64, language } = req.body;
-    const updateData = { name };
+    const { name, avatar_url, avatar_base64, language, theme, wallpaper_base64, wallpaper_url: wpUrl, wallpaper_opacity, wallpaper_type } = req.body;
+    const updateData = {};
+    if (name) updateData.name = name;
     if (language !== undefined) updateData.language = language;
+    if (theme !== undefined) updateData.theme = theme;
+    if (wallpaper_opacity !== undefined) updateData.wallpaper_opacity = Math.max(0, Math.min(100, parseInt(wallpaper_opacity) || 15));
 
     // Se houver uma imagem em base64, fazer o upload para o Supabase Storage
     if (avatar_base64) {
@@ -94,11 +100,49 @@ router.put('/', [
       updateData.avatar_url = avatar_url;
     }
 
+    // Wallpaper upload (image or video)
+    if (wallpaper_base64) {
+      try {
+        const buffer = Buffer.from(wallpaper_base64.split(',')[1], 'base64');
+        const mimeType = wallpaper_base64.split(';')[0].split(':')[1] || 'image/png';
+        const fileExt = mimeType.split('/')[1] || 'png';
+        const isVideo = mimeType.startsWith('video/');
+        const fileName = `${req.userId}-${Date.now()}.${fileExt}`;
+        const filePath = `wallpapers/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('wallpapers')
+          .upload(filePath, buffer, {
+            contentType: mimeType,
+            upsert: true
+          });
+
+        if (uploadError) {
+          console.error('Erro upload wallpaper:', uploadError);
+          return res.status(500).json({ error: 'Erro ao fazer upload do wallpaper' });
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('wallpapers')
+          .getPublicUrl(filePath);
+
+        updateData.wallpaper_url = publicUrl;
+        updateData.wallpaper_type = isVideo ? 'video' : 'image';
+      } catch (err) {
+        console.error('Erro ao processar wallpaper Base64:', err);
+        return res.status(400).json({ error: 'Formato de arquivo de wallpaper inválido' });
+      }
+    } else if (wpUrl !== undefined) {
+      updateData.wallpaper_url = wpUrl; // null to remove
+      if (wpUrl === null) updateData.wallpaper_type = 'image'; // reset type on remove
+    }
+    if (wallpaper_type !== undefined) updateData.wallpaper_type = wallpaper_type;
+
     const { data, error } = await supabase
       .from('users')
       .update(updateData)
       .eq('id', req.userId)
-      .select('id, name, email, avatar_url, language')
+      .select('id, name, email, avatar_url, language, wallpaper_url, wallpaper_opacity, wallpaper_type')
       .single();
 
     if (error) throw error;

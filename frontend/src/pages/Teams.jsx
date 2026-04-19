@@ -317,7 +317,7 @@ export default function Teams() {
   // ============================================
   // LOADING STATE
   // ============================================
-  if (loading) return <LoadingSkeleton fullScreen={false} />;
+  if (loading) return <LoadingSkeleton variant="teams" />;
 
   // ============================================
   // TEAM DETAIL VIEW
@@ -567,7 +567,7 @@ export default function Teams() {
             transition={{ duration: 0.2 }}
           >
             {teams.length === 0 ? (
-              <div className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-10 text-center">
+              <div className="glass-card bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-10 text-center">
                 <div className="w-14 h-14 rounded-2xl bg-[#2C2C2E] flex items-center justify-center mx-auto mb-4">
                   <Users size={24} className="text-[#86868B]" />
                 </div>
@@ -679,7 +679,7 @@ export default function Teams() {
             transition={{ duration: 0.2 }}
           >
             {(inbox.length === 0 && changeRequests.length === 0) ? (
-              <div className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-16 text-center">
+              <div className="glass-card bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-[#2C2C2E] flex items-center justify-center mx-auto mb-4">
                   <Inbox size={28} className="text-[#86868B]" />
                 </div>
@@ -858,7 +858,7 @@ export default function Teams() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-8">
+            <div className="glass-card bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] p-8">
               <h3 className="text-[20px] font-semibold text-[#F5F5F7] mb-6">Criar novo grupo</h3>
 
               <form onSubmit={handleCreateTeam} className="space-y-6">

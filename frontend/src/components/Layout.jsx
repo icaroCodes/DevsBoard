@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,6 +25,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
 import { useSessionTracker } from '../hooks/useSessionTracker';
+import { useLiquidGlass } from '../hooks/useLiquidGlass';
 import { api } from '../lib/api';
 import { useTranslation } from '../utils/translations';
 
@@ -52,6 +53,17 @@ export default function Layout({ children }) {
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);
+  const rootRef = useRef(null);
+
+  useLiquidGlass(rootRef, user?.wallpaper_type);
+
+  useEffect(() => {
+    if (user?.wallpaper_type) {
+      document.documentElement.setAttribute('data-wallpaper-type', user.wallpaper_type);
+    } else {
+      document.documentElement.removeAttribute('data-wallpaper-type');
+    }
+  }, [user?.wallpaper_type]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -115,9 +127,9 @@ export default function Layout({ children }) {
         height: isMobile ? 'calc(100dvh - 48px)' : '100dvh',
       }}
       transition={{ type: 'spring', stiffness: 400, damping: 40, mass: 1 }}
-      className={`fixed z-40 flex flex-col overflow-visible ${isMobile
-          ? 'bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.6)]'
-          : 'inset-y-0 left-0 bg-[#161717] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
+      className={`glass-target fixed z-40 flex flex-col overflow-visible ${isMobile
+        ? 'bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.6)]'
+        : 'inset-y-0 left-0 bg-[#161717] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
         }`}
     >
       <div className="p-6 border-b border-transparent flex items-center justify-start h-[88px] shrink-0 min-w-[240px]">
@@ -182,8 +194,8 @@ export default function Layout({ children }) {
               to={to}
               onClick={() => isMobile && setSidebarOpen(false)}
               className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative ${isMobile
-                  ? (isActive ? 'bg-white text-zinc-950 shadow-[0_8px_20px_rgba(255,255,255,0.1)]' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
-                  : (isActive ? 'bg-white/5 text-white' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
+                ? (isActive ? 'bg-white text-zinc-950 shadow-[0_8px_20px_rgba(255,255,255,0.1)]' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
+                : (isActive ? 'bg-white/5 text-white' : 'text-[#A1A1A1] hover:text-white hover:bg-white/5')
                 }`}
               title={(!isExpanded && !isMobile) ? label : ''}
               style={{ width: isExpanded || isMobile ? '100%' : '60px' }}
@@ -191,8 +203,8 @@ export default function Layout({ children }) {
               <Icon
                 size={22}
                 className={`shrink-0 ${isActive
-                    ? (isMobile ? 'text-zinc-950' : 'text-white')
-                    : 'text-[#A1A1A1] group-hover:text-white'
+                  ? (isMobile ? 'text-zinc-950' : 'text-white')
+                  : 'text-[#A1A1A1] group-hover:text-white'
                   }`}
                 strokeWidth={isActive ? 2 : 1.5}
               />
@@ -300,7 +312,12 @@ export default function Layout({ children }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                 transition={{ type: 'spring', duration: 0.4, bounce: 0.2 }}
-                className="absolute bottom-[calc(100%+8px)] left-0 w-[260px] bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/[0.08] rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.4)] overflow-hidden z-50 p-2"
+                className="absolute bottom-[calc(100%+8px)] left-0 w-[260px] border border-white/[0.08] rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden z-50 p-2"
+                style={{
+                  background: 'rgba(18, 18, 20, 0.98)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                }}
               >
                 {/* Section: Accounts */}
                 <div className="px-3 pt-3 pb-2 flex items-center justify-between">
@@ -424,114 +441,147 @@ export default function Layout({ children }) {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
-      {/* Hamburger — canto superior esquerdo, só mobile */}
-      {isMobile && (
-        <motion.button
-          onClick={() => setSidebarOpen(v => !v)}
-          className="fixed top-5 left-4 z-[60] w-10 h-10 rounded-[12px] flex items-center justify-center active:scale-90 transition-transform"
-          style={{
-            background: sidebarOpen ? 'rgba(255,255,255,0.1)' : 'rgba(28,28,30,0.85)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-          }}
-          animate={{ rotate: sidebarOpen ? 90 : 0 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            {sidebarOpen ? (
-              <motion.div
-                key="close"
-                initial={{ opacity: 0, rotate: -90, scale: 0.6 }}
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, rotate: 90, scale: 0.6 }}
-                transition={{ duration: 0.18 }}
-              >
-                <X size={18} color="#fff" strokeWidth={2.5} />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="open"
-                initial={{ opacity: 0, rotate: 90, scale: 0.6 }}
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, rotate: -90, scale: 0.6 }}
-                transition={{ duration: 0.18 }}
-              >
-                <Menu size={18} color="#A1A1AA" strokeWidth={2} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      )}
+    <div className="relative w-screen h-screen overflow-hidden bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
 
-      {/* Overlay com desfoque */}
-      <AnimatePresence>
-        {sidebarOpen && isMobile && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-30 lg:hidden"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-          />
+      {/* 1. ROOT WEBGL PURO (z-0 to z-10) */}
+      <div ref={rootRef} id="glass-root" className="absolute inset-0 z-10 pointer-events-none overflow-visible bg-[var(--db-bg)]">
+        {/* A imagem DEVE estar dentro do rootRef para que o html-to-image a capture! */}
+        {user?.wallpaper_url && (
+          user?.wallpaper_type === 'video' ? (
+            <video
+              src={user.wallpaper_url}
+              className="absolute inset-0 w-full h-full object-cover z-0"
+              style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
+              autoPlay
+              loop
+              muted
+              playsInline
+              onLoadedData={() => window.dispatchEvent(new Event('wallpaperLoaded'))}
+            />
+          ) : (
+            <img
+              src={user.wallpaper_url}
+              className="absolute inset-0 w-full h-full object-cover z-0"
+              style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
+              crossOrigin="anonymous"
+              alt=""
+              onLoad={() => window.dispatchEvent(new Event('wallpaperLoaded'))}
+            />
+          )
         )}
-      </AnimatePresence>
+        {/* Os fantasmas do useLiquidGlass.js serão injetados acima da imagem aqui! */}
+      </div>
 
-      {sidebarContent}
+      {/* 2. CONTEÚDO SCROLLÁVEL (z-20) */}
+      <div className="relative z-20 w-full h-full overflow-y-auto overflow-x-hidden">
+        {/* Hamburger — canto superior esquerdo, só mobile */}
+        {isMobile && (
+          <motion.button
+            onClick={() => setSidebarOpen(v => !v)}
+            className="fixed top-5 left-4 z-[60] w-10 h-10 rounded-[12px] flex items-center justify-center active:scale-90 transition-transform"
+            style={{
+              background: sidebarOpen ? 'rgba(255,255,255,0.1)' : 'rgba(28,28,30,0.85)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+            }}
+            animate={{ rotate: sidebarOpen ? 90 : 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {sidebarOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ opacity: 0, rotate: -90, scale: 0.6 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: 90, scale: 0.6 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <X size={18} color="#fff" strokeWidth={2.5} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="open"
+                  initial={{ opacity: 0, rotate: 90, scale: 0.6 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: -90, scale: 0.6 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <Menu size={18} color="#A1A1AA" strokeWidth={2} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        )}
 
-      {/* Main content */}
-      <motion.main
-        key={activeTeam?.id || user?.id || 'personal'}
-        initial={false}
-        animate={{ marginLeft: contentMargin }}
-        transition={{ type: 'spring', stiffness: 350, damping: 35, mass: 1 }}
-        className="p-6 pt-20 lg:pt-8 min-h-screen relative overflow-x-hidden"
-      >
-        {/* Background Decorative Glow for Team Mode */}
+        {/* Overlay com desfoque */}
         <AnimatePresence>
-          {activeTeam && (
+          {sidebarOpen && isMobile && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden"
-            >
-              <div className={`absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-[0.03] ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'}`} />
-              <div className={`absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-[0.03] ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'}`} />
-            </motion.div>
+              transition={{ duration: 0.25 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 z-30 lg:hidden"
+              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            />
           )}
         </AnimatePresence>
 
-        {/* Global Team Indicator Pill */}
-        <AnimatePresence>
-          {activeTeam && (
-            <motion.div
-              initial={{ y: -50, opacity: 0, x: '-50%' }}
-              animate={{ y: 0, opacity: 1, x: '-50%' }}
-              exit={{ y: -50, opacity: 0, x: '-50%' }}
-              className="fixed top-6 left-1/2 z-30 pointer-events-none hidden sm:block"
-            >
-              <div className="pointer-events-auto bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 pr-2">
-                <div className={`w-2 h-2 rounded-full ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'} animate-pulse`} />
-                <span className="text-[12px] font-semibold text-white/90">
-                  {t.layoutTeamMode} <span className="text-white font-bold">{activeTeam.name}</span>
-                </span>
-                <button
-                  onClick={() => switchTeam(null)}
-                  className="bg-white/5 hover:bg-white/10 text-white/40 hover:text-white px-3 py-1 rounded-full text-[10px] font-bold transition-all border border-white/5 active:scale-95"
-                >
-                  {t.layoutBackPersonal}
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {sidebarContent}
 
-        {children}
-      </motion.main>
+        {/* Main content */}
+        <motion.main
+          key={activeTeam?.id || user?.id || 'personal'}
+          initial={false}
+          animate={{ marginLeft: contentMargin }}
+          transition={{ type: 'spring', stiffness: 350, damping: 35, mass: 1 }}
+          className="p-6 pt-20 lg:pt-8 min-h-screen relative overflow-x-hidden"
+        >
+          {/* Background Decorative Glow for Team Mode */}
+          <AnimatePresence>
+            {activeTeam && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden"
+              >
+                <div className={`absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-[0.03] ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'}`} />
+                <div className={`absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] opacity-[0.03] ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'}`} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Global Team Indicator Pill */}
+          <AnimatePresence>
+            {activeTeam && (
+              <motion.div
+                initial={{ y: -50, opacity: 0, x: '-50%' }}
+                animate={{ y: 0, opacity: 1, x: '-50%' }}
+                exit={{ y: -50, opacity: 0, x: '-50%' }}
+                className="fixed top-6 left-1/2 z-30 pointer-events-none hidden sm:block"
+              >
+                <div className="pointer-events-auto bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 pr-2">
+                  <div className={`w-2 h-2 rounded-full ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'} animate-pulse`} />
+                  <span className="text-[12px] font-semibold text-white/90">
+                    {t.layoutTeamMode} <span className="text-white font-bold">{activeTeam.name}</span>
+                  </span>
+                  <button
+                    onClick={() => switchTeam(null)}
+                    className="bg-white/5 hover:bg-white/10 text-white/40 hover:text-white px-3 py-1 rounded-full text-[10px] font-bold transition-all border border-white/5 active:scale-95"
+                  >
+                    {t.layoutBackPersonal}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {children}
+        </motion.main>
+      </div>
     </div>
   );
 }

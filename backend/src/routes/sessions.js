@@ -32,6 +32,10 @@ router.post('/heartbeat', async (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
+    if (err instanceof TypeError && err.message === 'fetch failed') {
+      console.warn('⚠️ [Heartbeat] Supabase fetch timeout - silent ignore');
+      return res.json({ ok: false, warning: 'timeout ignored' });
+    }
     console.error('Heartbeat error:', err);
     res.status(500).json({ error: 'Erro interno' });
   }

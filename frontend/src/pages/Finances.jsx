@@ -213,7 +213,7 @@ export default function Finances() {
   // green accent: #30D158
   // red accent: #FF453A
 
-  if (loading) return <LoadingSkeleton fullScreen={false} />;
+  if (loading) return <LoadingSkeleton variant="finances" />;
 
   const categoryStats = items.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = { income: 0, expense: 0 };
@@ -305,7 +305,7 @@ export default function Finances() {
 
       {/* Overview Cards */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
+        <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <Wallet size={16} />
@@ -319,7 +319,7 @@ export default function Finances() {
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.06]"></div>
         </div>
 
-        <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
+        <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowUpRight size={16} className="text-[#30D158]" />
@@ -332,7 +332,7 @@ export default function Finances() {
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#30D158] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.06]"></div>
         </div>
 
-        <div className="bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
+        <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowDownRight size={16} className="text-[#FF453A]" />
@@ -348,7 +348,7 @@ export default function Finances() {
 
       <div className="flex flex-col gap-5">
         {/* Transactions Formatted specifically for SaaS look */}
-        <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
+        <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Últimas anotações</h2>
             <div className="text-[13px] text-[#86868B] bg-[#2C2C2E] px-3 py-1 rounded-full">
@@ -427,7 +427,7 @@ export default function Finances() {
         {/* Charts Sections - Side by Side on large screens */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Top Expenses */}
-          <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
+          <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowDownRight size={18} className="text-[#FF453A]" />
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Onde gastei mais</h2>
@@ -462,7 +462,7 @@ export default function Finances() {
           </motion.div>
 
           {/* Top Incomes */}
-          <motion.div variants={itemVariants} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
+          <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowUpRight size={18} className="text-[#30D158]" />
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">De onde veio mais dinheiro</h2>
@@ -500,7 +500,7 @@ export default function Finances() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative my-auto"
+              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative my-auto"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">

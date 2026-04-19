@@ -251,7 +251,7 @@ export default function Leaderboard() {
       </div>
 
       {loading ? (
-        <LoadingSkeleton fullScreen={false} />
+        <LoadingSkeleton variant="leaderboard" />
       ) : leaderboard.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-40 gap-3 text-zinc-700">
           <Trophy size={40} strokeWidth={1} />
@@ -298,7 +298,7 @@ export default function Leaderboard() {
           {/* Minha posição fora do top 50 */}
           {data?.mePosition && data.mePosition > 50 && (
             <div
-              className="mt-6 p-4 rounded-[16px] text-center"
+              className="glass-card mt-6 p-4 rounded-[16px] text-center"
               style={{ background: 'rgba(142,156,120,0.06)', border: '1px solid rgba(142,156,120,0.15)' }}
             >
               <p className="text-[12px] text-zinc-500">

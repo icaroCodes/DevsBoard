@@ -137,8 +137,8 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
       className={`group flex items-start justify-between p-3.5 rounded-[16px] transition-all duration-200 ${isDragging
           ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/20 opacity-40'
           : isOver
-            ? 'bg-[#8E9C78]/5 border border-[#8E9C78]/30 scale-[0.98]'
-            : 'bg-transparent hover:bg-white/[0.03]'
+            ? 'glass-card bg-[#8E9C78]/5 border border-[#8E9C78]/30 scale-[0.98]'
+            : 'glass-card bg-[#1C1C1E]/60 border border-white/[0.04] hover:bg-white/[0.04]'
         }`}
     >
       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -262,6 +262,7 @@ function SortableRoutine({
   visualLabels
 }) {
   const [activeTaskId, setActiveTaskId] = useState(null);
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -286,9 +287,9 @@ function SortableRoutine({
       style={style}
       className={`relative rounded-[24px] overflow-hidden transition-all duration-300 ${isDragging
           ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/40 shadow-none z-0'
-          : isOver 
-            ? 'bg-[#1C1C1E] border-2 border-[#0A84FF]/50 shadow-[0_0_15px_rgba(10,132,255,0.1)] scale-[0.98]'
-            : 'bg-[#1C1C1E] border border-white/[0.04] shadow-sm hover:border-white/10'
+          : isOver
+            ? 'glass-card bg-[#1C1C1E] border-2 border-[#0A84FF]/50 shadow-[0_0_15px_rgba(10,132,255,0.1)] scale-[0.98]'
+            : 'glass-card bg-[#1C1C1E] border border-white/[0.04] shadow-sm hover:border-white/10'
         }`}
     >
       {/* Indicador visual de inserção estilo "glow" quando o item é o destino do drop */}
@@ -749,11 +750,11 @@ export default function Routines() {
       </div>
 
       {loading ? (
-        <LoadingSkeleton fullScreen={false} />
+        <LoadingSkeleton variant="routines" />
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
+            <div className="glass-card flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
               <Repeat size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
               <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhuma rotina.</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">Coloque aqui as coisas que você faz sempre para não esquecer (como remédios, exercícios ou limpar a casa).</p>
@@ -822,7 +823,7 @@ export default function Routines() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-              className="relative w-full max-w-[400px] bg-[#1C1C1E] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
+              className="solid-modal relative w-full max-w-[400px] bg-[#1C1C1E] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
             >
               <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
                 <h2 className="text-[17px] font-semibold text-[#F5F5F7]">

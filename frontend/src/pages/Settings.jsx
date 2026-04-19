@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LogOut, User, Camera, Mail, ShieldAlert, Trash2, 
   Clock, Calendar, Timer, Flame, Globe, Palette, 
-  Check, ChevronRight, Sparkles
+  Check, ChevronRight, Sparkles, Image, Upload, X, Film
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +21,12 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [usageStats, setUsageStats] = useState(null);
+  const [wallpaperPreview, setWallpaperPreview] = useState(null);
+  const [wallpaperBase64, setWallpaperBase64] = useState(null);
+  const [wallpaperOpacity, setWallpaperOpacity] = useState(15);
+  const [wallpaperType, setWallpaperType] = useState('image'); // 'image' | 'video'
+  const [savingWallpaper, setSavingWallpaper] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   
   const { user, logout, updateUser, refreshUser } = useAuth();
   const { success, error } = useToast();
@@ -38,6 +44,9 @@ export default function Settings() {
       .then(([settingsData, statsData]) => {
         setForm({ name: settingsData.name || '' });
         setAvatarUrl(settingsData.avatar_url || null);
+        setWallpaperPreview(settingsData.wallpaper_url || null);
+        setWallpaperOpacity(settingsData.wallpaper_opacity ?? 15);
+        setWallpaperType(settingsData.wallpaper_type || 'image');
         setUsageStats({
           totalSeconds: settingsData.total_usage_seconds || 0,
           accountAgeDays: settingsData.account_age_days || 0,
@@ -102,7 +111,7 @@ export default function Settings() {
     });
   };
 
-  if (loading) return <LoadingSkeleton fullScreen={false} />;
+  if (loading) return <LoadingSkeleton variant="settings" />;
 
   return (
     <motion.div 
@@ -132,7 +141,7 @@ export default function Settings() {
         <div className="lg:col-span-8 space-y-8">
           
           {/* Sessão Perfil */}
-          <section className="bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
+          <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center gap-4 mb-8">
               <div className="relative group">
                 <div 
@@ -191,7 +200,7 @@ export default function Settings() {
           </section>
 
           {/* Sessão Aparência (Temas) */}
-          <section className="bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
+          <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-[#BF5AF2]/10">
@@ -237,8 +246,198 @@ export default function Settings() {
             </div>
           </section>
 
+          {/* Wallpaper de Fundo */}
+          <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#FF9F0A]/10">
+                  <Image size={20} className="text-[#FF9F0A]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-[var(--db-text)]">Wallpaper</h2>
+                  <p className="text-[13px] text-[var(--db-text-3)]">Escolha uma imagem ou vídeo de fundo para todas as páginas</p>
+                </div>
+              </div>
+              {(wallpaperPreview || wallpaperBase64) && (
+                <button
+                  onClick={async () => {
+                    setSavingWallpaper(true);
+                    try {
+                      await api('/settings', {
+                        method: 'PUT',
+                        body: JSON.stringify({ name: form.name || user?.name || 'Dev', wallpaper_url: null, wallpaper_type: 'image' }),
+                      });
+                      setWallpaperPreview(null);
+                      setWallpaperBase64(null);
+                      setWallpaperType('image');
+                      await refreshUser();
+                      success('Wallpaper removido!');
+                    } catch (err) {
+                      error(err.message);
+                    } finally {
+                      setSavingWallpaper(false);
+                    }
+                  }}
+                  disabled={savingWallpaper}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-[var(--db-red)] bg-[var(--db-red)]/5 hover:bg-[var(--db-red)]/10 border border-[var(--db-red)]/10 text-[12px] font-bold transition-all"
+                >
+                  <Trash2 size={14} /> Remover
+                </button>
+              )}
+            </div>
+
+            {/* Upload / Preview */}
+            {wallpaperPreview || wallpaperBase64 ? (
+              <div className="space-y-6">
+                {/* Preview */}
+                <div className="relative rounded-[24px] overflow-hidden border border-[var(--db-border)] bg-black aspect-video group">
+                  {wallpaperType === 'video' ? (
+                    <video
+                      src={wallpaperBase64 || wallpaperPreview}
+                      className="w-full h-full object-cover transition-opacity"
+                      style={{ opacity: wallpaperOpacity / 100 }}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={wallpaperBase64 || wallpaperPreview}
+                      alt="Wallpaper preview"
+                      className="w-full h-full object-cover transition-opacity"
+                      style={{ opacity: wallpaperOpacity / 100 }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {/* Type badge */}
+                  <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 text-white/80 text-[11px] font-bold uppercase tracking-wider">
+                    {wallpaperType === 'video' ? <><Film size={12} /> Vídeo</> : <><Image size={12} /> Imagem</>}
+                  </div>
+                  <button
+                    onClick={() => document.getElementById('wallpaper-input').click()}
+                    className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 text-white text-[12px] font-bold opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20"
+                  >
+                    <Camera size={14} /> Trocar
+                  </button>
+                </div>
+
+                {/* Opacity slider */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[13px] font-bold text-[var(--db-text-2)] uppercase tracking-wider">Intensidade</label>
+                    <span className="text-[14px] font-bold text-[var(--db-text)] tabular-nums">{wallpaperOpacity}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="3"
+                    max="60"
+                    value={wallpaperOpacity}
+                    onChange={(e) => setWallpaperOpacity(parseInt(e.target.value))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer accent-[var(--db-accent)]"
+                    style={{
+                      background: `linear-gradient(to right, var(--db-accent) 0%, var(--db-accent) ${((wallpaperOpacity - 3) / 57) * 100}%, var(--db-border-2) ${((wallpaperOpacity - 3) / 57) * 100}%, var(--db-border-2) 100%)`
+                    }}
+                  />
+                  <p className="text-[11px] text-[var(--db-text-3)]">Quanto menor o valor, mais sutil o efeito. Recomendado: 10-25%</p>
+                </div>
+
+                {/* Save wallpaper button */}
+                <button
+                  onClick={async () => {
+                    setSavingWallpaper(true);
+                    try {
+                      const payload = { name: form.name || user?.name || 'Dev', wallpaper_opacity: wallpaperOpacity, wallpaper_type: wallpaperType };
+                      if (wallpaperBase64) payload.wallpaper_base64 = wallpaperBase64;
+                      await api('/settings', {
+                        method: 'PUT',
+                        body: JSON.stringify(payload),
+                      });
+                      setWallpaperBase64(null);
+                      await refreshUser();
+                      success('Wallpaper atualizado!');
+                    } catch (err) {
+                      error(err.message);
+                    } finally {
+                      setSavingWallpaper(false);
+                    }
+                  }}
+                  disabled={savingWallpaper}
+                  className="w-full py-4 rounded-2xl bg-[var(--db-accent)] text-[var(--db-bg)] font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 shadow-lg shadow-[var(--db-accent)]/10 flex items-center justify-center gap-2"
+                >
+                  {savingWallpaper ? (
+                    <div className="w-4 h-4 border-2 border-[var(--db-bg)]/30 border-t-[var(--db-bg)] rounded-full animate-spin" />
+                  ) : (
+                    <Check size={18} />
+                  )}
+                  {savingWallpaper ? 'Salvando...' : 'Salvar Wallpaper'}
+                </button>
+              </div>
+            ) : (
+              /* Drop zone */
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  const file = e.dataTransfer.files[0];
+                  const isImage = file && file.type.startsWith('image/');
+                  const isVideo = file && file.type.startsWith('video/');
+                  if (isImage || isVideo) {
+                    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+                    if (file.size > maxSize) return error(isVideo ? 'Vídeo muito grande (máx 50MB)' : 'Imagem muito grande (máx 5MB)');
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setWallpaperBase64(reader.result);
+                      setWallpaperPreview(reader.result);
+                      setWallpaperType(isVideo ? 'video' : 'image');
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                onClick={() => document.getElementById('wallpaper-input').click()}
+                className={`flex flex-col items-center justify-center gap-4 py-16 rounded-[24px] border-2 border-dashed cursor-pointer transition-all ${
+                  dragOver
+                    ? 'border-[var(--db-accent)] bg-[var(--db-accent)]/5'
+                    : 'border-[var(--db-border-2)] hover:border-[var(--db-text-3)] bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-2)]'
+                }`}
+              >
+                <div className="w-16 h-16 rounded-2xl bg-[var(--db-surface-2)] flex items-center justify-center">
+                  <Upload size={28} className="text-[var(--db-text-3)]" strokeWidth={1.5} />
+                </div>
+                <div className="text-center">
+                  <p className="text-[14px] font-semibold text-[var(--db-text-2)]">Arraste uma imagem ou vídeo, ou clique para escolher</p>
+                  <p className="text-[12px] text-[var(--db-text-3)] mt-1">JPG, PNG, WebP, MP4 ou WebM • Imagem até 5MB • Vídeo até 50MB</p>
+                </div>
+              </div>
+            )}
+
+            <input
+              id="wallpaper-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const isVideo = file.type.startsWith('video/');
+                const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+                if (file.size > maxSize) return error(isVideo ? 'Vídeo muito grande (máx 50MB)' : 'Imagem muito grande (máx 5MB)');
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setWallpaperBase64(reader.result);
+                  setWallpaperPreview(reader.result);
+                  setWallpaperType(isVideo ? 'video' : 'image');
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+              }}
+            />
+          </section>
+
           {/* Idioma */}
-          <section className="bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
+          <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-8">
               <div className="p-2 rounded-xl bg-[var(--db-blue)]/10">
                 <Globe size={20} className="text-[var(--db-blue)]" />
@@ -273,10 +472,12 @@ export default function Settings() {
           
           {/* Estatísticas Rápidas */}
           {usageStats && (
-            <div className="bg-gradient-to-br from-[var(--db-accent)] to-[var(--db-accent-hover)] rounded-[32px] p-8 text-[var(--db-bg)] shadow-2xl">
+            <div className="glass-target bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--db-accent)]/20 to-[var(--db-accent-hover)]/10 z-0 pointer-events-none" />
+              <div className="relative z-10 text-[var(--db-text)]">
               <div className="flex items-center gap-2 mb-6">
                 <Flame size={20} />
-                <span className="font-bold text-[12px] uppercase tracking-widest opacity-80">Impacto Total</span>
+                <span className="font-bold text-[12px] uppercase tracking-widest opacity-80 text-[var(--db-accent)]">Impacto Total</span>
               </div>
               
               <div className="space-y-6">
@@ -299,10 +500,11 @@ export default function Settings() {
                 </div>
               </div>
             </div>
+            </div>
           )}
 
           {/* Danger Zone */}
-          <div className="bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8">
+          <div className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
              <div className="flex items-center gap-2 mb-6 text-[var(--db-red)]">
                 <ShieldAlert size={18} />
                 <h3 className="font-bold text-sm uppercase tracking-wider">Zona Crítica</h3>
@@ -342,15 +544,6 @@ export default function Settings() {
         </div>
       </div>
       
-      {/* Footer Branding */}
-      <footer className="mt-16 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--db-surface-2)] border border-[var(--db-border)]">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[11px] font-bold text-[var(--db-text-3)] uppercase tracking-widest">
-            DevsBoard System v2.0 • Online
-          </span>
-        </div>
-      </footer>
     </motion.div>
   );
 }

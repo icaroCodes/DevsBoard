@@ -149,12 +149,12 @@ export default function Goals() {
       </div>
 
       {loading ? (
-        <LoadingSkeleton fullScreen={false} />
+        <LoadingSkeleton variant="goals" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[200px]">
           {(!items || !Array.isArray(items) || items.length === 0) ? (
             <div
-              className="col-span-full flex flex-col items-center justify-center py-24 px-6 bg-[#1C1C1E] rounded-[32px] border border-white/[0.08]"
+              className="glass-card col-span-full flex flex-col items-center justify-center py-24 px-6 bg-[#1C1C1E] rounded-[32px] border border-white/[0.08]"
             >
               <div className="w-16 h-16 rounded-2xl bg-white/[0.05] flex items-center justify-center mb-6">
                 <TargetIcon size={32} className="text-[#86868B]" />
@@ -186,7 +186,7 @@ export default function Goals() {
                 <motion.div
                   key={item.id}
                   variants={itemVariants}
-                  className={`relative p-6 bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] shadow-sm overflow-hidden group transition-all duration-300 hover:border-white/10 ${isComplete ? 'opacity-60' : ''}`}
+                  className={`glass-card relative p-6 bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] shadow-sm overflow-hidden group transition-all duration-300 hover:border-white/10 ${isComplete ? 'opacity-60' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div className="flex items-start gap-3 flex-1">
@@ -304,7 +304,7 @@ export default function Goals() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[32px] p-7 w-full max-w-md shadow-2xl relative"
+              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[32px] p-7 w-full max-w-md shadow-2xl relative"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">

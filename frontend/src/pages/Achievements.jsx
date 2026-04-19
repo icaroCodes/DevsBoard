@@ -380,7 +380,7 @@ export default function Achievements() {
       {/* ── Stats Hero ── */}
       {data && tierSummary && (
         <div
-          className="rounded-[32px] sm:rounded-[40px] p-6 sm:p-12 mb-10 relative overflow-hidden isolate"
+          className="glass-panel rounded-[32px] sm:rounded-[40px] p-6 sm:p-12 mb-10 relative overflow-hidden isolate"
           style={{
             background:  'linear-gradient(165deg, #111116 0%, #09090b 100%)',
             border:      '1px solid rgba(255,255,255,0.06)',
@@ -468,7 +468,7 @@ export default function Achievements() {
 
       {/* ── Grid ── */}
       {loading ? (
-        <LoadingSkeleton fullScreen={false} />
+        <LoadingSkeleton variant="achievements" />
       ) : (
         <motion.div
           key={filter}

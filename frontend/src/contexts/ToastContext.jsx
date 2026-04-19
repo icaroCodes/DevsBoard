@@ -59,7 +59,7 @@ function ToastItem({ message, type, onClose }) {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 1, transition: { duration: 0.2 } }}
             whileHover={{ scale: 1.01 }}
-            className={`pointer-events-auto relative overflow-hidden flex items-center gap-3.5 px-4 py-4 rounded-[20px] border border-white/[0.08] bg-[#1C1C1E]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] min-w-[300px] max-w-md`}
+            className={`solid-modal pointer-events-auto relative overflow-hidden flex items-center gap-3.5 px-4 py-4 rounded-[20px] border border-white/[0.08] bg-[#1C1C1E]/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] min-w-[300px] max-w-md`}
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' }}
         >
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/[0.03] flex items-center justify-center">

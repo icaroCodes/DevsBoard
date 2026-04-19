@@ -285,7 +285,121 @@ body {
 
 [data-theme="forest"] .text-zinc-200,
 [data-theme="forest"] .text-zinc-300,
-[data-theme="forest"] .text-zinc-400,
 [data-theme="forest"] .text-zinc-500 {
   color: #86EFAC !important;
 }
+
+/* ─── LIQUID GLASS ────────────────────────────────────── */
+[data-theme="liquidglass"] .bg-zinc-950,
+[data-theme="liquidglass"] .bg-zinc-900 {
+  background-color: transparent !important;
+}
+
+[data-theme="liquidglass"] .bg-\[\#161717\],
+[data-theme="liquidglass"] .bg-\[\#161618\] {
+  background-color: transparent !important;
+}
+
+[data-theme="liquidglass"] .bg-\[\#111111\],
+[data-theme="liquidglass"] .bg-\[\#1A1A1C\],
+[data-theme="liquidglass"] .bg-\[\#222224\] {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+[data-theme="liquidglass"] .bg-\[\#1C1C1E\] {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/60,
+[data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/80,
+[data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/95 {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="liquidglass"] .bg-\[\#2C2C2E\],
+[data-theme="liquidglass"] .bg-\[\#2C2C2E\]\/60 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="liquidglass"] .glass-target,
+[data-theme="liquidglass"] .glass-card,
+[data-theme="liquidglass"] .glass-panel {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: transparent !important; /* Force true transparency so WebGL handles refraction */
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Fallback Liquid Glass behavior for videos (restore native blur and tint) ─── */
+[data-theme="liquidglass"][data-wallpaper-type="video"] .glass-target,
+[data-theme="liquidglass"][data-wallpaper-type="video"] .glass-card,
+[data-theme="liquidglass"][data-wallpaper-type="video"] .glass-panel {
+  backdrop-filter: blur(40px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+  background-color: rgba(30, 30, 35, 0.4) !important;
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
+  border-left-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="liquidglass"][data-wallpaper-type="video"] .bg-\[\#1C1C1E\]\/60,
+[data-theme="liquidglass"][data-wallpaper-type="video"] .bg-\[\#1C1C1E\]\/80,
+[data-theme="liquidglass"][data-wallpaper-type="video"] .bg-\[\#1C1C1E\]\/95 {
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  background-color: rgba(30, 30, 35, 0.3) !important;
+}
+
+/* ── Solid Modal: floating UI that must NEVER be transparent ─── */
+[data-theme="liquidglass"] .solid-modal {
+  background-color: rgba(28, 28, 30, 0.92) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="liquidglass"] .solid-modal .bg-\[\#1C1C1E\],
+[data-theme="liquidglass"] .solid-modal .bg-\[\#1C1C1E\]\/80 {
+  background-color: rgba(28, 28, 30, 0.95) !important;
+}
+
+[data-theme="liquidglass"] .solid-modal .bg-\[\#2C2C2E\],
+[data-theme="liquidglass"] .solid-modal .bg-\[\#2C2C2E\]\/50,
+[data-theme="liquidglass"] .solid-modal .bg-\[\#2C2C2E\]\/60 {
+  background-color: rgba(44, 44, 46, 0.9) !important;
+}
+
+[data-theme="liquidglass"] .solid-modal .bg-\[\#3A3A3C\] {
+  background-color: rgba(58, 58, 60, 0.9) !important;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Reusable glass utilities
+   - .glass-card   → standard card (24px radius, surface bg, soft shadow)
+   - .glass-panel  → larger section (32px radius, deeper shadow, more padding)
+   Both are picked up by useLiquidGlass (querySelector matches them).
+   In non-liquidglass themes they degrade gracefully to a normal card.
+──────────────────────────────────────────────────────────────────── */
+.glass-card {
+  background-color: var(--db-surface);
+  border: 1px solid var(--db-border);
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  position: relative;
+}
+
+.glass-panel {
+  background-color: var(--db-surface);
+  border: 1px solid var(--db-border);
+  border-radius: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+/* In Liquid Glass theme, ensure text inside stays legible over the wallpaper */
+[data-theme="liquidglass"] .glass-card,
+[data-theme="liquidglass"] .glass-panel {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}

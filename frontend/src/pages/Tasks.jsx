@@ -120,7 +120,7 @@ function ListView() {
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
-  const priorityLabels = getPriorityLabels(t);
+  // priorityLabels is defined at module scope
 
   const load = () => {
     setLoading(true);
@@ -198,7 +198,7 @@ function ListView() {
     setModalOpen(true);
   };
 
-  if (loading) return <LoadingSkeleton fullScreen={false} />;
+  if (loading) return <LoadingSkeleton variant="tasks" />;
 
   return (
     <>
@@ -237,7 +237,7 @@ function ListView() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-5 mb-8">
-        <div className="bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
+        <div className="glass-card bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
             <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Para fazer</span>
             <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{pendingCount}</p>
@@ -248,7 +248,7 @@ function ListView() {
           </div>
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
         </div>
-        <div className="bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
+        <div className="glass-card bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
             <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Terminadas</span>
             <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{items.length - pendingCount}</p>
@@ -261,14 +261,14 @@ function ListView() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[400px] shadow-sm">
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[400px] shadow-sm">
         {filteredItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
             <ListTodo size={48} strokeWidth={1} className="text-[#86868B]" />
             <p className="text-[15px] text-[#86868B]">Ainda não há atividades aqui.</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 space-y-1">
+          <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 space-y-2">
             {filteredItems.map(item => (
               <motion.div
                 key={item.id}
@@ -276,7 +276,7 @@ function ListView() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`flex items-center justify-between p-3 sm:p-4 rounded-[16px] hover:bg-white/[0.03] transition-colors group cursor-default border border-transparent ${item.completed ? 'opacity-60' : ''}`}
+                className={`glass-card flex items-center justify-between p-3 sm:p-4 rounded-[16px] bg-[#1C1C1E]/60 hover:bg-white/[0.04] transition-colors group cursor-default border border-white/[0.04] ${item.completed ? 'opacity-60' : ''}`}
               >
                 <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
                   <div className="mt-0.5 sm:mt-0 shrink-0">
@@ -322,7 +322,7 @@ function ListView() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
+              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
@@ -632,7 +632,7 @@ function EditCardModal({ card, onSave, onClose }) {
       style={{ fontFamily: FONT, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }}>
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
         transition={{ duration: 0.25 }}
-        className="w-full max-w-sm rounded-[22px] p-6 shadow-2xl border border-white/[0.08]"
+        className="solid-modal w-full max-w-sm rounded-[22px] p-6 shadow-2xl border border-white/[0.08]"
         style={{ background: '#1C1C1E' }}>
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-[18px] font-semibold text-[#F5F5F7]">Editar Recado</h2>
@@ -771,7 +771,7 @@ function BoardGallery({ onOpenBoard }) {
     success('Mural atualizado');
   }
 
-  if (loading) return <LoadingSkeleton fullScreen={false} />;
+  if (loading) return <LoadingSkeleton variant="tasks" />;
 
   return (
     <>
@@ -902,7 +902,7 @@ function EditBoardModal({ board, onSave, onClose }) {
   return (
     <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4" style={{ fontFamily: FONT }}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
+        className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[20px] font-semibold text-[#F5F5F7]">Editar Mural</h2>
           <button onClick={onClose} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] transition-colors outline-none cursor-pointer"><X size={18} /></button>
@@ -1254,7 +1254,7 @@ function BoardKanban({ board, onBack }) {
   const listIds = lists.map(l => `list-${l.id}`);
   const dropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) };
 
-  if (loading) return <LoadingSkeleton fullScreen={false} />;
+  if (loading) return <LoadingSkeleton variant="tasks" />;
 
   return (
     <>

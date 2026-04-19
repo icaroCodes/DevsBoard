@@ -353,11 +353,11 @@ export default function Projects() {
       </div>
 
       {loading ? (
-        <LoadingSkeleton fullScreen={false} />
+        <LoadingSkeleton variant="projects" />
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
+            <div className="glass-card flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
               <FolderKanban size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
               <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhum projeto.</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-xs">Aqui você pode planejar as etapas de algo grande que queira fazer.</p>
@@ -367,7 +367,7 @@ export default function Projects() {
               <motion.div
                 key={p.id}
                 variants={itemVariants}
-                className="bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm hover:border-white/10 transition-all duration-300 group"
+                className="glass-card bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm hover:border-white/10 transition-all duration-300 group"
               >
                 <div
                   className="flex justify-between items-center p-6 cursor-pointer select-none"
@@ -572,7 +572,7 @@ export default function Projects() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-[#1C1C1E] border border-white/[0.08] rounded-[32px] p-7 w-full max-w-2xl my-8 shadow-2xl relative"
+              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[32px] p-7 w-full max-w-2xl my-8 shadow-2xl relative"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
