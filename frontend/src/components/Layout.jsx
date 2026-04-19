@@ -444,7 +444,24 @@ export default function Layout({ children }) {
     <div className="relative w-screen h-screen overflow-hidden bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
 
       {/* 1. ROOT WEBGL PURO (z-0 to z-10) */}
-      <div ref={rootRef} id="glass-root" className="absolute inset-0 z-10 pointer-events-none overflow-visible bg-[var(--db-bg)]">
+      <div 
+        ref={rootRef} 
+        id="glass-root" 
+        className="fixed z-10 pointer-events-none bg-[var(--db-bg)]"
+        style={{
+          // OVER-SCAN FIX: Expand the render area beyond the viewport bounds
+          // This prevents the WebGL refraction shader / compositor from sampling invalid (not rendered)
+          // pixels when elements scroll partially out of screen, eliminating the white border artifacts.
+          top: '-15vh',
+          left: '-15vw',
+          bottom: '-15vh',
+          right: '-15vw',
+          overflow: 'hidden',
+          // Force hardware compositing and prevent aggressive browser clipping at viewport bounds
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+        }}
+      >
         {/* A imagem DEVE estar dentro do rootRef para que o html-to-image a capture! */}
         {user?.wallpaper_url && (
           user?.wallpaper_type === 'video' ? (
@@ -452,6 +469,8 @@ export default function Layout({ children }) {
               src={user.wallpaper_url}
               className="absolute inset-0 w-full h-full object-cover z-0"
               style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
+              crossOrigin="anonymous"
+              data-dynamic="true"
               autoPlay
               loop
               muted
@@ -473,7 +492,10 @@ export default function Layout({ children }) {
       </div>
 
       {/* 2. CONTEÚDO SCROLLÁVEL (z-20) */}
-      <div className="relative z-20 w-full h-full overflow-y-auto overflow-x-hidden">
+      <div
+        className="relative z-20 w-full h-full overflow-y-auto overflow-x-hidden"
+        style={{ overscrollBehavior: 'none', backgroundColor: 'transparent' }}
+      >
         {/* Hamburger — canto superior esquerdo, só mobile */}
         {isMobile && (
           <motion.button

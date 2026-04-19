@@ -1,152 +1,282 @@
 import { useEffect, useRef } from 'react';
 import { useTheme, THEMES } from '../contexts/ThemeContext';
 
+// Tuning rationale:
+//  - Reduced blur and refraction to prevent "milky" or washed-out areas, keeping text behind it readable.
+//  - Lowered fresnel and edgeHighlight for subtle, refined reflections without harsh lighting.
+//  - Added slight background darkening (brightness: -0.02) to boost contrast for readability.
 const GLASS_CONFIG = {
   floating: false,
-  blurAmount: 0.07,
-  refraction: 1.08,
-  chromAberration: 0.05,
-  edgeHighlight: 0.05,
+  blurAmount: 0.035,
+  refraction: 0.55,
+  chromAberration: 0.015,
+  edgeHighlight: 0.01,
   specular: 0,
-  fresnel: 1,
+  fresnel: 0.25,
   distortion: 0,
-  cornerRadius: 20,
-  zRadius: 40,
-  opacity: 1,
-  saturation: 0,
-  brightness: 0,
+  cornerRadius: 32,
+  zRadius: 15,
+  opacity: 1.0,
+  saturation: 0.05,
+  brightness: -0.02,
   shadowOpacity: 0.3,
-  shadowSpread: 10,
+  shadowSpread: 12,
   bevelMode: 0,
 };
 
-export function useLiquidGlass(rootRef, wallpaperType = 'image') {
+const GLASS_SELECTOR = '.glass-target, .glass-card, .glass-panel';
+
+function shouldUseFallback() {
+  if (typeof window === 'undefined') return true;
+  const ua = navigator.userAgent;
+
+  const isIOS = /iP(hone|ad|od)/.test(ua) && !window.MSStream;
+  if (isIOS) return true;
+
+  const isAndroid = /Android/.test(ua);
+  if (isAndroid && window.innerWidth < 1024) return true;
+
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
+
+  if (navigator.deviceMemory && navigator.deviceMemory < 4) return true;
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) return true;
+
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    if (!gl) return true;
+  } catch {
+    return true;
+  }
+
+  return false;
+}
+
+function makeGhost(target, rootRect) {
+  const rect = target.getBoundingClientRect();
+  const top = rect.top - rootRect.top;
+  const left = rect.left - rootRect.left;
+
+  const ghost = document.createElement('div');
+  ghost.dataset.glass = 'true';
+  ghost.dataset.config = JSON.stringify(GLASS_CONFIG);
+  ghost.style.position = 'absolute';
+  ghost.style.top = '0';
+  ghost.style.left = '0';
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+  ghost.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+  ghost.style.willChange = 'transform';
+  ghost.style.contain = 'layout paint';
+  ghost.style.borderRadius = window.getComputedStyle(target).borderRadius;
+  ghost.style.pointerEvents = 'none';
+  // Born invisible: the WebGL canvas the lib injects renders its first
+  // (default-cleared) frame as opaque white. Stay hidden until init()
+  // resolves and the first refraction pass has actually painted.
+  ghost.style.opacity = '0';
+  ghost.style.transition = 'opacity 120ms ease-out';
+  return ghost;
+}
+
+export function useLiquidGlass(rootRef) {
   const { theme } = useTheme();
   const instanceRef = useRef(null);
-  const ghostContainerRef = useRef(null);
+  const ghostContainerRef = useRef([]);
+  const targetsRef = useRef([]);
   const isGlass = THEMES[theme]?.isGlass === true;
 
   useEffect(() => {
-    if (!isGlass || !rootRef.current || wallpaperType === 'video') {
+    const body = document.body;
+
+    if (!isGlass || !rootRef.current) {
+      body.classList.remove('glass-webgl-active', 'glass-fallback-mode');
       if (instanceRef.current) {
         try { instanceRef.current.destroy(); } catch (_) {}
         instanceRef.current = null;
       }
-      if (ghostContainerRef.current) {
-        ghostContainerRef.current.forEach(g => g.remove());
-        ghostContainerRef.current = [];
-      }
+      ghostContainerRef.current.forEach(g => g.remove());
+      ghostContainerRef.current = [];
+      targetsRef.current = [];
       return;
     }
 
+    if (shouldUseFallback()) {
+      body.classList.add('glass-fallback-mode');
+      body.classList.remove('glass-webgl-active');
+      return () => {
+        body.classList.remove('glass-fallback-mode');
+      };
+    }
+
+    body.classList.remove('glass-fallback-mode');
+
     let cancelled = false;
     let LiquidGlassRef = null;
-    ghostContainerRef.current = ghostContainerRef.current || [];
+    let isSyncing = false;
+    let pendingSync = false;
+    let isScrolling = false;
+    let scrollIdleTimer = null;
+    let debounceTimer = null;
 
+    const targetsEqual = (a, b) => {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+      return true;
+    };
+
+    // Double-buffered sync: build new ghosts + new instance BEFORE
+    // destroying the old. Eliminates the "white flash" gap that the
+    // previous destroy-then-recreate approach caused on every re-sync.
     const syncGhostElements = async () => {
       if (cancelled || !rootRef.current) return;
-      
-      if (!LiquidGlassRef) {
-        const module = await import('@ybouane/liquidglass');
-        LiquidGlassRef = module.LiquidGlass;
-      }
+      if (isSyncing) { pendingSync = true; return; }
+      if (isScrolling) { pendingSync = true; return; }
 
-      if (instanceRef.current) {
-        try { instanceRef.current.destroy(); } catch (_) {}
-        instanceRef.current = null;
-      }
+      isSyncing = true;
+      try {
+        if (!LiquidGlassRef) {
+          const module = await import('@ybouane/liquidglass');
+          LiquidGlassRef = module.LiquidGlass;
+          if (cancelled) return;
+        }
 
-      // Clear old ghosts
-      ghostContainerRef.current.forEach(g => g.remove());
-      ghostContainerRef.current = [];
+        const targets = Array.from(document.querySelectorAll(GLASS_SELECTOR));
 
-      // Find all nested targets anywhere in the REAL DOM (not rootRef, but document.body, since targets are outside rootRef in Layout!)
-      // Wait, Layout.jsx puts rootRef as a sibling of the content.
-      // The observer was watching rootRef, but targets are outside rootRef.
-      // So document.body is where targets are!
-      const targets = document.querySelectorAll('.glass-target, .glass-card, .glass-panel');
-      
-      const ghostEls = [];
-      const rootRect = rootRef.current.getBoundingClientRect();
+        // If the SET of targets is unchanged, skip the re-init entirely
+        // and just re-paint at current positions. No white flash possible.
+        if (instanceRef.current && targetsEqual(targets, targetsRef.current)) {
+          updatePositions();
+          markGlassDirty();
+          return;
+        }
 
-      targets.forEach(target => {
-        const rect = target.getBoundingClientRect();
-        const top = rect.top - rootRect.top;
-        const left = rect.left - rootRect.left;
+        if (targets.length === 0) {
+          // No glass targets on this page → tear down silently.
+          if (instanceRef.current) {
+            try { instanceRef.current.destroy(); } catch (_) {}
+            instanceRef.current = null;
+          }
+          ghostContainerRef.current.forEach(g => g.remove());
+          ghostContainerRef.current = [];
+          targetsRef.current = [];
+          body.classList.remove('glass-webgl-active');
+          return;
+        }
 
-        const ghost = document.createElement('div');
-        ghost.dataset.glass = "true";
-        ghost.dataset.config = JSON.stringify(GLASS_CONFIG);
-        ghost.style.position = 'absolute';
-        ghost.style.top = '0';
-        ghost.style.left = '0';
-        ghost.style.width = `${rect.width}px`;
-        ghost.style.height = `${rect.height}px`;
-        ghost.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-        ghost.style.willChange = 'transform';
+        // Build new ghosts (alongside any existing ones, in the same root).
+        const rootRect = rootRef.current.getBoundingClientRect();
+        const newGhosts = targets.map(t => makeGhost(t, rootRect));
+        newGhosts.forEach(g => rootRef.current.appendChild(g));
 
-        const computedStyle = window.getComputedStyle(target);
-        ghost.style.borderRadius = computedStyle.borderRadius;
-        ghost.style.pointerEvents = 'none';
-
-        rootRef.current.appendChild(ghost);
-        ghostEls.push(ghost);
-        ghostContainerRef.current.push(ghost);
-      });
-
-      if (ghostEls.length > 0) {
+        let newInstance = null;
         try {
-          instanceRef.current = await LiquidGlassRef.init({
+          newInstance = await LiquidGlassRef.init({
             root: rootRef.current,
-            glassElements: ghostEls
+            glassElements: newGhosts,
           });
         } catch (e) {
-          console.warn('[LiquidGlass] init error', e);
+          // New init failed — clean up new ghosts, KEEP old instance running.
+          // This is the key win: a transient failure doesn't blank the screen.
+          newGhosts.forEach(g => g.remove());
+          console.warn('[LiquidGlass] re-init failed; keeping previous instance', e);
+          if (!instanceRef.current) {
+            // We had nothing to fall back to → flip to CSS mode.
+            body.classList.remove('glass-webgl-active');
+            body.classList.add('glass-fallback-mode');
+          }
+          return;
+        }
+
+        if (cancelled) {
+          try { newInstance.destroy(); } catch (_) {}
+          newGhosts.forEach(g => g.remove());
+          return;
+        }
+
+        // Atomic swap in one frame: tear down old AFTER new is fully ready.
+        const oldInstance = instanceRef.current;
+        const oldGhosts = ghostContainerRef.current;
+        instanceRef.current = newInstance;
+        ghostContainerRef.current = newGhosts;
+        targetsRef.current = targets;
+        body.classList.add('glass-webgl-active');
+
+        // Force one render so the WebGL canvas has actual content (not
+        // the default white framebuffer) BEFORE we reveal the ghosts.
+        if (typeof newInstance.markChanged === 'function') newInstance.markChanged();
+        else if (typeof newInstance.update === 'function') newInstance.update();
+        else if (typeof newInstance.render === 'function') newInstance.render();
+
+        // Wait one rAF: the lib's first frame paints, THEN we fade the
+        // new ghosts in and tear down the old ones in the same tick.
+        requestAnimationFrame(() => {
+          newGhosts.forEach(g => { g.style.opacity = '1'; });
+          requestAnimationFrame(() => {
+            if (oldInstance) {
+              try { oldInstance.destroy(); } catch (_) {}
+            }
+            oldGhosts.forEach(g => g.remove());
+          });
+        });
+      } finally {
+        isSyncing = false;
+        if (pendingSync && !cancelled) {
+          pendingSync = false;
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(syncGhostElements, 250);
         }
       }
     };
 
-    let debounceTimer = setTimeout(syncGhostElements, 100);
+    debounceTimer = setTimeout(syncGhostElements, 100);
 
-    const GLASS_SELECTOR = '.glass-target, .glass-card, .glass-panel';
+    // Observer is intentionally narrow: only fires on actual childList
+    // changes that touch a glass element. Hover/class changes do NOT
+    // trigger sync. The set-equality check inside sync is the second
+    // line of defense — even if observer fires, identical target sets
+    // skip re-init entirely.
     const observer = new MutationObserver((mutations) => {
       let needsSync = false;
       for (const m of mutations) {
-        if (m.type === 'childList') {
-          m.addedNodes.forEach(node => {
-            if (node.nodeType === 1 && (node.matches?.(GLASS_SELECTOR) || node.querySelector?.(GLASS_SELECTOR))) {
-              needsSync = true;
-            }
-          });
-          m.removedNodes.forEach(node => {
-            if (node.nodeType === 1 && (node.matches?.(GLASS_SELECTOR) || node.querySelector?.(GLASS_SELECTOR))) {
-              needsSync = true;
-            }
-          });
+        if (m.type !== 'childList') continue;
+        for (const node of m.addedNodes) {
+          if (node.nodeType === 1 && (node.matches?.(GLASS_SELECTOR) || node.querySelector?.(GLASS_SELECTOR))) {
+            needsSync = true;
+            break;
+          }
         }
+        if (needsSync) break;
+        for (const node of m.removedNodes) {
+          if (node.nodeType === 1 && (node.matches?.(GLASS_SELECTOR) || node.querySelector?.(GLASS_SELECTOR))) {
+            needsSync = true;
+            break;
+          }
+        }
+        if (needsSync) break;
       }
       if (needsSync) {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(syncGhostElements, 500);
+        debounceTimer = setTimeout(syncGhostElements, 600);
       }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Cache da última posição de cada ghost para evitar writes desnecessários no DOM
     const lastPos = new WeakMap();
 
     const updatePositions = () => {
       if (!rootRef.current) return false;
-      const targets = document.querySelectorAll('.glass-target, .glass-card, .glass-panel');
-      const rootRect = rootRef.current.getBoundingClientRect();
+      const targets = targetsRef.current;
       const ghosts = ghostContainerRef.current;
+      if (!targets.length || !ghosts.length) return false;
+      const rootRect = rootRef.current.getBoundingClientRect();
       let anyChanged = false;
 
       for (let i = 0; i < targets.length; i++) {
         const ghost = ghosts[i];
-        if (!ghost) continue;
-        const rect = targets[i].getBoundingClientRect();
+        const target = targets[i];
+        if (!ghost || !target || !target.isConnected) continue;
+        const rect = target.getBoundingClientRect();
         const top = rect.top - rootRect.top;
         const left = rect.left - rootRect.left;
         const width = rect.width;
@@ -160,12 +290,9 @@ export function useLiquidGlass(rootRef, wallpaperType = 'image') {
           prev.width !== width ||
           prev.height !== height
         ) {
-          // translate3d entra no compositor — bem mais barato que top/left
           ghost.style.transform = `translate3d(${left}px, ${top}px, 0)`;
           ghost.style.width = `${width}px`;
           ghost.style.height = `${height}px`;
-          ghost.style.top = '0';
-          ghost.style.left = '0';
           lastPos.set(ghost, { top, left, width, height });
           anyChanged = true;
         }
@@ -181,7 +308,6 @@ export function useLiquidGlass(rootRef, wallpaperType = 'image') {
       else if (typeof inst.render === 'function') inst.render();
     };
 
-    // rAF loop ativo durante interações para tracking sub-frame.
     let rafId = null;
     let interactingUntil = 0;
     const tick = () => {
@@ -198,40 +324,53 @@ export function useLiquidGlass(rootRef, wallpaperType = 'image') {
       if (rafId == null) rafId = requestAnimationFrame(tick);
     };
 
-    const onScroll = () => wakeLoop(250);
+    const onScrollLike = () => {
+      isScrolling = true;
+      clearTimeout(scrollIdleTimer);
+      scrollIdleTimer = setTimeout(() => {
+        isScrolling = false;
+        if (pendingSync) {
+          pendingSync = false;
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(syncGhostElements, 250);
+        }
+      }, 250);
+      wakeLoop(300);
+    };
+
     const onResize = () => {
-      // resize pode mudar layout drasticamente — força sync imediato + loop curto
       updatePositions();
       markGlassDirty();
       wakeLoop(400);
     };
     const handleWallpaperLoad = () => markGlassDirty();
 
-    // Captura scroll de QUALQUER elemento (incluindo o overflow-y-auto irmão do rootRef)
-    window.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    window.addEventListener('wheel', onScroll, { capture: true, passive: true });
-    window.addEventListener('touchmove', onScroll, { capture: true, passive: true });
+    window.addEventListener('scroll', onScrollLike, { capture: true, passive: true });
+    window.addEventListener('wheel', onScrollLike, { capture: true, passive: true });
+    window.addEventListener('touchmove', onScrollLike, { capture: true, passive: true });
     window.addEventListener('resize', onResize);
     window.addEventListener('wallpaperLoaded', handleWallpaperLoad);
 
     return () => {
       cancelled = true;
       clearTimeout(debounceTimer);
+      clearTimeout(scrollIdleTimer);
       if (rafId != null) cancelAnimationFrame(rafId);
       observer.disconnect();
-      window.removeEventListener('scroll', onScroll, { capture: true });
-      window.removeEventListener('wheel', onScroll, { capture: true });
-      window.removeEventListener('touchmove', onScroll, { capture: true });
+      window.removeEventListener('scroll', onScrollLike, { capture: true });
+      window.removeEventListener('wheel', onScrollLike, { capture: true });
+      window.removeEventListener('touchmove', onScrollLike, { capture: true });
       window.removeEventListener('resize', onResize);
       window.removeEventListener('wallpaperLoaded', handleWallpaperLoad);
 
+      body.classList.remove('glass-webgl-active', 'glass-fallback-mode');
       if (instanceRef.current) {
         try { instanceRef.current.destroy(); } catch (_) {}
+        instanceRef.current = null;
       }
-      if (ghostContainerRef.current) {
-        ghostContainerRef.current.forEach(g => g.remove());
-        ghostContainerRef.current = [];
-      }
+      ghostContainerRef.current.forEach(g => g.remove());
+      ghostContainerRef.current = [];
+      targetsRef.current = [];
     };
   }, [isGlass, rootRef]);
 

@@ -14,20 +14,35 @@
   box-sizing: border-box;
 }
 
+/* Hard floor on html — paints before any CSS var resolves and before
+   ThemeContext sets vars on documentElement. Stops the white flash on
+   first paint + browser overscroll bounce. */
 html {
-  background-color: var(--color-bg);
+  background-color: #0A0A0B;
+}
+
+html,
+body,
+#root {
+  background-color: var(--db-bg, #0A0A0B);
+  color-scheme: dark;
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  background: var(--color-bg);
   color: var(--color-text);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Light theme should not force dark color-scheme on form elements */
+body[data-theme="arctic"] {
+  color-scheme: light;
 }
 
 
@@ -290,6 +305,26 @@ body {
 }
 
 /* ─── LIQUID GLASS ────────────────────────────────────── */
+[data-theme="liquidglass"] {
+  --color-bg: #030712; /* Deep black with midnight blue undertone */
+  --db-bg: #030712;
+  --color-surface: rgba(15, 23, 42, 0.35); /* Subtle navy-gray glass surface */
+  --color-border: rgba(255, 255, 255, 0.1); 
+  --color-text: #F8FAFC; 
+  --color-muted: #94A3B8;
+  --color-accent: #818CF8; /* Soft blue */
+}
+
+/* Force dark text scaling overrides to prioritize readability */
+[data-theme="liquidglass"] .text-\[\#86868B\],
+[data-theme="liquidglass"] .text-\[\#A1A1AA\] {
+  color: #94A3B8 !important;
+}
+
+[data-theme="liquidglass"] .text-white {
+  color: #F8FAFC !important;
+}
+
 [data-theme="liquidglass"] .bg-zinc-950,
 [data-theme="liquidglass"] .bg-zinc-900 {
   background-color: transparent !important;
@@ -303,33 +338,50 @@ body {
 [data-theme="liquidglass"] .bg-\[\#111111\],
 [data-theme="liquidglass"] .bg-\[\#1A1A1C\],
 [data-theme="liquidglass"] .bg-\[\#222224\] {
-  background-color: rgba(255, 255, 255, 0.03) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\] {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/60,
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/80,
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/95 {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="liquidglass"] .bg-\[\#2C2C2E\],
 [data-theme="liquidglass"] .bg-\[\#2C2C2E\]\/60 {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
+/* Base structural properties for WebGL-powered glass components */
 [data-theme="liquidglass"] .glass-target,
 [data-theme="liquidglass"] .glass-card,
 [data-theme="liquidglass"] .glass-panel {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background-color: transparent !important; /* Force true transparency so WebGL handles refraction */
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 
+    0 16px 40px -8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.06), /* Top highlight inside */
+    inset 0 -1px 1px rgba(255, 255, 255, 0.01) !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Interactive subtle enhancements */
+[data-theme="liquidglass"] button.glass-card:hover,
+[data-theme="liquidglass"] button.glass-panel:hover,
+[data-theme="liquidglass"] .glass-card:has(button:hover) {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 
+    0 20px 48px -8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1), 
+    inset 0 -1px 1px rgba(255, 255, 255, 0.02) !important;
 }
 
 /* ── Fallback Liquid Glass behavior for videos (restore native blur and tint) ─── */
@@ -402,4 +454,63 @@ body {
 [data-theme="liquidglass"] .glass-card,
 [data-theme="liquidglass"] .glass-panel {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Liquid Glass — body-class state machine driven by useLiquidGlass.
+     • .glass-webgl-active  → WebGL ghosts mounted, real refraction
+     • .glass-fallback-mode → mobile/iOS/low-end → CSS-only glass
+   Default (no class) is already covered by the
+   `[data-theme="liquidglass"] .glass-card` rule above (transparent).
+──────────────────────────────────────────────────────────────────── */
+
+/* App-shell bg lockdown so nothing flashes white. data-theme lives on
+   <body>, so target body and #root directly. */
+body[data-theme="liquidglass"],
+body[data-theme="liquidglass"] #root {
+  background-color: #030712;
+}
+
+/* #glass-root MUST keep an opaque dark background. html-to-image
+   captures this element to build the WebGL refraction texture; if it
+   were transparent, the resulting texture would be white (canvas default
+   fill) and every glass card would render as a white block.
+   isolation:isolate gives it a stable stacking context so the WebGL
+   canvas inside composites against this dark layer instead of whatever
+   the browser's overscroll/back-buffer happens to be. */
+body[data-theme="liquidglass"] #glass-root {
+  background-color: #030712;
+  isolation: isolate;
+}
+
+/* The library injects a <canvas> inside each ghost. Some browsers paint
+   the canvas's first (uncleared) frame as opaque white. Force it
+   transparent so any frame the WebGL hasn't drawn yet is invisible
+   instead of a white block. */
+body[data-theme="liquidglass"] [data-glass="true"],
+body[data-theme="liquidglass"] [data-glass="true"] canvas {
+  background-color: transparent !important;
+}
+
+/* WEBGL-ACTIVE — ghosts are live, force the cards fully transparent
+   so refraction is the only thing painting the body. */
+body.glass-webgl-active .glass-target,
+body.glass-webgl-active .glass-card,
+body.glass-webgl-active .glass-panel {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* FALLBACK — mobile/iOS/low-end. Pure CSS glassmorphism. */
+body.glass-fallback-mode .glass-target,
+body.glass-fallback-mode .glass-card,
+body.glass-fallback-mode .glass-panel {
+  background-color: rgba(22, 22, 24, 0.45) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.30) !important;
 }
