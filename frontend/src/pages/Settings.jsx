@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LogOut, User, Camera, Mail, ShieldAlert, Trash2, 
-  Clock, Calendar, Timer, Flame, Globe, Palette, 
-  Check, ChevronRight, Sparkles, Image, Upload, X, Film
+import {
+  LogOut, User, Camera, Mail, ShieldAlert, Trash2,
+  Clock, Calendar, Timer, Flame, Globe, Palette,
+  Check, ChevronRight, Sparkles, Image, Upload, X, Film,
+  Music, Play, Pause
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,7 +28,18 @@ export default function Settings() {
   const [wallpaperType, setWallpaperType] = useState('image'); // 'image' | 'video'
   const [savingWallpaper, setSavingWallpaper] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioBase64, setAudioBase64] = useState(null);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [audioFileName, setAudioFileName] = useState('');
+  const [audioName, setAudioName] = useState('');
+  const [audioArtist, setAudioArtist] = useState('');
+  const [audioCoverUrl, setAudioCoverUrl] = useState(null);
+  const [audioCoverBase64, setAudioCoverBase64] = useState(null);
+  const [savingAudio, setSavingAudio] = useState(false);
+  const [audioPreviewPlaying, setAudioPreviewPlaying] = useState(false);
+  const audioPreviewRef = useRef(null);
+
   const { user, logout, updateUser, refreshUser } = useAuth();
   const { success, error } = useToast();
   const { confirm } = useConfirm();
@@ -47,6 +59,11 @@ export default function Settings() {
         setWallpaperPreview(settingsData.wallpaper_url || null);
         setWallpaperOpacity(settingsData.wallpaper_opacity ?? 15);
         setWallpaperType(settingsData.wallpaper_type || 'image');
+        setAudioUrl(settingsData.audio_url || null);
+        setAudioEnabled(settingsData.audio_enabled ?? true);
+        setAudioName(settingsData.audio_name || '');
+        setAudioArtist(settingsData.audio_artist || '');
+        setAudioCoverUrl(settingsData.audio_cover_url || null);
         setUsageStats({
           totalSeconds: settingsData.total_usage_seconds || 0,
           accountAgeDays: settingsData.account_age_days || 0,
@@ -114,7 +131,7 @@ export default function Settings() {
   if (loading) return <LoadingSkeleton variant="settings" />;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl mx-auto px-4 py-8 md:py-12"
@@ -136,15 +153,15 @@ export default function Settings() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Coluna Esquerda: Perfil e Aparência */}
         <div className="lg:col-span-8 space-y-8">
-          
+
           {/* Sessão Perfil */}
           <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center gap-4 mb-8">
               <div className="relative group">
-                <div 
+                <div
                   className="w-24 h-24 rounded-3xl overflow-hidden bg-[var(--db-surface-2)] border-2 border-[var(--db-border)] group-hover:border-[var(--db-accent)] transition-all cursor-pointer shadow-inner"
                   onClick={() => document.getElementById('avatar-input').click()}
                 >
@@ -203,8 +220,8 @@ export default function Settings() {
           <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-[#BF5AF2]/10">
-                  <Palette size={20} className="text-[#BF5AF2]" />
+                <div className="p-2 rounded-xl bg-[#8E9C78]/10">
+                  <Palette size={20} className="text-[#8E9C78]" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-[var(--db-text)]">Aparência</h2>
@@ -220,11 +237,10 @@ export default function Settings() {
                   <button
                     key={key}
                     onClick={() => setTheme(key)}
-                    className={`relative p-5 rounded-[24px] text-left transition-all border-2 group overflow-hidden ${
-                      isActive 
-                        ? 'border-[var(--db-blue)] shadow-lg shadow-[var(--db-blue)]/10' 
+                    className={`relative p-5 rounded-[24px] text-left transition-all border-2 group overflow-hidden ${isActive
+                        ? 'border-[var(--db-blue)] shadow-lg shadow-[var(--db-blue)]/10'
                         : 'border-transparent hover:border-[var(--db-border-2)] bg-[var(--db-bg-secondary)]'
-                    }`}
+                      }`}
                   >
                     <div className="flex gap-1.5 mb-4 items-center">
                       {def.preview.map((color, i) => (
@@ -233,9 +249,9 @@ export default function Settings() {
                       {isActive && <Sparkles size={12} className="ml-auto text-[var(--db-blue)] animate-pulse" />}
                     </div>
                     <span className="text-[13px] font-bold text-[var(--db-text)]">{def.label}</span>
-                    
+
                     {isActive && (
-                      <motion.div 
+                      <motion.div
                         layoutId="active-theme-glow"
                         className="absolute inset-0 bg-[var(--db-blue)]/5 pointer-events-none"
                       />
@@ -397,11 +413,10 @@ export default function Settings() {
                   }
                 }}
                 onClick={() => document.getElementById('wallpaper-input').click()}
-                className={`flex flex-col items-center justify-center gap-4 py-16 rounded-[24px] border-2 border-dashed cursor-pointer transition-all ${
-                  dragOver
+                className={`flex flex-col items-center justify-center gap-4 py-16 rounded-[24px] border-2 border-dashed cursor-pointer transition-all ${dragOver
                     ? 'border-[var(--db-accent)] bg-[var(--db-accent)]/5'
                     : 'border-[var(--db-border-2)] hover:border-[var(--db-text-3)] bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-2)]'
-                }`}
+                  }`}
               >
                 <div className="w-16 h-16 rounded-2xl bg-[var(--db-surface-2)] flex items-center justify-center">
                   <Upload size={28} className="text-[var(--db-text-3)]" strokeWidth={1.5} />
@@ -436,6 +451,263 @@ export default function Settings() {
             />
           </section>
 
+          {/* Áudio de fundo — 1 música em loop */}
+          <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#8E9C78]/10">
+                  <Music size={20} className="text-[#8E9C78]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-[var(--db-text)]">Áudio de fundo</h2>
+                  <p className="text-[13px] text-[var(--db-text-3)]">Uma música em loop, com player minimalista</p>
+                </div>
+              </div>
+              {(audioUrl && !audioBase64) && (
+                <button
+                  onClick={async () => {
+                    setSavingAudio(true);
+                    try {
+                      await api('/settings', { method: 'PUT', body: JSON.stringify({ audio_url: null }) });
+                      setAudioUrl(null); setAudioBase64(null); setAudioFileName('');
+                      setAudioName(''); setAudioArtist(''); setAudioCoverUrl(null); setAudioCoverBase64(null);
+                      await refreshUser();
+                      success('Áudio removido!');
+                    } catch (err) { error(err.message); }
+                    finally { setSavingAudio(false); }
+                  }}
+                  disabled={savingAudio}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-[var(--db-red)] bg-[var(--db-red)]/5 hover:bg-[var(--db-red)]/10 border border-[var(--db-red)]/10 text-[12px] font-bold transition-all"
+                >
+                  <Trash2 size={14} /> Remover
+                </button>
+              )}
+            </div>
+
+            {audioUrl || audioBase64 ? (
+              <div className="space-y-5">
+
+                {/* ── Capa da música ── */}
+                <div className="flex flex-col items-center gap-3">
+                  {/* Quadrado da capa */}
+                  <div
+                    className="relative w-full rounded-[20px] overflow-hidden cursor-pointer group"
+                    style={{ aspectRatio: '1/1', maxHeight: 200 }}
+                    onClick={() => document.getElementById('audio-cover-input').click()}
+                  >
+                    {audioCoverBase64 || audioCoverUrl ? (
+                      <img
+                        src={audioCoverBase64 || audioCoverUrl}
+                        alt="capa"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full flex flex-col items-center justify-center gap-2"
+                        style={{ background: 'rgba(142,156,120,0.06)', border: '2px dashed rgba(142,156,120,0.25)' }}
+                      >
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(142,156,120,0.12)' }}>
+                          <Camera size={22} className="text-[#8E9C78]" />
+                        </div>
+                        <p className="text-[12px] font-semibold text-[var(--db-text-3)]">Adicionar capa</p>
+                        <p className="text-[11px] text-[var(--db-text-3)] opacity-60">JPG, PNG ou WebP • até 3MB</p>
+                      </div>
+                    )}
+                    {/* Hover overlay quando já tem capa */}
+                    {(audioCoverBase64 || audioCoverUrl) && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
+                        <Camera size={24} className="text-white" />
+                        <p className="text-[12px] font-semibold text-white">Trocar foto</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botão explícito */}
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('audio-cover-input').click()}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all hover:scale-[1.02] active:scale-95"
+                    style={{
+                      color: '#8E9C78',
+                      background: 'rgba(142,156,120,0.1)',
+                      border: '1px solid rgba(142,156,120,0.2)',
+                    }}
+                  >
+                    <Upload size={13} />
+                    {audioCoverBase64 || audioCoverUrl ? 'Trocar foto da capa' : 'Adicionar foto da capa'}
+                  </button>
+                </div>
+
+                {/* ── Preview mini-player ── */}
+                <div className="flex gap-4 p-4 rounded-[20px] bg-[var(--db-bg-secondary)] border border-[var(--db-border)]">
+                  {/* Thumb da capa no preview */}
+                  <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">
+                    {audioCoverBase64 || audioCoverUrl ? (
+                      <img src={audioCoverBase64 || audioCoverUrl} alt="capa" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(142,156,120,0.08)' }}>
+                        <Music size={18} className="text-[#8E9C78]/40" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info + play */}
+                  <div className="flex flex-col justify-between flex-1 min-w-0">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-bold text-[var(--db-text)] truncate">{audioName || audioFileName || 'Sem título'}</p>
+                      <p className="text-[11px] text-[var(--db-text-3)] truncate mt-0.5">{audioArtist || 'Artista desconhecido'}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const el = audioPreviewRef.current;
+                        if (!el) return;
+                        if (el.paused) el.play().then(() => setAudioPreviewPlaying(true)).catch(() => { });
+                        else { el.pause(); setAudioPreviewPlaying(false); }
+                      }}
+                      className="self-start w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 hover:scale-105"
+                      style={{ background: audioPreviewPlaying ? 'linear-gradient(135deg,#8E9C78,#6B7A5E)' : 'rgba(142,156,120,0.15)' }}
+                    >
+                      {audioPreviewPlaying
+                        ? <Pause size={13} className="text-white" fill="currentColor" />
+                        : <Play size={13} className="text-[#8E9C78] ml-0.5" fill="currentColor" />}
+                    </button>
+                  </div>
+                  <audio ref={audioPreviewRef} src={audioBase64 || audioUrl}
+                    onEnded={() => setAudioPreviewPlaying(false)}
+                    onPause={() => setAudioPreviewPlaying(false)}
+                    onPlay={() => setAudioPreviewPlaying(true)} />
+                </div>
+
+                {/* ── Campos de metadados ── */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[var(--db-text-3)] uppercase tracking-wider mb-1.5">Nome da música</label>
+                    <input
+                      type="text"
+                      value={audioName}
+                      onChange={(e) => setAudioName(e.target.value)}
+                      placeholder="Ex: Ghousting"
+                      className="w-full px-3 py-2.5 rounded-xl text-[13px] text-[var(--db-text)] placeholder-[var(--db-text-3)] outline-none transition-all focus:ring-2 focus:ring-[#8E9C78]/30"
+                      style={{ background: 'var(--db-bg-secondary)', border: '1px solid var(--db-border)' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[var(--db-text-3)] uppercase tracking-wider mb-1.5">Artista</label>
+                    <input
+                      type="text"
+                      value={audioArtist}
+                      onChange={(e) => setAudioArtist(e.target.value)}
+                      placeholder="Ex: Azeakuma"
+                      className="w-full px-3 py-2.5 rounded-xl text-[13px] text-[var(--db-text)] placeholder-[var(--db-text-3)] outline-none transition-all focus:ring-2 focus:ring-[#8E9C78]/30"
+                      style={{ background: 'var(--db-bg-secondary)', border: '1px solid var(--db-border)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Toggle auto-play */}
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--db-bg-secondary)] border border-[var(--db-border)]">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[var(--db-text-2)]">Iniciar tocando automaticamente</p>
+                    <p className="text-[11px] text-[var(--db-text-3)] mt-0.5">Browsers podem bloquear na primeira visita</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAudioEnabled(v => !v)}
+                    className="relative w-12 h-7 rounded-full transition-colors shrink-0"
+                    style={{ background: audioEnabled ? 'var(--db-accent)' : 'rgba(255,255,255,0.1)' }}
+                  >
+                    <span 
+                      className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300 ${audioEnabled ? 'translate-x-[20px]' : 'translate-x-0'}`} 
+                    />
+                  </button>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    setSavingAudio(true);
+                    try {
+                      const payload = {
+                        audio_enabled: audioEnabled,
+                        audio_name: audioName,
+                        audio_artist: audioArtist,
+                      };
+                      if (audioBase64) payload.audio_base64 = audioBase64;
+                      if (audioCoverBase64) payload.audio_cover_base64 = audioCoverBase64;
+                      await api('/settings', { method: 'PUT', body: JSON.stringify(payload) });
+                      setAudioBase64(null);
+                      setAudioCoverBase64(null);
+                      await refreshUser();
+                      success('Áudio salvo!');
+                    } catch (err) { error(err.message); }
+                    finally { setSavingAudio(false); }
+                  }}
+                  disabled={savingAudio}
+                  className="w-full py-4 rounded-2xl bg-[var(--db-accent)] text-[var(--db-bg)] font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 shadow-lg shadow-[var(--db-accent)]/10 flex items-center justify-center gap-2"
+                >
+                  {savingAudio
+                    ? <div className="w-4 h-4 border-2 border-[var(--db-bg)]/30 border-t-[var(--db-bg)] rounded-full animate-spin" />
+                    : <Check size={18} />}
+                  {savingAudio ? 'Salvando...' : 'Salvar áudio'}
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => document.getElementById('audio-input').click()}
+                className="flex flex-col items-center justify-center gap-4 py-16 rounded-[24px] border-2 border-dashed cursor-pointer transition-all border-[var(--db-border-2)] hover:border-[#8E9C78]/40 bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-2)]"
+              >
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(191,90,242,0.08)' }}>
+                  <Music size={28} className="text-[#8E9C78]/60" strokeWidth={1.5} />
+                </div>
+                <div className="text-center">
+                  <p className="text-[14px] font-semibold text-[var(--db-text-2)]">Clique para escolher um áudio</p>
+                  <p className="text-[12px] text-[var(--db-text-3)] mt-1">MP3, OGG, WAV, M4A • até 10MB</p>
+                </div>
+              </div>
+            )}
+
+            {/* Input áudio */}
+            <input id="audio-input" type="file"
+              accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/aac"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!file.type.startsWith('audio/')) return error('Arquivo precisa ser de áudio');
+                if (file.size > 10 * 1024 * 1024) return error('Áudio muito grande (máx 10MB)');
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setAudioBase64(reader.result);
+                  setAudioUrl(reader.result);
+                  const base = file.name.replace(/\.[^/.]+$/, '');
+                  setAudioFileName(file.name);
+                  if (!audioName) setAudioName(base);
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+              }}
+            />
+
+            {/* Input capa */}
+            <input id="audio-cover-input" type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) return error('Capa precisa ser uma imagem');
+                if (file.size > 3 * 1024 * 1024) return error('Imagem muito grande (máx 3MB)');
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setAudioCoverBase64(reader.result);
+                  setAudioCoverUrl(reader.result);
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+              }}
+            />
+          </section>
+
           {/* Idioma */}
           <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center gap-3 mb-8">
@@ -444,7 +716,7 @@ export default function Settings() {
               </div>
               <h2 className="text-xl font-semibold text-[var(--db-text)]">Idioma</h2>
             </div>
-            
+
             <div className="flex flex-wrap gap-4">
               {[
                 { code: 'pt', label: 'Português', flag: '🇧🇷' },
@@ -453,11 +725,10 @@ export default function Settings() {
                 <button
                   key={code}
                   onClick={() => setLang(code)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${
-                    lang === code 
-                    ? 'bg-[var(--db-blue)] text-white border-[var(--db-blue)] shadow-md shadow-[var(--db-blue)]/20' 
-                    : 'bg-[var(--db-bg-secondary)] text-[var(--db-text-2)] border-transparent hover:text-[var(--db-text)]'
-                  }`}
+                  className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-sm transition-all border-2 ${lang === code
+                      ? 'bg-[var(--db-blue)] text-white border-[var(--db-blue)] shadow-md shadow-[var(--db-blue)]/20'
+                      : 'bg-[var(--db-bg-secondary)] text-[var(--db-text-2)] border-transparent hover:text-[var(--db-text)]'
+                    }`}
                 >
                   <span className="text-xl">{flag}</span>
                   {label}
@@ -469,81 +740,81 @@ export default function Settings() {
 
         {/* Coluna Direita: Stats e Danger */}
         <div className="lg:col-span-4 space-y-8">
-          
+
           {/* Estatísticas Rápidas */}
           {usageStats && (
             <div className="glass-target bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--db-accent)]/20 to-[var(--db-accent-hover)]/10 z-0 pointer-events-none" />
               <div className="relative z-10 text-[var(--db-text)]">
-              <div className="flex items-center gap-2 mb-6">
-                <Flame size={20} />
-                <span className="font-bold text-[12px] uppercase tracking-widest opacity-80 text-[var(--db-accent)]">Impacto Total</span>
-              </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <p className="text-5xl font-black tracking-tighter">
-                    {Math.floor(usageStats.totalSeconds / 3600)}h
-                  </p>
-                  <p className="text-sm font-bold opacity-70 mt-1 uppercase tracking-wider">Produtividade Acumulada</p>
+                <div className="flex items-center gap-2 mb-6">
+                  <Flame size={20} />
+                  <span className="font-bold text-[12px] uppercase tracking-widest opacity-80 text-[var(--db-accent)]">Impacto Total</span>
                 </div>
 
-                <div className="pt-6 border-t border-[var(--db-bg)]/10 grid grid-cols-2 gap-4">
+                <div className="space-y-6">
                   <div>
-                    <p className="text-xl font-bold">{usageStats.currentStreak}d</p>
-                    <p className="text-[10px] uppercase font-bold opacity-60">Streak Atual</p>
+                    <p className="text-5xl font-black tracking-tighter">
+                      {Math.floor(usageStats.totalSeconds / 3600)}h
+                    </p>
+                    <p className="text-sm font-bold opacity-70 mt-1 uppercase tracking-wider">Produtividade Acumulada</p>
                   </div>
-                  <div>
-                    <p className="text-xl font-bold">{usageStats.accountAgeDays}d</p>
-                    <p className="text-[10px] uppercase font-bold opacity-60">Na plataforma</p>
+
+                  <div className="pt-6 border-t border-[var(--db-bg)]/10 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xl font-bold">{usageStats.currentStreak}d</p>
+                      <p className="text-[10px] uppercase font-bold opacity-60">Streak Atual</p>
+                    </div>
+                    <div>
+                      <p className="text-xl font-bold">{usageStats.accountAgeDays}d</p>
+                      <p className="text-[10px] uppercase font-bold opacity-60">Na plataforma</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
             </div>
           )}
 
           {/* Danger Zone */}
           <div className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
-             <div className="flex items-center gap-2 mb-6 text-[var(--db-red)]">
-                <ShieldAlert size={18} />
-                <h3 className="font-bold text-sm uppercase tracking-wider">Zona Crítica</h3>
-             </div>
-             
-             <div className="space-y-4">
-                <button 
-                  onClick={() => {
-                    confirm({
-                      title: "Sair do sistema?",
-                      message: "Sua sessão será encerrada com segurança.",
-                      onConfirm: () => { logout(); navigate('/'); }
-                    });
-                  }}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-3)] transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <LogOut size={18} className="text-[var(--db-text-3)]" />
-                    <span className="text-sm font-bold text-[var(--db-text-2)]">Encerrar Sessão</span>
-                  </div>
-                  <ChevronRight size={16} className="text-[var(--db-text-3)] group-hover:translate-x-1 transition-transform" />
-                </button>
+            <div className="flex items-center gap-2 mb-6 text-[var(--db-red)]">
+              <ShieldAlert size={18} />
+              <h3 className="font-bold text-sm uppercase tracking-wider">Zona Crítica</h3>
+            </div>
 
-                <button 
-                  onClick={handleDelete}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-[var(--db-red)]/5 hover:bg-[var(--db-red)]/10 border border-[var(--db-red)]/10 transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <Trash2 size={18} className="text-[var(--db-red)]" />
-                    <span className="text-sm font-bold text-[var(--db-red)]">Deletar Conta</span>
-                  </div>
-                  <ChevronRight size={16} className="text-[var(--db-red)]/40 group-hover:translate-x-1 transition-transform" />
-                </button>
-             </div>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  confirm({
+                    title: "Sair do sistema?",
+                    message: "Sua sessão será encerrada com segurança.",
+                    onConfirm: () => { logout(); navigate('/'); }
+                  });
+                }}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-3)] transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <LogOut size={18} className="text-[var(--db-text-3)]" />
+                  <span className="text-sm font-bold text-[var(--db-text-2)]">Encerrar Sessão</span>
+                </div>
+                <ChevronRight size={16} className="text-[var(--db-text-3)] group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button
+                onClick={handleDelete}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-[var(--db-red)]/5 hover:bg-[var(--db-red)]/10 border border-[var(--db-red)]/10 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <Trash2 size={18} className="text-[var(--db-red)]" />
+                  <span className="text-sm font-bold text-[var(--db-red)]">Deletar Conta</span>
+                </div>
+                <ChevronRight size={16} className="text-[var(--db-red)]/40 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
 
         </div>
       </div>
-      
+
     </motion.div>
   );
 }

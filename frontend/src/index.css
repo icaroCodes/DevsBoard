@@ -306,23 +306,23 @@ body[data-theme="arctic"] {
 
 /* ─── LIQUID GLASS ────────────────────────────────────── */
 [data-theme="liquidglass"] {
-  --color-bg: #030712; /* Deep black with midnight blue undertone */
-  --db-bg: #030712;
-  --color-surface: rgba(15, 23, 42, 0.35); /* Subtle navy-gray glass surface */
-  --color-border: rgba(255, 255, 255, 0.1); 
-  --color-text: #F8FAFC; 
-  --color-muted: #94A3B8;
-  --color-accent: #818CF8; /* Soft blue */
+  --color-bg: #050507;
+  --db-bg: #050507;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-text: #F5F5F7;
+  --color-muted: #98989D;
+  --color-accent: #0A84FF;
 }
 
 /* Force dark text scaling overrides to prioritize readability */
 [data-theme="liquidglass"] .text-\[\#86868B\],
 [data-theme="liquidglass"] .text-\[\#A1A1AA\] {
-  color: #94A3B8 !important;
+  color: #98989D !important;
 }
 
 [data-theme="liquidglass"] .text-white {
-  color: #F8FAFC !important;
+  color: #F5F5F7 !important;
 }
 
 [data-theme="liquidglass"] .bg-zinc-950,
@@ -338,24 +338,24 @@ body[data-theme="arctic"] {
 [data-theme="liquidglass"] .bg-\[\#111111\],
 [data-theme="liquidglass"] .bg-\[\#1A1A1C\],
 [data-theme="liquidglass"] .bg-\[\#222224\] {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\] {
-  background-color: rgba(255, 255, 255, 0.03) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/60,
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/80,
 [data-theme="liquidglass"] .bg-\[\#1C1C1E\]\/95 {
-  background-color: rgba(255, 255, 255, 0.03) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="liquidglass"] .bg-\[\#2C2C2E\],
 [data-theme="liquidglass"] .bg-\[\#2C2C2E\]\/60 {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 /* Base structural properties for WebGL-powered glass components */
@@ -364,12 +364,14 @@ body[data-theme="arctic"] {
 [data-theme="liquidglass"] .glass-panel {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background-color: transparent !important; /* Force true transparency so WebGL handles refraction */
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top-color: rgba(255, 255, 255, 0.18) !important;
   box-shadow: 
-    0 16px 40px -8px rgba(0, 0, 0, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.06), /* Top highlight inside */
-    inset 0 -1px 1px rgba(255, 255, 255, 0.01) !important;
+    0 20px 48px -12px rgba(0, 0, 0, 0.5),
+    0 8px 16px -4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02) !important;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -377,54 +379,58 @@ body[data-theme="arctic"] {
 [data-theme="liquidglass"] button.glass-card:hover,
 [data-theme="liquidglass"] button.glass-panel:hover,
 [data-theme="liquidglass"] .glass-card:has(button:hover) {
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-top-color: rgba(255, 255, 255, 0.28) !important;
   box-shadow: 
-    0 20px 48px -8px rgba(0, 0, 0, 0.5),
-    inset 0 1px 1px rgba(255, 255, 255, 0.1), 
-    inset 0 -1px 1px rgba(255, 255, 255, 0.02) !important;
+    0 24px 56px -12px rgba(0, 0, 0, 0.55),
+    0 12px 24px -4px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03) !important;
 }
 
 /* ── Fallback Liquid Glass behavior for videos (restore native blur and tint) ─── */
 [data-theme="liquidglass"][data-wallpaper-type="video"] .glass-target,
 [data-theme="liquidglass"][data-wallpaper-type="video"] .glass-card,
 [data-theme="liquidglass"][data-wallpaper-type="video"] .glass-panel {
-  backdrop-filter: blur(40px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
-  background-color: rgba(30, 30, 35, 0.4) !important;
-  border-top-color: rgba(255, 255, 255, 0.15) !important;
-  border-left-color: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(48px) saturate(180%) brightness(0.9) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(180%) brightness(0.9) !important;
+  background-color: rgba(20, 20, 24, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    0 20px 48px -12px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 [data-theme="liquidglass"][data-wallpaper-type="video"] .bg-\[\#1C1C1E\]\/60,
 [data-theme="liquidglass"][data-wallpaper-type="video"] .bg-\[\#1C1C1E\]\/80,
 [data-theme="liquidglass"][data-wallpaper-type="video"] .bg-\[\#1C1C1E\]\/95 {
-  backdrop-filter: blur(20px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
-  background-color: rgba(30, 30, 35, 0.3) !important;
+  backdrop-filter: blur(24px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
+  background-color: rgba(20, 20, 24, 0.3) !important;
 }
 
 /* ── Solid Modal: floating UI that must NEVER be transparent ─── */
 [data-theme="liquidglass"] .solid-modal {
-  background-color: rgba(28, 28, 30, 0.92) !important;
-  backdrop-filter: blur(40px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(22, 22, 26, 0.94) !important;
+  backdrop-filter: blur(48px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(48px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 [data-theme="liquidglass"] .solid-modal .bg-\[\#1C1C1E\],
 [data-theme="liquidglass"] .solid-modal .bg-\[\#1C1C1E\]\/80 {
-  background-color: rgba(28, 28, 30, 0.95) !important;
+  background-color: rgba(22, 22, 26, 0.95) !important;
 }
 
 [data-theme="liquidglass"] .solid-modal .bg-\[\#2C2C2E\],
 [data-theme="liquidglass"] .solid-modal .bg-\[\#2C2C2E\]\/50,
 [data-theme="liquidglass"] .solid-modal .bg-\[\#2C2C2E\]\/60 {
-  background-color: rgba(44, 44, 46, 0.9) !important;
+  background-color: rgba(40, 40, 44, 0.9) !important;
 }
 
 [data-theme="liquidglass"] .solid-modal .bg-\[\#3A3A3C\] {
-  background-color: rgba(58, 58, 60, 0.9) !important;
+  background-color: rgba(54, 54, 58, 0.9) !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -453,7 +459,7 @@ body[data-theme="arctic"] {
 /* In Liquid Glass theme, ensure text inside stays legible over the wallpaper */
 [data-theme="liquidglass"] .glass-card,
 [data-theme="liquidglass"] .glass-panel {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* ──────────────────────────────────────────────────────────────────
@@ -468,7 +474,7 @@ body[data-theme="arctic"] {
    <body>, so target body and #root directly. */
 body[data-theme="liquidglass"],
 body[data-theme="liquidglass"] #root {
-  background-color: #030712;
+  background-color: #050507;
 }
 
 /* #glass-root MUST keep an opaque dark background. html-to-image
@@ -479,7 +485,7 @@ body[data-theme="liquidglass"] #root {
    canvas inside composites against this dark layer instead of whatever
    the browser's overscroll/back-buffer happens to be. */
 body[data-theme="liquidglass"] #glass-root {
-  background-color: #030712;
+  background-color: #050507;
   isolation: isolate;
 }
 
@@ -506,11 +512,12 @@ body.glass-webgl-active .glass-panel {
 body.glass-fallback-mode .glass-target,
 body.glass-fallback-mode .glass-card,
 body.glass-fallback-mode .glass-panel {
-  background-color: rgba(22, 22, 24, 0.45) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(18, 18, 22, 0.45) !important;
+  backdrop-filter: blur(32px) saturate(180%) brightness(0.95) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-top-color: rgba(255, 255, 255, 0.16) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 12px 32px rgba(0, 0, 0, 0.30) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 40px rgba(0, 0, 0, 0.35) !important;
 }

@@ -28,6 +28,7 @@ import { useSessionTracker } from '../hooks/useSessionTracker';
 import { useLiquidGlass } from '../hooks/useLiquidGlass';
 import { api } from '../lib/api';
 import { useTranslation } from '../utils/translations';
+import AudioPlayer from './AudioPlayer';
 
 const navRoutes = [
   { to: '/dashboard', icon: Home, key: 'navHome' },
@@ -604,6 +605,9 @@ export default function Layout({ children }) {
           {children}
         </motion.main>
       </div>
+
+      {/* Audio player flutuante — 1 música em loop, play/pause/hide */}
+      <AudioPlayer />
     </div>
   );
 }

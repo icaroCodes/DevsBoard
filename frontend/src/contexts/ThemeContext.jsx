@@ -90,25 +90,25 @@ export const THEMES = {
   },
   liquidglass: {
     label: 'Liquid Glass',
-    preview: ['#0E0E12', '#1A1A2E', '#7B61FF'],
+    preview: ['#050507', '#141418', '#0A84FF'],
     isGlass: true,
     vars: {
-      '--db-bg': '#0E0E12',
-      '--db-surface': 'rgba(255, 255, 255, 0.04)',
-      '--db-surface-2': 'rgba(255, 255, 255, 0.06)',
-      '--db-surface-3': 'rgba(255, 255, 255, 0.08)',
+      '--db-bg': '#050507',
+      '--db-surface': 'rgba(255, 255, 255, 0.05)',
+      '--db-surface-2': 'rgba(255, 255, 255, 0.07)',
+      '--db-surface-3': 'rgba(255, 255, 255, 0.10)',
       '--db-bg-secondary': 'rgba(255, 255, 255, 0.03)',
-      '--db-text': '#F0EFF4',
-      '--db-text-2': '#A1A1B5',
-      '--db-text-3': '#636380',
-      '--db-accent': '#7B61FF',
-      '--db-accent-hover': '#6B4FE0',
-      '--db-accent-muted': 'rgba(123, 97, 255, 0.12)',
-      '--db-border': 'rgba(255, 255, 255, 0.08)',
-      '--db-border-2': 'rgba(255, 255, 255, 0.12)',
-      '--db-blue': '#7B61FF',
+      '--db-text': '#F5F5F7',
+      '--db-text-2': '#98989D',
+      '--db-text-3': '#636366',
+      '--db-accent': '#0A84FF',
+      '--db-accent-hover': '#0071E3',
+      '--db-accent-muted': 'rgba(10, 132, 255, 0.12)',
+      '--db-border': 'rgba(255, 255, 255, 0.10)',
+      '--db-border-2': 'rgba(255, 255, 255, 0.14)',
+      '--db-blue': '#0A84FF',
       '--db-red': '#FF453A',
-      '--db-sidebar': '#0C0C10'
+      '--db-sidebar': '#050507'
     }
   }
 };
