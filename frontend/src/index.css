@@ -508,7 +508,15 @@ body.glass-webgl-active .glass-panel {
   -webkit-backdrop-filter: none !important;
 }
 
-/* FALLBACK — mobile/iOS/low-end. Pure CSS glassmorphism. */
+/* FALLBACK — mobile/iOS/low-end. Pure CSS glassmorphism.
+   #glass-root creates a transform/isolation stacking context that prevents
+   backdrop-filter on cards from sampling the wallpaper inside it (Safari
+   bug). In fallback we hide it and paint the wallpaper on <body> instead
+   (see Layout.jsx) so backdrop-filter has a real backdrop to blur. */
+body.glass-fallback-mode #glass-root {
+  display: none !important;
+}
+
 body.glass-fallback-mode .glass-target,
 body.glass-fallback-mode .glass-card,
 body.glass-fallback-mode .glass-panel {

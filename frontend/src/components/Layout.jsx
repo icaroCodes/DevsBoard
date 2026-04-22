@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useSessionTracker } from '../hooks/useSessionTracker';
 import { useLiquidGlass } from '../hooks/useLiquidGlass';
 import { api } from '../lib/api';
@@ -49,11 +50,13 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
+  const { theme } = useTheme();
   const { formattedTime } = useSessionTracker(!!user, user?.id);
   const { t } = useTranslation();
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [teams, setTeams] = useState([]);
   const [recentAccounts, setRecentAccounts] = useState([]);
+  const [glassFallback, setGlassFallback] = useState(false);
   const rootRef = useRef(null);
 
   useLiquidGlass(rootRef, user?.wallpaper_type);
@@ -65,6 +68,52 @@ export default function Layout({ children }) {
       document.documentElement.removeAttribute('data-wallpaper-type');
     }
   }, [user?.wallpaper_type]);
+
+  // Track CSS-fallback mode set by useLiquidGlass so we can render the
+  // wallpaper outside #glass-root — mobile Safari's backdrop-filter cannot
+  // sample through the transform/isolation stacking context that #glass-root
+  // creates, so cards in fallback mode see only the dark base color.
+  useEffect(() => {
+    const body = document.body;
+    const sync = () => setGlassFallback(body.classList.contains('glass-fallback-mode'));
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const isGlassTheme = theme === 'liquidglass';
+
+  // In fallback mode (mobile/iOS), paint the wallpaper directly on <body>
+  // so backdrop-filter on glass cards has something visible to blur.
+  // Wallpaper opacity is replicated via a black gradient overlay.
+  useEffect(() => {
+    const body = document.body;
+    const clear = () => {
+      body.style.backgroundImage = '';
+      body.style.backgroundSize = '';
+      body.style.backgroundPosition = '';
+      body.style.backgroundAttachment = '';
+      body.style.backgroundRepeat = '';
+    };
+    if (
+      isGlassTheme &&
+      glassFallback &&
+      user?.wallpaper_url &&
+      user?.wallpaper_type !== 'video'
+    ) {
+      const op = (user.wallpaper_opacity ?? 15) / 100;
+      const overlay = `rgba(5, 5, 7, ${1 - op})`;
+      body.style.backgroundImage = `linear-gradient(${overlay}, ${overlay}), url("${user.wallpaper_url}")`;
+      body.style.backgroundSize = 'cover';
+      body.style.backgroundPosition = 'center';
+      body.style.backgroundAttachment = 'fixed';
+      body.style.backgroundRepeat = 'no-repeat';
+    } else {
+      clear();
+    }
+    return clear;
+  }, [isGlassTheme, glassFallback, user?.wallpaper_url, user?.wallpaper_type, user?.wallpaper_opacity]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -443,6 +492,21 @@ export default function Layout({ children }) {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-zinc-950 selection:bg-cyan-500/30 font-[Poppins,sans-serif]">
+
+      {/* Fallback wallpaper for mobile/iOS: rendered OUTSIDE #glass-root so
+          backdrop-filter on glass cards can sample it (the WebGL root creates
+          a stacking context that blocks backdrop sampling on Safari). */}
+      {isGlassTheme && glassFallback && user?.wallpaper_url && user?.wallpaper_type === 'video' && (
+        <video
+          src={user.wallpaper_url}
+          className="fixed inset-0 w-screen h-screen object-cover pointer-events-none z-0"
+          style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
 
       {/* 1. ROOT WEBGL PURO (z-0 to z-10) */}
       <div 

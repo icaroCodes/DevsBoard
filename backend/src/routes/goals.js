@@ -31,19 +31,21 @@ router.post('/', [
   body('deadline_type').optional().isIn(['monthly', 'yearly', 'indefinite']),
   body('deadline_date').optional().isDate(),
   body('target_value').optional().isFloat({ min: 0 }),
+  body('year').optional({ nullable: true }).isInt({ min: 2000, max: 2100 }).withMessage('Ano inválido'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { name, type, deadline_type = 'indefinite', deadline_date, target_value } = req.body;
-    const insertData = { 
-      user_id: req.userId, 
-      name, 
-      type, 
-      deadline_type, 
-      deadline_date: deadline_date || null, 
-      target_value: target_value || 0 
+    const { name, type, deadline_type = 'indefinite', deadline_date, target_value, year } = req.body;
+    const insertData = {
+      user_id: req.userId,
+      name,
+      type,
+      deadline_type,
+      deadline_date: deadline_date || null,
+      target_value: target_value || 0,
+      year: year ?? null,
     };
 
     if (req.teamId) {
@@ -71,6 +73,7 @@ router.put('/:id', [
   body('completed').optional().isBoolean(),
   body('add_amount').optional().isFloat({ min: 0.01 }), // Mínimo de 0.01
   body('remove_amount').optional().isFloat({ min: 0.01 }),
+  body('year').optional({ nullable: true }).isInt({ min: 2000, max: 2100 }).withMessage('Ano inválido'),
 ], async (req, res) => {
   try {
     const { userId, teamId } = req;
@@ -153,7 +156,7 @@ router.put('/:id', [
       }
     }
 
-    ['name', 'deadline_type', 'deadline_date', 'target_value', 'completed'].forEach(f => {
+    ['name', 'deadline_type', 'deadline_date', 'target_value', 'completed', 'year'].forEach(f => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
 
