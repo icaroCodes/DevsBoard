@@ -26,13 +26,17 @@ router.post('/heartbeat', async (req, res) => {
       }, { onConflict: 'id' });
 
     if (error) {
+      if (isTransientNetworkError(error)) {
+        console.warn('⚠️ [Heartbeat] Supabase fetch timeout - silent ignore');
+        return res.json({ ok: false, warning: 'timeout ignored' });
+      }
       console.error('Heartbeat error:', error);
       return res.status(500).json({ error: 'Erro ao registrar heartbeat' });
     }
 
     res.json({ ok: true });
   } catch (err) {
-    if (err instanceof TypeError && err.message === 'fetch failed') {
+    if (isTransientNetworkError(err)) {
       console.warn('⚠️ [Heartbeat] Supabase fetch timeout - silent ignore');
       return res.json({ ok: false, warning: 'timeout ignored' });
     }
@@ -40,6 +44,19 @@ router.post('/heartbeat', async (req, res) => {
     res.status(500).json({ error: 'Erro interno' });
   }
 });
+
+// Timeouts transitórios do Supabase chegam tanto como exceção lançada
+// (TypeError: fetch failed) quanto como `error` retornado com a mesma
+// mensagem embrulhada pelo supabase-js. Em heartbeat esses erros não
+// são acionáveis — o próximo tick reenvia.
+function isTransientNetworkError(err) {
+  const msg = err?.message || err?.details || '';
+  return typeof msg === 'string' && (
+    msg.includes('fetch failed') ||
+    msg.includes('ConnectTimeoutError') ||
+    msg.includes('UND_ERR_CONNECT_TIMEOUT')
+  );
+}
 
 // POST /sessions/start - Inicia nova sessão ou recupera existente
 router.post('/start', async (req, res) => {

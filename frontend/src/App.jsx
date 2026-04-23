@@ -45,7 +45,7 @@ export default function App() {
               <AchievementProvider>
                 <RealtimeProvider>
                   <Routes>
-                    <Route path="/" element={<Landing />} />
+                    <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
                     <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
                     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                     <Route path="/finances" element={<ProtectedRoute><Finances /></ProtectedRoute>} />

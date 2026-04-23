@@ -84,37 +84,6 @@ export default function Layout({ children }) {
 
   const isGlassTheme = theme === 'liquidglass';
 
-  // In fallback mode (mobile/iOS), paint the wallpaper directly on <body>
-  // so backdrop-filter on glass cards has something visible to blur.
-  // Wallpaper opacity is replicated via a black gradient overlay.
-  useEffect(() => {
-    const body = document.body;
-    const clear = () => {
-      body.style.backgroundImage = '';
-      body.style.backgroundSize = '';
-      body.style.backgroundPosition = '';
-      body.style.backgroundAttachment = '';
-      body.style.backgroundRepeat = '';
-    };
-    if (
-      isGlassTheme &&
-      glassFallback &&
-      user?.wallpaper_url &&
-      user?.wallpaper_type !== 'video'
-    ) {
-      const op = (user.wallpaper_opacity ?? 15) / 100;
-      const overlay = `rgba(5, 5, 7, ${1 - op})`;
-      body.style.backgroundImage = `linear-gradient(${overlay}, ${overlay}), url("${user.wallpaper_url}")`;
-      body.style.backgroundSize = 'cover';
-      body.style.backgroundPosition = 'center';
-      body.style.backgroundAttachment = 'fixed';
-      body.style.backgroundRepeat = 'no-repeat';
-    } else {
-      clear();
-    }
-    return clear;
-  }, [isGlassTheme, glassFallback, user?.wallpaper_url, user?.wallpaper_type, user?.wallpaper_opacity]);
-
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize(); // set initial
@@ -495,17 +464,28 @@ export default function Layout({ children }) {
 
       {/* Fallback wallpaper for mobile/iOS: rendered OUTSIDE #glass-root so
           backdrop-filter on glass cards can sample it (the WebGL root creates
-          a stacking context that blocks backdrop sampling on Safari). */}
-      {isGlassTheme && glassFallback && user?.wallpaper_url && user?.wallpaper_type === 'video' && (
-        <video
-          src={user.wallpaper_url}
-          className="fixed inset-0 w-screen h-screen object-cover pointer-events-none z-0"
-          style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
-          autoPlay
-          loop
-          muted
-          playsInline
-        />
+          a stacking context that blocks backdrop sampling on Safari).
+          Painting on <body> doesn't work here because #root has an opaque
+          background in the liquidglass theme and covers the body entirely. */}
+      {isGlassTheme && glassFallback && user?.wallpaper_url && (
+        user?.wallpaper_type === 'video' ? (
+          <video
+            src={user.wallpaper_url}
+            className="fixed inset-0 w-screen h-screen object-cover pointer-events-none z-0"
+            style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img
+            src={user.wallpaper_url}
+            className="fixed inset-0 w-screen h-screen object-cover pointer-events-none z-0"
+            style={{ opacity: (user.wallpaper_opacity ?? 15) / 100 }}
+            alt=""
+          />
+        )
       )}
 
       {/* 1. ROOT WEBGL PURO (z-0 to z-10) */}
