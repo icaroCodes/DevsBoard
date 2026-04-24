@@ -3,10 +3,10 @@ import config from '../config/index.js';
 import supabase from '../database/connection.js';
 
 export const authenticate = (req, res, next) => {
-  // Prefer cookies for security (HttpOnly)
+  
   let token = req.cookies?.accessToken;
 
-  // Fallback for current clients or API testing
+  
   if (!token) {
     const authHeader = req.headers.authorization;
     if (authHeader?.startsWith('Bearer ')) {
@@ -22,10 +22,13 @@ export const authenticate = (req, res, next) => {
     const decoded = jwt.verify(token, config.jwt.accessSecret);
     req.userId = decoded.userId;
     
-    // Team Context
+    
+    // Preserva o ID como string: o tipo real da coluna `teams.id` pode ser
+    // BIGINT ou UUID, e o Supabase/PostgREST coage strings pra ambos.
+    // `parseInt` em UUID quebra (retorna NaN), então mantemos cru.
     const teamIdStr = req.headers['x-team-id'];
     if (teamIdStr && teamIdStr !== 'null' && teamIdStr !== 'undefined') {
-      req.teamId = parseInt(teamIdStr);
+      req.teamId = String(teamIdStr);
     } else {
       req.teamId = null;
     }
@@ -39,9 +42,7 @@ export const authenticate = (req, res, next) => {
   }
 };
 
-/**
- * Anti-IDOR: Garante que o usuário pertence ao time solicitado
- */
+
 export const checksOwnership = async (req, res, next) => {
   if (!req.teamId) return next();
 

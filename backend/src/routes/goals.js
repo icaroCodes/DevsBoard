@@ -71,7 +71,7 @@ router.put('/:id', [
   body('deadline_date').optional().isDate(),
   body('target_value').optional().isFloat({ min: 0 }),
   body('completed').optional().isBoolean(),
-  body('add_amount').optional().isFloat({ min: 0.01 }), // Mínimo de 0.01
+  body('add_amount').optional().isFloat({ min: 0.01 }), 
   body('remove_amount').optional().isFloat({ min: 0.01 }),
   body('year').optional({ nullable: true }).isInt({ min: 2000, max: 2100 }).withMessage('Ano inválido'),
 ], async (req, res) => {
@@ -93,7 +93,7 @@ router.put('/:id', [
     const updates = {};
     const transactions = [];
 
-    // Calcular saldo atual do usuário no sistema financeiro se necessário
+    
     let currentBalance = null;
     if (req.body.add_amount !== undefined && goal.type === 'financial') {
       let finQuery = supabase.from('finances').select('type, amount');
@@ -120,7 +120,7 @@ router.put('/:id', [
 
       updates.saved_amount = Number(goal.saved_amount || 0) + amountToAdd;
 
-      // Auto-completar quando atingir a meta
+      
       if (updates.saved_amount >= Number(goal.target_value)) {
         updates.completed = true;
       }
@@ -190,7 +190,7 @@ router.delete('/:id', async (req, res) => {
       
     if (!goal) return res.status(404).json({ error: 'Meta não encontrada' });
 
-    // Se a meta é financeira e tem saldo guardado, devolve para a conta antes de excluir
+    
     if (goal.type === 'financial' && Number(goal.saved_amount) > 0) {
       const txData = {
         user_id: userId,

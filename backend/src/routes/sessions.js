@@ -5,7 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-// POST /sessions/heartbeat - Atualiza sessão ativa com tempo real de uso
+
 router.post('/heartbeat', async (req, res) => {
   try {
     const { userId } = req;
@@ -15,7 +15,7 @@ router.post('/heartbeat', async (req, res) => {
       return res.status(400).json({ error: 'session_id e active_seconds são obrigatórios' });
     }
 
-    // Upsert sessão atual - atualiza o tempo ativo
+    
     const { error } = await supabase
       .from('user_sessions')
       .upsert({
@@ -45,10 +45,10 @@ router.post('/heartbeat', async (req, res) => {
   }
 });
 
-// Timeouts transitórios do Supabase chegam tanto como exceção lançada
-// (TypeError: fetch failed) quanto como `error` retornado com a mesma
-// mensagem embrulhada pelo supabase-js. Em heartbeat esses erros não
-// são acionáveis — o próximo tick reenvia.
+
+
+
+
 function isTransientNetworkError(err) {
   const msg = err?.message || err?.details || '';
   return typeof msg === 'string' && (
@@ -58,7 +58,7 @@ function isTransientNetworkError(err) {
   );
 }
 
-// POST /sessions/start - Inicia nova sessão ou recupera existente
+
 router.post('/start', async (req, res) => {
   try {
     const { userId } = req;
@@ -68,7 +68,7 @@ router.post('/start', async (req, res) => {
       return res.status(400).json({ error: 'session_id é obrigatório' });
     }
 
-    // Verificar se sessão já existe (reload de página)
+    
     const { data: existing } = await supabase
       .from('user_sessions')
       .select('active_seconds')
@@ -92,7 +92,7 @@ router.post('/start', async (req, res) => {
 
     if (error) {
       if (error.code === '23505') {
-        // Race condition - buscar o valor existente
+        
         const { data: race } = await supabase
           .from('user_sessions')
           .select('active_seconds')
@@ -111,12 +111,12 @@ router.post('/start', async (req, res) => {
   }
 });
 
-// GET /sessions/stats - Retorna estatísticas de tempo do usuário
+
 router.get('/stats', async (req, res) => {
   try {
     const { userId } = req;
 
-    // Buscar total de segundos ativos em todas as sessões
+    
     const { data: sessions, error } = await supabase
       .from('user_sessions')
       .select('active_seconds')
@@ -129,7 +129,7 @@ router.get('/stats', async (req, res) => {
 
     const totalSeconds = (sessions || []).reduce((sum, s) => sum + (s.active_seconds || 0), 0);
 
-    // Buscar sessão com maior duração (para conquistas de sessão única)
+    
     const { data: longestSession, error: longestErr } = await supabase
       .from('user_sessions')
       .select('active_seconds')
@@ -140,7 +140,7 @@ router.get('/stats', async (req, res) => {
 
     const longestSessionSeconds = longestSession?.active_seconds || 0;
 
-    // Buscar data de criação da conta
+    
     const { data: userData, error: userErr } = await supabase
       .from('users')
       .select('created_at')

@@ -1,0 +1,189 @@
+/* ========================================================================
+   Design System tokens — premium dark, Apple-inspired.
+   Namespaced `--ds-*` to coexist with the legacy `--db-*` theme vars.
+   Pages migrated to the new design read from these; legacy pages untouched.
+   ======================================================================== */
+
+:root {
+  /* ── Surfaces ─────────────────────────────────────────
+     Depth comes from contrast between layers, not borders.
+     Three levels: base / card / elevated. Plus an inset track. */
+  --ds-bg:              #0B0B0D;
+  --ds-surface-1:       #121214;
+  --ds-surface-2:       #17171A;
+  --ds-surface-3:       #1E1E22;
+  --ds-surface-inset:   rgba(0, 0, 0, 0.28);
+
+  /* ── Hairlines (used sparingly) ── */
+  --ds-hairline:        rgba(255, 255, 255, 0.055);
+  --ds-hairline-strong: rgba(255, 255, 255, 0.09);
+
+  /* ── Text ── */
+  --ds-text:            #ECECEE;
+  --ds-text-2:          #9899A0;
+  --ds-text-3:          #63646B;
+  --ds-text-inverse:    #0B0B0D;
+
+  /* ── Accents — used with restraint ── */
+  --ds-accent:          #0A84FF;
+  --ds-accent-hover:    #2E95FF;
+  --ds-accent-soft:     rgba(10, 132, 255, 0.14);
+  --ds-highlight:       #EAEFF8;  /* cool near-white secondary accent */
+
+  /* ── Semantic ── */
+  --ds-success:         #32D74B;
+  --ds-success-soft:    rgba(50, 215, 75, 0.14);
+  --ds-warn:            #FF9F0A;
+  --ds-warn-soft:       rgba(255, 159, 10, 0.14);
+  --ds-danger:          #FF453A;
+  --ds-danger-soft:     rgba(255, 69, 58, 0.14);
+
+  /* ── Radii ── */
+  --ds-r-xs: 8px;
+  --ds-r-sm: 12px;
+  --ds-r-md: 18px;
+  --ds-r-lg: 22px;
+  --ds-r-xl: 30px;
+
+  /* ── Shadows — ambient, two-layer (close contact + distant fall) ── */
+  --ds-shadow-1:
+    0 1px 1px rgba(0, 0, 0, 0.30),
+    0 4px 14px rgba(0, 0, 0, 0.22);
+  --ds-shadow-2:
+    0 1px 2px rgba(0, 0, 0, 0.38),
+    0 14px 32px rgba(0, 0, 0, 0.30);
+  --ds-shadow-float:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 28px 64px rgba(0, 0, 0, 0.36);
+  /* 1px inset rim — the subtle top-edge glow on physical cards */
+  --ds-rim: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --ds-rim-strong: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  /* ── Motion ── */
+  --ds-ease:      cubic-bezier(0.22, 1, 0.36, 1);
+  --ds-ease-in:   cubic-bezier(0.55, 0, 0.85, 0);
+  --ds-dur-fast:  140ms;
+  --ds-dur-base:  200ms;
+  --ds-dur-slow:  320ms;
+
+  /* ── Type stacks ── */
+  --ds-font-display: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --ds-font-text:    "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --ds-font-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ds-dur-fast: 0ms;
+    --ds-dur-base: 0ms;
+    --ds-dur-slow: 0ms;
+  }
+}
+
+/* ────────────────────────────────────────────────────────
+   Utility classes — the vocabulary pages compose from.
+   Keeping these as classes (not Tailwind utilities) so the
+   system can evolve in one place.
+   ──────────────────────────────────────────────────────── */
+
+/* Card — the default flat surface, feels like paper with
+   ambient light from above. Hairline is intentionally skipped;
+   depth is supplied by shadow + rim, not a stroke. */
+.ds-card {
+  background: var(--ds-surface-1);
+  border-radius: var(--ds-r-lg);
+  box-shadow: var(--ds-shadow-1), var(--ds-rim);
+  transition: background var(--ds-dur-base) var(--ds-ease),
+              box-shadow var(--ds-dur-base) var(--ds-ease),
+              transform   var(--ds-dur-fast) var(--ds-ease);
+}
+
+.ds-card-raised {
+  background: var(--ds-surface-2);
+  box-shadow: var(--ds-shadow-2), var(--ds-rim-strong);
+}
+
+.ds-card-interactive {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ds-card-interactive:hover {
+  background: var(--ds-surface-2);
+  box-shadow: var(--ds-shadow-2), var(--ds-rim-strong);
+}
+.ds-card-interactive:active {
+  transform: scale(0.992);
+  transition-duration: var(--ds-dur-fast);
+}
+
+/* Number display — tabular, tight tracking, financial-grade. */
+.ds-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.022em;
+  font-feature-settings: "tnum", "cv11";
+}
+
+/* Section kicker — tiny caps above a title. Signals grouping
+   without a horizontal divider. */
+.ds-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ds-text-3);
+}
+
+/* Chip — inline status/type label. */
+.ds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  color: var(--ds-text-2);
+  background: var(--ds-surface-2);
+}
+
+/* Link that acts as a section action (e.g. "Ver todos"). */
+.ds-action-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ds-text-2);
+  transition: color var(--ds-dur-fast) var(--ds-ease);
+}
+.ds-action-link:hover {
+  color: var(--ds-text);
+}
+
+/* Focus ring — consistent across buttons/links/inputs. */
+.ds-focus-ring:focus-visible {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Segmented control — pills-in-pill, Apple-style. */
+.ds-segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--ds-surface-inset);
+  border-radius: 10px;
+}
+.ds-segmented-item {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 8px;
+  color: var(--ds-text-2);
+  transition: color var(--ds-dur-fast) var(--ds-ease);
+  position: relative;
+  z-index: 1;
+}
+.ds-segmented-item[data-active="true"] {
+  color: var(--ds-text);
+}

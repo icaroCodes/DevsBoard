@@ -12,25 +12,22 @@ function getHeaders() {
   return headers;
 }
 
-/**
- * API Wrapper Seguro e Resiliente
- * Implementa Transparent Token Refresh e Cookies HttpOnly
- */
+
 export async function api(endpoint, options = {}, isRetry = false) {
   const url = `${API_URL}${endpoint}`;
 
   const res = await fetch(url, {
     ...options,
-    credentials: 'include', // Essencial para enviar/receber cookies HttpOnly
+    credentials: 'include', 
     headers: { ...getHeaders(), ...options.headers },
   });
 
-  // 1. Lógica de Refresh de Token Silencioso
+  
   if (res.status === 401 && !isRetry) {
     const errorData = await res.json().catch(() => null);
 
-    // Rotas de autenticação que intencionalmente retornam 401 (credenciais erradas)
-    // não devem ser tratadas como "sessão expirada"
+    
+    
     const isAuthRoute = endpoint.includes('/auth/login') || endpoint.includes('/auth/register');
     if (isAuthRoute) {
       const errorMsg = errorData?.error || (errorData?.errors?.[0]?.message) || 'Credenciais inválidas';
@@ -54,17 +51,17 @@ export async function api(endpoint, options = {}, isRetry = false) {
           return api(endpoint, options, true);
         }
 
-        // Refresh request chegou ao servidor mas falhou (refresh token inválido/expirado)
-        // → deslogar
+        
+        
       } catch (networkErr) {
-        // Erro de REDE no refresh (ECONNRESET, ECONNREFUSED durante restart)
-        // Não deslogar — é transitório. Lançar erro genérico.
+        
+        
         console.warn('[Refresh network error — keeping session]', networkErr.message);
         throw new Error('Erro de conexão. Tente novamente.');
       }
     }
 
-    // 401 explícito sem TOKEN_EXPIRED, ou refresh token inválido → deslogar
+    
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
@@ -77,7 +74,7 @@ export async function api(endpoint, options = {}, isRetry = false) {
 
   const data = res.status === 204 ? null : await res.json().catch(() => null);
 
-  // Intercept 202 com change request (Fluxo de Aprovação de Membros)
+  
   if (res.status === 202 && data?.is_change_request) {
     const err = new Error('CHANGE_REQUEST:' + (data.message || 'Pedido enviado.'));
     err.isChangeRequest = true;
@@ -90,7 +87,7 @@ export async function api(endpoint, options = {}, isRetry = false) {
     throw new Error(errorMsg);
   }
 
-  // Sinaliza mutação bem-sucedida para o sistema de conquistas
+  
   const method = (options?.method || 'GET').toUpperCase();
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && !endpoint.includes('/achievements')) {
     window.dispatchEvent(new CustomEvent('devsboard:mutation'));

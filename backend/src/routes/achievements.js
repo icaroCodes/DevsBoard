@@ -4,8 +4,8 @@ import supabase from '../database/connection.js';
 
 const router = Router();
 
-// POST /achievements/check — chamado pelo frontend após mutações (fire-and-forget)
-// Retorna apenas as conquistas recém-desbloqueadas nesta chamada
+
+
 router.post('/check', async (req, res) => {
   try {
     const { newlyUnlocked } = await checkAndUnlock(req.userId);
@@ -16,7 +16,7 @@ router.post('/check', async (req, res) => {
   }
 });
 
-// GET /achievements — lista completa com progresso (página de conquistas)
+
 router.get('/', async (req, res) => {
   try {
     const { achievementsWithProgress } = await checkAndUnlock(req.userId);
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /achievements/leaderboard — top global de usuários com mais conquistas
+
 router.get('/leaderboard', async (req, res) => {
   try {
     const { data: allUnlocked, error } = await supabase
@@ -80,7 +80,7 @@ router.get('/leaderboard', async (req, res) => {
       .sort((a, b) => b.total - a.total || b.platina - a.platina || b.ouro - a.ouro || b.prata - a.prata)
       .slice(0, 50);
 
-    // posição do usuário autenticado
+    
     const meIndex = leaderboard.findIndex(u => u.id === req.userId);
 
     res.json({ leaderboard, mePosition: meIndex === -1 ? null : meIndex + 1 });

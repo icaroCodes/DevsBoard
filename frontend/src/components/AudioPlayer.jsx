@@ -7,7 +7,7 @@ import { api } from '../lib/api';
 const POSITION_KEY = 'audio_position';
 const PLAYER_POS_KEY = 'audio_player_position';
 const ACCENT = '#8E9C78';
-const FADE_DURATION = 400; // ms for fade-out on pause
+const FADE_DURATION = 400; 
 
 export default function AudioPlayer() {
   const { user } = useAuth();
@@ -26,22 +26,22 @@ export default function AudioPlayer() {
   const volumeTimeout = useRef(null);
   const fadeInterval = useRef(null);
 
-  // ─── Drag state ────────────────────────────────────────
+  
   const [pos, setPos] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(PLAYER_POS_KEY));
       if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') return saved;
     } catch {}
-    return null; // will use CSS default (bottom-right)
+    return null; 
   });
   const dragState = useRef({ dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 });
 
-  // ─── Seek state ────────────────────────────────────────
+  
   const [seeking, setSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const seekBarRef = useRef(null);
 
-  // ─── Save playback position periodically ───────────────
+  
   useEffect(() => {
     if (!playing) return;
     saveTimer.current = setInterval(() => {
@@ -84,7 +84,7 @@ export default function AudioPlayer() {
     audioRef.current.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
   }, [ready, user?.audio_enabled]);
 
-  // ─── Clamp position on window resize ──────────────────
+  
   useEffect(() => {
     if (!pos) return;
     const handleResize = () => {
@@ -103,7 +103,7 @@ export default function AudioPlayer() {
     return () => window.removeEventListener('resize', handleResize);
   }, [pos]);
 
-  // ─── Controls ─────────────────────────────────────────
+  
   const fadeOutAndPause = useCallback(() => {
     const el = audioRef.current;
     if (!el) return;
@@ -117,12 +117,12 @@ export default function AudioPlayer() {
     fadeInterval.current = setInterval(() => {
       step++;
       const t = step / steps;
-      // Ease-out curve for natural fade
+      
       el.volume = Math.max(0, startVol * (1 - t * t));
       if (step >= steps) {
         clearInterval(fadeInterval.current);
         el.pause();
-        el.volume = startVol; // restore volume for next play
+        el.volume = startVol; 
         setPlaying(false);
       }
     }, stepTime);
@@ -132,7 +132,7 @@ export default function AudioPlayer() {
     const el = audioRef.current;
     if (!el) return;
     if (el.paused) {
-      clearInterval(fadeInterval.current); // cancel any ongoing fade
+      clearInterval(fadeInterval.current); 
       el.volume = muted ? 0 : volume / 100;
       el.play().then(() => setPlaying(true)).catch(() => {});
     } else {
@@ -146,7 +146,7 @@ export default function AudioPlayer() {
     audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
   };
 
-  // ─── Seek (smooth, no jitter) ─────────────────────────
+  
   const getSeekPct = useCallback((clientX) => {
     if (!seekBarRef.current) return 0;
     const rect = seekBarRef.current.getBoundingClientRect();
@@ -192,7 +192,7 @@ export default function AudioPlayer() {
     };
   }, [seeking, handleSeekMove, handleSeekEnd]);
 
-  // ─── Drag logic ───────────────────────────────────────
+  
   const handleDragStart = useCallback((e) => {
     e.preventDefault();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -217,7 +217,7 @@ export default function AudioPlayer() {
       const dy = cy - dragState.current.startY;
       let nx = dragState.current.originX + dx;
       let ny = dragState.current.originY + dy;
-      // Clamp to viewport
+      
       nx = Math.max(0, Math.min(nx, window.innerWidth - rect.width));
       ny = Math.max(0, Math.min(ny, window.innerHeight - rect.height));
       setPos({ x: nx, y: ny });
@@ -225,7 +225,7 @@ export default function AudioPlayer() {
 
     const handleUp = () => {
       dragState.current.dragging = false;
-      // Save position
+      
       setPos(prev => {
         if (prev) localStorage.setItem(PLAYER_POS_KEY, JSON.stringify(prev));
         return prev;
@@ -242,7 +242,7 @@ export default function AudioPlayer() {
     window.addEventListener('touchend', handleUp);
   }, []);
 
-  // ─── Volume ───────────────────────────────────────────
+  
   const handleVolumeChange = (v) => {
     setVolume(v);
     setMuted(false);
@@ -267,7 +267,7 @@ export default function AudioPlayer() {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Position styles
+  
   const positionStyle = pos
     ? { position: 'fixed', left: pos.x, top: pos.y, bottom: 'auto', right: 'auto' }
     : { position: 'fixed', bottom: 20, right: 20 };
@@ -308,7 +308,7 @@ export default function AudioPlayer() {
             boxShadow: '0 32px 80px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.06) inset',
           }}
         >
-          {/* ─── Drag handle ─────────────────────────────── */}
+          {}
           <div
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
@@ -318,7 +318,7 @@ export default function AudioPlayer() {
             <GripHorizontal size={14} style={{ color: 'rgba(255,255,255,0.18)' }} />
           </div>
 
-          {/* ─── Cover art (hero) ────────────────────────── */}
+          {}
           <div className="relative w-full" style={{ aspectRatio: '1 / 1' }}>
             {cover ? (
               <img
@@ -337,7 +337,7 @@ export default function AudioPlayer() {
               </div>
             )}
 
-            {/* Gradient scrim bottom */}
+            {}
             <div
               className="absolute inset-x-0 bottom-0 pointer-events-none"
               style={{
@@ -346,7 +346,7 @@ export default function AudioPlayer() {
               }}
             />
 
-            {/* Equalizer bars (playing indicator) */}
+            {}
             <AnimatePresence>
               {playing && (
                 <motion.div
@@ -366,7 +366,7 @@ export default function AudioPlayer() {
               )}
             </AnimatePresence>
 
-            {/* Close button */}
+            {}
             <button
               onClick={() => { audioRef.current?.pause(); setVisible(false); }}
               aria-label="Fechar"
@@ -376,7 +376,7 @@ export default function AudioPlayer() {
               <X size={12} className="text-white/70" />
             </button>
 
-            {/* ─── Song info (overlaid on cover bottom) ──── */}
+            {}
             <div className="absolute bottom-0 inset-x-0 px-5 pb-4 pointer-events-none">
               <p
                 className="text-[16px] font-bold leading-tight truncate text-white"
@@ -395,10 +395,10 @@ export default function AudioPlayer() {
             </div>
           </div>
 
-          {/* ─── Controls panel ──────────────────────────── */}
+          {}
           <div className="px-5 pt-3 pb-4 space-y-3">
 
-            {/* Progress bar (smooth seek) */}
+            {}
             <div className="space-y-1.5">
               <div
                 ref={seekBarRef}
@@ -407,7 +407,7 @@ export default function AudioPlayer() {
                 onMouseDown={handleSeekStart}
                 onTouchStart={handleSeekStart}
               >
-                {/* Track fill */}
+                {}
                 <div
                   className="h-full rounded-full pointer-events-none"
                   style={{
@@ -416,7 +416,7 @@ export default function AudioPlayer() {
                     transition: seeking ? 'none' : 'width 0.15s linear',
                   }}
                 />
-                {/* Thumb */}
+                {}
                 <div
                   className="absolute top-1/2 -translate-y-1/2 rounded-full pointer-events-none transition-transform"
                   style={{
@@ -430,7 +430,7 @@ export default function AudioPlayer() {
                     transition: 'opacity 0.15s, transform 0.15s',
                   }}
                 />
-                {/* Hover/seeking thumb visibility */}
+                {}
                 <div
                   className="absolute inset-0 group-hover:opacity-100 opacity-0 pointer-events-none transition-opacity"
                 >
@@ -448,7 +448,7 @@ export default function AudioPlayer() {
                   />
                 </div>
               </div>
-              {/* Time labels */}
+              {}
               <div className="flex items-center justify-between">
                 <span className="text-[10px] tabular-nums" style={{ color: 'rgba(255,255,255,0.35)' }}>
                   {fmt(displayProgress)}
@@ -459,9 +459,9 @@ export default function AudioPlayer() {
               </div>
             </div>
 
-            {/* Transport controls */}
+            {}
             <div className="flex items-center justify-center gap-5">
-              {/* Volume toggle */}
+              {}
               <div
                 className="relative"
                 onMouseEnter={() => { clearTimeout(volumeTimeout.current); setShowVolume(true); }}
@@ -476,7 +476,7 @@ export default function AudioPlayer() {
                   {muted || volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
                 </button>
 
-                {/* Volume popup */}
+                {}
                 <AnimatePresence>
                   {showVolume && (
                     <motion.div
@@ -510,7 +510,7 @@ export default function AudioPlayer() {
                 </AnimatePresence>
               </div>
 
-              {/* Skip back */}
+              {}
               <button
                 onClick={restart}
                 aria-label="Reiniciar"
@@ -520,7 +520,7 @@ export default function AudioPlayer() {
                 <SkipBack size={20} fill="currentColor" />
               </button>
 
-              {/* Play / Pause — hero button */}
+              {}
               <button
                 onClick={toggle}
                 aria-label={playing ? 'Pausar' : 'Tocar'}
@@ -535,7 +535,7 @@ export default function AudioPlayer() {
                   : <Play size={22} fill="white" className="text-white ml-0.5" />}
               </button>
 
-              {/* Skip forward */}
+              {}
               <button
                 onClick={restart}
                 aria-label="Repetir"
@@ -545,7 +545,7 @@ export default function AudioPlayer() {
                 <SkipForward size={20} fill="currentColor" />
               </button>
 
-              {/* Empty spacer for symmetry with volume */}
+              {}
               <div className="w-8 h-8" />
             </div>
           </div>

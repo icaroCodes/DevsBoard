@@ -28,7 +28,7 @@ const setAuthCookies = (res, { accessToken, refreshToken }) => {
   res.cookie('refreshToken', refreshToken, cookieOptions);
 };
 
-// GET /auth/github — redireciona para o GitHub
+
 router.get('/', (req, res) => {
   console.log('[GitHub Auth] Iniciando OAuth — CALLBACK_URL:', CALLBACK_URL);
   const params = new URLSearchParams({
@@ -39,7 +39,7 @@ router.get('/', (req, res) => {
   res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 });
 
-// GET /auth/github/callback — GitHub redireciona aqui com o code
+
 router.get('/callback', async (req, res) => {
   const { code } = req.query;
   if (!code) return res.redirect(`${FRONTEND_URL}/auth?error=codigo_invalido`);
@@ -90,11 +90,11 @@ router.get('/callback', async (req, res) => {
       }
     }
 
-    // Emissão segura via Cookies
+    
     const { accessToken, refreshToken } = generateTokens(user.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    // Redireciona APENAS com flag de sucesso, sem o token na URL!
+    
     res.redirect(`${FRONTEND_URL}/auth?success=true`);
   } catch (err) {
     console.error('[GitHub Auth Error]', err);

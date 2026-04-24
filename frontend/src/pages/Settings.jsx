@@ -25,7 +25,7 @@ export default function Settings() {
   const [wallpaperPreview, setWallpaperPreview] = useState(null);
   const [wallpaperBase64, setWallpaperBase64] = useState(null);
   const [wallpaperOpacity, setWallpaperOpacity] = useState(15);
-  const [wallpaperType, setWallpaperType] = useState('image'); // 'image' | 'video'
+  const [wallpaperType, setWallpaperType] = useState('image'); 
   const [savingWallpaper, setSavingWallpaper] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -51,7 +51,7 @@ export default function Settings() {
     setLoading(true);
     Promise.all([
       api('/settings'),
-      api('/sessions/stats').catch(() => ({})), // Fallback if stats fail
+      api('/sessions/stats').catch(() => ({})), 
     ])
       .then(([settingsData, statsData]) => {
         setForm({ name: settingsData.name || '' });
@@ -136,7 +136,7 @@ export default function Settings() {
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl mx-auto px-4 py-8 md:py-12"
     >
-      {/* Header Cinematográfico */}
+      {}
       <header className="mb-12">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-xl bg-[var(--db-accent-muted)]">
@@ -154,10 +154,10 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {/* Coluna Esquerda: Perfil e Aparência */}
+        {}
         <div className="lg:col-span-8 space-y-8">
 
-          {/* Sessão Perfil */}
+          {}
           <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center gap-4 mb-8">
               <div className="relative group">
@@ -216,7 +216,7 @@ export default function Settings() {
             </form>
           </section>
 
-          {/* Sessão Aparência (Temas) */}
+          {}
           <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -262,7 +262,7 @@ export default function Settings() {
             </div>
           </section>
 
-          {/* Wallpaper de Fundo */}
+          {}
           <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -302,10 +302,10 @@ export default function Settings() {
               )}
             </div>
 
-            {/* Upload / Preview */}
+            {}
             {wallpaperPreview || wallpaperBase64 ? (
               <div className="space-y-6">
-                {/* Preview */}
+                {}
                 <div className="relative rounded-[24px] overflow-hidden border border-[var(--db-border)] bg-black aspect-video group">
                   {wallpaperType === 'video' ? (
                     <video
@@ -326,7 +326,7 @@ export default function Settings() {
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  {/* Type badge */}
+                  {}
                   <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 text-white/80 text-[11px] font-bold uppercase tracking-wider">
                     {wallpaperType === 'video' ? <><Film size={12} /> Vídeo</> : <><Image size={12} /> Imagem</>}
                   </div>
@@ -338,7 +338,7 @@ export default function Settings() {
                   </button>
                 </div>
 
-                {/* Opacity slider */}
+                {}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-[13px] font-bold text-[var(--db-text-2)] uppercase tracking-wider">Intensidade</label>
@@ -358,7 +358,7 @@ export default function Settings() {
                   <p className="text-[11px] text-[var(--db-text-3)]">Quanto menor o valor, mais sutil o efeito. Recomendado: 10-25%</p>
                 </div>
 
-                {/* Save wallpaper button */}
+                {}
                 <button
                   onClick={async () => {
                     setSavingWallpaper(true);
@@ -390,8 +390,7 @@ export default function Settings() {
                 </button>
               </div>
             ) : (
-              /* Drop zone */
-              <div
+                            <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={(e) => {
@@ -513,7 +512,7 @@ export default function Settings() {
                         <p className="text-[11px] text-[var(--db-text-3)] opacity-60">JPG, PNG ou WebP • até 3MB</p>
                       </div>
                     )}
-                    {/* Hover overlay quando já tem capa */}
+                    {}
                     {(audioCoverBase64 || audioCoverUrl) && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
@@ -523,7 +522,7 @@ export default function Settings() {
                     )}
                   </div>
 
-                  {/* Botão explícito */}
+                  {}
                   <button
                     type="button"
                     onClick={() => document.getElementById('audio-cover-input').click()}
@@ -539,9 +538,9 @@ export default function Settings() {
                   </button>
                 </div>
 
-                {/* ── Preview mini-player ── */}
+                {}
                 <div className="flex gap-4 p-4 rounded-[20px] bg-[var(--db-bg-secondary)] border border-[var(--db-border)]">
-                  {/* Thumb da capa no preview */}
+                  {}
                   <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">
                     {audioCoverBase64 || audioCoverUrl ? (
                       <img src={audioCoverBase64 || audioCoverUrl} alt="capa" className="w-full h-full object-cover" />
@@ -552,7 +551,7 @@ export default function Settings() {
                     )}
                   </div>
 
-                  {/* Info + play */}
+                  {}
                   <div className="flex flex-col justify-between flex-1 min-w-0">
                     <div className="min-w-0">
                       <p className="text-[13px] font-bold text-[var(--db-text)] truncate">{audioName || audioFileName || 'Sem título'}</p>
@@ -579,7 +578,7 @@ export default function Settings() {
                     onPlay={() => setAudioPreviewPlaying(true)} />
                 </div>
 
-                {/* ── Campos de metadados ── */}
+                {}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-[var(--db-text-3)] uppercase tracking-wider mb-1.5">Nome da música</label>
@@ -605,7 +604,7 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Toggle auto-play */}
+                {}
                 <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-[var(--db-bg-secondary)] border border-[var(--db-border)]">
                   <div>
                     <p className="text-[13px] font-semibold text-[var(--db-text-2)]">Iniciar tocando automaticamente</p>
@@ -666,7 +665,7 @@ export default function Settings() {
               </div>
             )}
 
-            {/* Input áudio */}
+            {}
             <input id="audio-input" type="file"
               accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/aac"
               className="hidden"
@@ -738,10 +737,10 @@ export default function Settings() {
           </section>
         </div>
 
-        {/* Coluna Direita: Stats e Danger */}
+        {}
         <div className="lg:col-span-4 space-y-8">
 
-          {/* Estatísticas Rápidas */}
+          {}
           {usageStats && (
             <div className="glass-target bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--db-accent)]/20 to-[var(--db-accent-hover)]/10 z-0 pointer-events-none" />
@@ -774,7 +773,7 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Danger Zone */}
+          {}
           <div className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
             <div className="flex items-center gap-2 mb-6 text-[var(--db-red)]">
               <ShieldAlert size={18} />

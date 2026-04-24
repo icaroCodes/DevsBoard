@@ -8,7 +8,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
-    // Query principal — colunas que sempre existem
+    
     const { data, error } = await supabase
       .from('users')
       .select('id, name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url')
@@ -16,14 +16,14 @@ router.get('/', async (req, res) => {
       .single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-    // Streak — query separada; silenciosamente retorna 0 se colunas não existirem
+    
     const { data: streakRow } = await supabase
       .from('users')
       .select('current_streak, longest_streak, last_access_date')
       .eq('id', req.userId)
       .single();
 
-    // Tempo total — silenciosamente retorna 0 se tabela não existir
+    
     const { data: sessions } = await supabase
       .from('user_sessions')
       .select('active_seconds')
@@ -82,7 +82,7 @@ router.put('/', [
     if (audio_name !== undefined) updateData.audio_name = audio_name || null;
     if (audio_artist !== undefined) updateData.audio_artist = audio_artist || null;
 
-    // Se houver uma imagem em base64, fazer o upload para o Supabase Storage
+    
     if (avatar_base64) {
       try {
         const buffer = Buffer.from(avatar_base64.split(',')[1], 'base64');
@@ -115,7 +115,7 @@ router.put('/', [
       updateData.avatar_url = avatar_url;
     }
 
-    // Wallpaper upload (image or video)
+    
     if (wallpaper_base64) {
       try {
         const buffer = Buffer.from(wallpaper_base64.split(',')[1], 'base64');
@@ -148,12 +148,12 @@ router.put('/', [
         return res.status(400).json({ error: 'Formato de arquivo de wallpaper inválido' });
       }
     } else if (wpUrl !== undefined) {
-      updateData.wallpaper_url = wpUrl; // null to remove
-      if (wpUrl === null) updateData.wallpaper_type = 'image'; // reset type on remove
+      updateData.wallpaper_url = wpUrl; 
+      if (wpUrl === null) updateData.wallpaper_type = 'image'; 
     }
     if (wallpaper_type !== undefined) updateData.wallpaper_type = wallpaper_type;
 
-    // Audio upload (segue o padrão do wallpaper)
+    
     if (audio_base64) {
       try {
         const buffer = Buffer.from(audio_base64.split(',')[1], 'base64');
@@ -184,7 +184,7 @@ router.put('/', [
         return res.status(400).json({ error: 'Formato de áudio inválido' });
       }
     } else if (aUrl !== undefined) {
-      updateData.audio_url = aUrl; // null to remove
+      updateData.audio_url = aUrl; 
       if (aUrl === null) {
         updateData.audio_name = null;
         updateData.audio_artist = null;
@@ -192,7 +192,7 @@ router.put('/', [
       }
     }
 
-    // Capa do áudio (imagem base64)
+    
     if (audio_cover_base64) {
       try {
         const buffer = Buffer.from(audio_cover_base64.split(',')[1], 'base64');

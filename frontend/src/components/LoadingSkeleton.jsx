@@ -1,12 +1,3 @@
-/**
- * LoadingSkeleton — Premium page-specific loading skeletons.
- * Each variant mirrors its page's real layout proportionally.
- *
- * Usage:
- *   <LoadingSkeleton variant="dashboard" />
- *   <LoadingSkeleton variant="finances" />
- *   <LoadingSkeleton />  (fallback generic)
- */
 
 const shimmerStyle = `
 @keyframes skeleton-shimmer {
@@ -32,7 +23,7 @@ const shimmerStyle = `
 }
 `;
 
-// ── Atomic bone ──────────────────────────────────────────────
+
 function B({ w, h, r = 12, round, delay = 0, className = '', style = {} }) {
   return (
     <div
@@ -578,7 +569,7 @@ function LeaderboardSkeleton() {
         </div>
       </div>
 
-      {/* Rank rows */}
+      {}
       <div className="space-y-2">
         <B w={50} h={10} r={6} delay={200} className="mb-3" />
         {[0, 1, 2, 3, 4].map(i => (
@@ -601,9 +592,9 @@ function LeaderboardSkeleton() {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// GENERIC FALLBACK
-// ═════════════════════════════════════════════════════════════
+
+
+
 function GenericSkeleton() {
   return (
     <div className="sk-wrap max-w-4xl mx-auto pb-12">
@@ -621,9 +612,9 @@ function GenericSkeleton() {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// VARIANT MAP
-// ═════════════════════════════════════════════════════════════
+
+
+
 const VARIANTS = {
   dashboard:    DashboardSkeleton,
   finances:     FinancesSkeleton,
@@ -637,9 +628,9 @@ const VARIANTS = {
   leaderboard:  LeaderboardSkeleton,
 };
 
-// ═════════════════════════════════════════════════════════════
-// EXPORT
-// ═════════════════════════════════════════════════════════════
+
+
+
 export default function LoadingSkeleton({ variant }) {
   const Comp = VARIANTS[variant] || GenericSkeleton;
   return (

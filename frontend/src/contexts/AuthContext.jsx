@@ -8,7 +8,7 @@ export function AuthProvider({ children }) {
   const [activeTeam, setActiveTeam] = useState(() => JSON.parse(localStorage.getItem('activeTeam')));
   const [loading, setLoading] = useState(true);
 
-  // Sync activeTeam to localStorage
+  
   useEffect(() => {
     if (activeTeam) {
       localStorage.setItem('activeTeam', JSON.stringify(activeTeam));
@@ -22,9 +22,9 @@ export function AuthProvider({ children }) {
       .then((data) => {
         setUser(data);
         localStorage.setItem('user', JSON.stringify(data));
-        // Keep _userName in sync for useTranslation's setLang
+        
         if (data.name) localStorage.setItem('_userName', data.name);
-        // Sync language from DB — overrides any stale localStorage value
+        
         if (data.language) {
           localStorage.setItem('lang', data.language);
           window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: data.language } }));
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('activeTeam');
         } else {
           console.warn('[Settings fetch failed — keeping session]', msg);
-          // Mantém o user do localStorage (erro de rede transitório)
+          
         }
       })
       .finally(() => setLoading(false));
@@ -109,6 +109,17 @@ export function AuthProvider({ children }) {
   };
 
   const switchTeam = (team) => {
+    // Escreve o localStorage SINCRONAMENTE antes do setState. O lib/api.js
+    // lê `x-team-id` do localStorage a cada request — e as useEffects dos
+    // consumers (Projects, Dashboard, etc.) com dep `[activeTeam]` disparam
+    // ANTES da useEffect do próprio AuthContext no flush do React. Sem esse
+    // write síncrono, o primeiro fetch pós-switch sai com o team antigo e
+    // o conteúdo do workspace anterior persiste na tela.
+    if (team) {
+      localStorage.setItem('activeTeam', JSON.stringify(team));
+    } else {
+      localStorage.removeItem('activeTeam');
+    }
     setActiveTeam(team);
   };
 

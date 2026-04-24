@@ -10,7 +10,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
-// ─── Tier config ─────────────────────────────────────────────────────────────
+
 
 const TIERS = {
   bronze: {
@@ -76,7 +76,7 @@ const CATEGORY_LABELS = {
   ultimate: { label: 'Especiais',icon: ShieldAlert },
 };
 
-// ─── Achievement Card ─────────────────────────────────────────────────────────
+
 
 function AchievementCard({ achievement, index }) {
   const isUnlocked = achievement.unlocked;
@@ -101,7 +101,7 @@ function AchievementCard({ achievement, index }) {
       }}
       whileHover={isUnlocked ? { scale: 1.01 } : {}}
     >
-      {/* Platina shimmer overlay */}
+      {}
       {isPlatina && isUnlocked && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -115,7 +115,7 @@ function AchievementCard({ achievement, index }) {
       )}
 
       <div className="flex gap-4 p-4 sm:p-5 relative z-10">
-        {/* Medal */}
+        {}
         <div className="relative shrink-0 flex items-center justify-center">
           <div
             className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-[18px] sm:rounded-[22px] flex items-center justify-center overflow-hidden transition-all duration-300"
@@ -137,7 +137,7 @@ function AchievementCard({ achievement, index }) {
             )}
           </div>
 
-          {/* Unlock badge */}
+          {}
           {isUnlocked && (
             <motion.div
               initial={{ scale: 0 }}
@@ -152,7 +152,7 @@ function AchievementCard({ achievement, index }) {
           )}
         </div>
 
-        {/* Content */}
+        {}
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <h3
             className="text-[14px] sm:text-[15px] font-bold leading-tight mb-0.5 sm:mb-1 truncate"
@@ -165,7 +165,7 @@ function AchievementCard({ achievement, index }) {
           </p>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            {/* Tier badge */}
+            {}
             <span
               className="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider"
               style={{
@@ -176,7 +176,7 @@ function AchievementCard({ achievement, index }) {
               {tier.label}
             </span>
 
-            {/* Category badge */}
+            {}
             {!isHidden && (
               <span className="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-white/[0.03] text-white/20">
                 {CATEGORY_LABELS[achievement.category]?.label || achievement.category}
@@ -186,7 +186,7 @@ function AchievementCard({ achievement, index }) {
         </div>
       </div>
 
-      {/* Progress bar */}
+      {}
       {!isUnlocked && progress > 0 && (
         <div className="px-5 pb-4 relative z-10">
           <div className="flex justify-between items-center mb-1.5">
@@ -205,7 +205,7 @@ function AchievementCard({ achievement, index }) {
         </div>
       )}
 
-      {/* Full-width shimmer line at top for unlocked */}
+      {}
       {isUnlocked && (
         <div
           className="absolute top-0 left-0 right-0 h-[1px]"
@@ -216,7 +216,7 @@ function AchievementCard({ achievement, index }) {
   );
 }
 
-// ─── Tier Summary Card ────────────────────────────────────────────────────────
+
 
 function TierCard({ tierKey, unlocked, total }) {
   const tier = TIERS[tierKey];
@@ -232,7 +232,7 @@ function TierCard({ tierKey, unlocked, total }) {
         backdropFilter: 'blur(8px)',
       }}
     >
-      {/* Medal image */}
+      {}
       <div className="relative">
         <img
           src={tier.medal}
@@ -255,7 +255,7 @@ function TierCard({ tierKey, unlocked, total }) {
           {tier.label}
         </p>
 
-        {/* Progress bar */}
+        {}
         <div className="h-[2px] sm:h-[3px] bg-white/[0.04] rounded-full overflow-hidden mb-2">
           <motion.div
             initial={{ width: 0 }}
@@ -277,7 +277,7 @@ function TierCard({ tierKey, unlocked, total }) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+
 
 const CATEGORIES = ['all', 'tasks', 'goals', 'finances', 'routines', 'projects', 'tempo', 'streak', 'hidden'];
 
@@ -289,7 +289,7 @@ export default function Achievements() {
   const { activeTeam } = useAuth();
   const navigate = useNavigate();
 
-  // ── Load achievements ──
+  
   useEffect(() => {
     setLoading(true);
     api('/achievements')
@@ -298,7 +298,7 @@ export default function Achievements() {
       .finally(() => setLoading(false));
   }, [activeTeam]);
 
-  // ── Derived ──
+  
   const tierSummary = useMemo(() => {
     if (!data?.achievements) return null;
     const acc = { bronze: { u: 0, t: 0 }, prata: { u: 0, t: 0 }, ouro: { u: 0, t: 0 }, platina: { u: 0, t: 0 } };
@@ -321,7 +321,7 @@ export default function Achievements() {
           : a.category === filter
       );
     }
-    // Unlocked first, then by tier rank (higher = earlier), then alpha
+    
     return [...list].sort((a, b) => {
       if (b.unlocked !== a.unlocked) return b.unlocked ? 1 : -1;
       const ra = TIERS[a.tier]?.rank || 0;
@@ -330,7 +330,7 @@ export default function Achievements() {
     });
   }, [data, filter]);
 
-  // ─────────────────────────────────────────────────────────────────────────
+  
 
   return (
     <div
@@ -347,7 +347,7 @@ export default function Achievements() {
           </p>
         </div>
 
-        {/* Botão Top Global — estilo igual ao ViewToggle */}
+        {}
         <div
           className="flex p-1 shrink-0 mt-2"
           style={{
@@ -377,7 +377,7 @@ export default function Achievements() {
         </div>
       </div>
 
-      {/* ── Stats Hero ── */}
+      {}
       {data && tierSummary && (
         <div
           className="glass-panel rounded-[32px] sm:rounded-[40px] p-6 sm:p-12 mb-10 relative overflow-hidden isolate"
@@ -387,7 +387,7 @@ export default function Achievements() {
             boxShadow:   '0 40px 100px rgba(0,0,0,0.6)',
           }}
         >
-          {/* Animated Background Gradients */}
+          {}
           <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-[#FFD700]/[0.03] blur-[120px] rounded-full -z-10" />
           <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-[#CD7F32]/[0.03] blur-[120px] rounded-full -z-10" />
 
@@ -426,7 +426,7 @@ export default function Achievements() {
             </div>
           </div>
 
-          {/* Tier grid */}
+          {}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 relative z-10">
             {Object.entries(tierSummary).map(([key, val]) => (
               <TierCard key={key} tierKey={key} unlocked={val.u} total={val.t} />
@@ -435,7 +435,7 @@ export default function Achievements() {
         </div>
       )}
 
-      {/* ── Filter Tabs ── */}
+      {}
       <div className="sticky top-0 z-40 -mx-4 px-4 pb-6 pt-2 bg-transparent pointer-events-none mb-4">
         <div className="overflow-x-auto scrollbar-hide pointer-events-auto">
           <div className="flex p-1.5 bg-[#1C1C1E]/60 backdrop-blur-xl rounded-[24px] border border-white/[0.06] w-fit shadow-2xl">
@@ -466,7 +466,7 @@ export default function Achievements() {
         </div>
       </div>
 
-      {/* ── Grid ── */}
+      {}
       {loading ? (
         <LoadingSkeleton variant="achievements" />
       ) : (

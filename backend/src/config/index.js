@@ -3,8 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// O arquivo está em backend/.env, e o script em backend/src/config/index.js
-// Portanto, subir 2 níveis: src -> backend
+
+
 const envPath = path.resolve(__dirname, '../../.env');
 
 const loadEnv = () => {
@@ -21,7 +21,7 @@ const loadEnv = () => {
           if (index > 0) {
             const key = trimmed.substring(0, index).trim();
             const value = trimmed.substring(index + 1).trim();
-            // Remove aspas se existirem
+            
             fileEnv[key] = value.replace(/^["']|["']$/g, '');
           }
         }
@@ -51,7 +51,7 @@ const config = {
   },
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Permite Cross-site para Vercel
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
   },
   server: {
     port: parseInt(process.env.PORT || fileEnv.PORT || '3001', 10),

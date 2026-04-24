@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Wallet,
   CheckSquare,
@@ -10,18 +10,36 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Clock,
-  ListTodo
+  ListTodo,
+  GripVertical,
 } from 'lucide-react';
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
-
 import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
-/* Note: Routine/Goal labels are now dynamic inside the component! */
-
+/* ─────────────────────────────────────────────────────────
+   TaskStatusCheck — checkbox visual, mantém comportamento original.
+   ───────────────────────────────────────────────────────── */
 function TaskStatusCheck({ completed, priority, colorClass = "bg-[#0A84FF]" }) {
   if (completed) {
     return (
@@ -32,23 +50,100 @@ function TaskStatusCheck({ completed, priority, colorClass = "bg-[#0A84FF]" }) {
       </div>
     );
   }
+  if (priority === 'high')   return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF453A] shrink-0 transition-all hover:bg-[#FF453A]/20" />;
+  if (priority === 'medium') return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF9F0A] shrink-0 transition-all hover:bg-[#FF9F0A]/20" />;
+  if (priority === 'low')    return <div className="w-6 h-6 rounded-full border-[2px] border-[#32D74B] shrink-0 transition-all hover:bg-[#32D74B]/20" />;
+  return <div className="w-6 h-6 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10" />;
+}
 
-  if (priority === 'high') {
-    return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF453A] shrink-0 transition-all hover:bg-[#FF453A]/20" />;
+/* ─────────────────────────────────────────────────────────
+   sortByOrder — reconcilia items do servidor com ordem salva.
+   IDs conhecidos ficam na ordem salva; IDs novos aparecem no fim;
+   IDs que sumiram do servidor são descartados.
+   ───────────────────────────────────────────────────────── */
+function sortByOrder(items, order, idOf = (it) => it.id) {
+  if (!order?.length) return items;
+  const byId = new Map(items.map(it => [String(idOf(it)), it]));
+  const known = [];
+  for (const id of order) {
+    const hit = byId.get(String(id));
+    if (hit) {
+      known.push(hit);
+      byId.delete(String(id));
+    }
   }
-  if (priority === 'medium') {
-    return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF9F0A] shrink-0 transition-all hover:bg-[#FF9F0A]/20" />;
+  // byId agora só tem os novos — mantém ordem original do servidor pra eles
+  const fresh = items.filter(it => byId.has(String(idOf(it))));
+  return [...known, ...fresh];
+}
+
+/* ─────────────────────────────────────────────────────────
+   SortableRow — envolve cada item da lista com grip + useSortable.
+   Grip é um botão separado do conteúdo clicável (evita conflito
+   entre drag e click-to-toggle).
+   ───────────────────────────────────────────────────────── */
+function SortableRow({ id, children, className = '' }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.45 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+    position: 'relative',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={`flex items-start gap-2 mx-2 my-1 rounded-[16px] transition-colors group ${isDragging ? 'bg-white/[0.04]' : 'hover:bg-white/[0.03]'} ${className}`}>
+      <button
+        {...attributes}
+        {...listeners}
+        aria-label="Arrastar para reordenar"
+        className="shrink-0 w-6 h-8 mt-3 flex items-center justify-center opacity-0 group-hover:opacity-50 hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing touch-none outline-none"
+      >
+        <GripVertical size={14} className="text-[#86868B]" />
+      </button>
+      <div className="flex-1 min-w-0">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+   Dashboard
+   ───────────────────────────────────────────────────────── */
+
+const TASK_ORDER_KEY = 'dashboard:taskOrder:v1';
+const ROUTINE_ORDER_KEY = (tab) => `dashboard:routineOrder:v1:${tab}`;
+
+function readOrder(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
   }
-  if (priority === 'low') {
-    return <div className="w-6 h-6 rounded-full border-[2px] border-[#32D74B] shrink-0 transition-all hover:bg-[#32D74B]/20" />;
-  }
-  return <div className={`w-6 h-6 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10`} />;
 }
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [routineTab, setRoutineTab] = useState('daily');
+  const [taskOrder, setTaskOrder] = useState(() => readOrder(TASK_ORDER_KEY));
+  const [routineOrderByTab, setRoutineOrderByTab] = useState(() => ({
+    daily: readOrder(ROUTINE_ORDER_KEY('daily')),
+    weekly: readOrder(ROUTINE_ORDER_KEY('weekly')),
+  }));
   const { error: showError } = useToast();
   const { user, activeTeam } = useAuth();
   const { t } = useTranslation();
@@ -62,6 +157,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTeam]);
 
   useRealtimeSubscription(
@@ -69,60 +165,76 @@ export default function Dashboard() {
     () => { load(); }
   );
 
+  // Persistência de ordem
+  useEffect(() => {
+    localStorage.setItem(TASK_ORDER_KEY, JSON.stringify(taskOrder));
+  }, [taskOrder]);
+  useEffect(() => {
+    localStorage.setItem(ROUTINE_ORDER_KEY('daily'), JSON.stringify(routineOrderByTab.daily));
+    localStorage.setItem(ROUTINE_ORDER_KEY('weekly'), JSON.stringify(routineOrderByTab.weekly));
+  }, [routineOrderByTab]);
+
   const toggleTaskComplete = async (task) => {
     try {
-      // Optimistic update
       setData(prev => ({
         ...prev,
         tasks: {
           ...prev.tasks,
-          items: prev.tasks.items.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t)
+          items: prev.tasks.items.map(it => it.id === task.id ? { ...it, completed: !it.completed } : it)
         }
       }));
       await api(`/tasks/${task.id}`, {
         method: 'PUT',
         body: JSON.stringify({ completed: !task.completed }),
       });
-      // reload silently
       api('/dashboard').then(setData);
     } catch (err) {
       showError(err.message);
-      load(); // revert on err
+      load();
     }
   };
 
   const toggleRoutineTaskComplete = async (routineId, task) => {
     try {
-      // Optimistic update
       setData(prev => ({
         ...prev,
         routines: prev.routines.map(r => r.id === routineId ? {
           ...r,
-          tasks: r.tasks.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t)
+          tasks: r.tasks.map(it => it.id === task.id ? { ...it, completed: !it.completed } : it)
         } : r)
       }));
       await api(`/routines/${routineId}/tasks/${task.id}`, {
         method: 'PUT',
         body: JSON.stringify({ completed: !task.completed }),
       });
-      // reload silently
       api('/dashboard').then(setData);
     } catch (err) {
       showError(err.message);
-      load(); // revert on err
+      load();
     }
   };
 
-  if (loading) return <LoadingSkeleton variant="dashboard" />;
+  // DnD sensors — mesmos params que Goals.jsx usa, iOS-safe.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
-  if (!data) return null;
+  if (loading) return <LoadingSkeleton variant="dashboard" />;
+  if (!data) return <div style={{position: 'fixed', top: 100, left: 300, zIndex: 99999, background: 'red', color: 'white', fontSize: 40}}>DATA IS NULL! Dashboard not rendering.</div>;
 
   const { finance, tasks, goals, routines } = data;
   const displayName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário';
   const routineTypeTabs = ['daily', 'weekly'];
+
+
+  // Rotinas achatadas → chave composta `${routineId}-${taskId}` evita colisão
+  // entre tasks de rotinas diferentes. Ordenação base (start_time) aplicada
+  // ANTES da reconciliação com a ordem salva.
   const filteredRoutines = routines?.filter(r => r.visual_type === routineTab) || [];
-  const routineTasks = filteredRoutines
-    .flatMap(r => (r.tasks || []).map(t => ({ ...t, routineId: r.id })))
+  const routineTasksBase = filteredRoutines
+    .flatMap(r => (r.tasks || []).map(it => ({ ...it, routineId: r.id, _key: `${r.id}-${it.id}` })))
     .sort((a, b) => {
       if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time);
       if (a.start_time) return -1;
@@ -130,11 +242,35 @@ export default function Dashboard() {
       return 0;
     });
 
+  // Aplica ordem persistida + reconcilia IDs novos/removidos
+  const sortedTasks = sortByOrder(tasks.items || [], taskOrder, it => it.id);
+  const sortedRoutineTasks = sortByOrder(routineTasksBase, routineOrderByTab[routineTab], it => it._key);
+
+  const handleTaskDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const currentIds = sortedTasks.map(it => String(it.id));
+    const from = currentIds.indexOf(String(active.id));
+    const to = currentIds.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    setTaskOrder(arrayMove(currentIds, from, to));
+  };
+
+  const handleRoutineDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const currentKeys = sortedRoutineTasks.map(it => it._key);
+    const from = currentKeys.indexOf(String(active.id));
+    const to = currentKeys.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    const next = arrayMove(currentKeys, from, to);
+    setRoutineOrderByTab(prev => ({ ...prev, [routineTab]: next }));
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.05 } }
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
@@ -211,7 +347,7 @@ export default function Dashboard() {
       {/* Grid: Tasks & Routines */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
 
-        {/* Tarefas */}
+        {/* Tarefas com DnD */}
         <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] shadow-sm flex flex-col min-h-[420px]">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -223,30 +359,42 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-2 py-2">
-            {tasks.items?.length === 0 ? (
+          <div className="flex-1 overflow-y-auto py-2">
+            {sortedTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-60 space-y-3 py-10">
                 <ListTodo size={40} className="text-[#86868B]" strokeWidth={1.5} />
                 <p className="text-[15px] text-[#86868B]">{t.dashTasksClean}</p>
               </div>
             ) : (
-              tasks.items?.map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center gap-4 p-3.5 mx-2 my-1 bg-transparent hover:bg-white/[0.03] rounded-[16px] cursor-pointer transition-colors group"
-                  onClick={() => toggleTaskComplete(t)}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleTaskDragEnd}
+              >
+                <SortableContext
+                  items={sortedTasks.map(it => String(it.id))}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <TaskStatusCheck completed={t.completed} priority={t.priority} colorClass="bg-[#0A84FF]" />
-                  <span className={`flex-1 text-[15px] font-medium transition-colors ${t.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
-                    {t.title}
-                  </span>
-                </div>
-              ))
+                  {sortedTasks.map((it) => (
+                    <SortableRow key={it.id} id={String(it.id)}>
+                      <div
+                        className="flex items-center gap-4 py-2.5 pr-3 cursor-pointer"
+                        onClick={() => toggleTaskComplete(it)}
+                      >
+                        <TaskStatusCheck completed={it.completed} priority={it.priority} colorClass="bg-[#0A84FF]" />
+                        <span className={`flex-1 text-[15px] font-medium transition-colors ${it.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
+                          {it.title}
+                        </span>
+                      </div>
+                    </SortableRow>
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </motion.div>
 
-        {/* Routines */}
+        {/* Rotinas com DnD */}
         <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] shadow-sm flex flex-col min-h-[420px]">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -258,7 +406,7 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Segmented Control using framer motion */}
+          {/* Segmented Control */}
           <div className="px-6 py-4">
             <div className="flex p-1 bg-[#2C2C2E] rounded-[12px] shadow-sm border border-white/[0.02] relative w-full mb-2">
               {routineTypeTabs.map((tab) => (
@@ -280,44 +428,56 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-2 pb-2">
-            {routineTasks.length === 0 ? (
+          <div className="flex-1 overflow-y-auto pb-2">
+            {sortedRoutineTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-60 space-y-3 py-6">
                 <Clock size={40} className="text-[#86868B]" strokeWidth={1.5} />
                 <p className="text-[15px] text-[#86868B]">{t.dashNoRoutine} {t.routineType[routineTab]?.toLowerCase()}.</p>
               </div>
             ) : (
-              routineTasks.map((t) => (
-                <div
-                  key={`${t.routineId}-${t.id}`}
-                  className="flex items-start gap-4 p-3.5 mx-2 my-1 bg-transparent hover:bg-white/[0.03] rounded-[16px] cursor-pointer transition-colors group"
-                  onClick={() => toggleRoutineTaskComplete(t.routineId, t)}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleRoutineDragEnd}
+              >
+                <SortableContext
+                  items={sortedRoutineTasks.map(it => it._key)}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="mt-0.5">
-                    <TaskStatusCheck completed={t.completed} priority={t.priority} colorClass="bg-[#8E9C78]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[15px] font-medium truncate transition-colors ${t.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
-                        {t.title}
-                      </span>
-                      {t.start_time && !t.completed && (
-                        <span className="flex items-center gap-1 text-[11px] font-medium text-[#8E9C78]">
-                          <Clock size={10} /> {t.start_time.substring(0, 5)}
-                        </span>
-                      )}
-                      {t.priority === 'high' && !t.completed && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF453A] shrink-0" />
-                      )}
-                    </div>
-                    {t.description && (
-                      <p className={`text-[13px] line-clamp-1 transition-colors ${t.completed ? 'text-[#86868B]/50' : 'text-[#86868B]'}`}>
-                        {t.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))
+                  {sortedRoutineTasks.map((it) => (
+                    <SortableRow key={it._key} id={it._key}>
+                      <div
+                        className="flex items-start gap-4 py-2.5 pr-3 cursor-pointer"
+                        onClick={() => toggleRoutineTaskComplete(it.routineId, it)}
+                      >
+                        <div className="mt-0.5">
+                          <TaskStatusCheck completed={it.completed} priority={it.priority} colorClass="bg-[#8E9C78]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[15px] font-medium truncate transition-colors ${it.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
+                              {it.title}
+                            </span>
+                            {it.start_time && !it.completed && (
+                              <span className="flex items-center gap-1 text-[11px] font-medium text-[#8E9C78]">
+                                <Clock size={10} /> {it.start_time.substring(0, 5)}
+                              </span>
+                            )}
+                            {it.priority === 'high' && !it.completed && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#FF453A] shrink-0" />
+                            )}
+                          </div>
+                          {it.description && (
+                            <p className={`text-[13px] line-clamp-1 transition-colors ${it.completed ? 'text-[#86868B]/50' : 'text-[#86868B]'}`}>
+                              {it.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </SortableRow>
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </motion.div>
@@ -359,7 +519,6 @@ export default function Dashboard() {
                     <p className="text-[13px] text-[#86868B] mb-0.5">{t.dashGoalAccum}</p>
                     <p className="text-[24px] font-semibold text-[#FF9F0A] tracking-tight">R$ {Number(g.saved_amount || 0).toFixed(2).replace('.', ',')}</p>
                   </div>
-                  {/* decorative background glow */}
                   <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#FF9F0A] opacity-[0.02] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.04]"></div>
                 </div>
               </Link>
@@ -367,7 +526,6 @@ export default function Dashboard() {
           )}
         </div>
       </motion.div>
-
     </motion.div>
   );
 }

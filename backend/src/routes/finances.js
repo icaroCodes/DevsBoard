@@ -10,14 +10,14 @@ router.use(authenticate);
 router.get('/list', async (req, res) => {
   try {
     let query = supabase.from('finances').select('*');
-    
-    // ISOLAMENTO ESTRITO - Evita misturar pessoal com equipe
+
+
     if (req.teamId) {
       query = query.eq('team_id', req.teamId);
     } else {
       query = query.eq('user_id', req.userId).is('team_id', null);
     }
-    
+
     if (req.query.type && ['income', 'expense'].includes(req.query.type)) {
       query = query.eq('type', req.query.type);
     }
@@ -42,19 +42,19 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { category, description, amount, type, transaction_date } = req.body;
-    const insertData = { 
-      user_id: req.userId, 
-      category, 
-      description: description || null, 
-      amount, 
-      type, 
-      transaction_date 
+    const insertData = {
+      user_id: req.userId,
+      category,
+      description: description || null,
+      amount,
+      type,
+      transaction_date
     };
-    
+
     if (req.teamId) {
       insertData.team_id = req.teamId;
     }
-    
+
     const { data, error } = await supabase
       .from('finances')
       .insert(insertData)
@@ -76,8 +76,14 @@ router.put('/:id', [
   body('transaction_date').optional().isDate(),
 ], async (req, res) => {
   try {
-    const { data: existing } = await supabase
-      .from('finances').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { userId, teamId } = req;
+    let query = supabase.from('finances').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
     if (!existing) return res.status(404).json({ error: 'Transação não encontrada' });
 
     const updates = {};
@@ -97,10 +103,18 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('finances').delete().eq('id', req.params.id).eq('user_id', req.userId).select();
+    const { userId, teamId } = req;
+    let query = supabase.from('finances').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
+    if (!existing) return res.status(404).json({ error: 'Transação não encontrada' });
+
+    const { error } = await supabase.from('finances').delete().eq('id', req.params.id);
     if (error) throw error;
-    if (!data || data.length === 0) return res.status(404).json({ error: 'Transação não encontrada' });
     res.status(204).send();
   } catch (err) {
     console.error(err);
@@ -109,9 +123,9 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// --- TRANSAÇÕES RECORRENTES ---
 
-// GET /finances/recurring/list - Listar transações recorrentes ativas
+
+
 router.get('/recurring/list', async (req, res) => {
   try {
     let query = supabase.from('recurring_transactions').select('*');
@@ -129,7 +143,7 @@ router.get('/recurring/list', async (req, res) => {
   }
 });
 
-// POST /finances/recurring - Criar nova transação recorrente
+
 router.post('/recurring', [
   body('category').trim().notEmpty(),
   body('amount').isFloat({ min: 0.01 }),
@@ -142,7 +156,7 @@ router.post('/recurring', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { category, description, amount, type, start_date, recurrence_interval, day_of_month, day_of_week } = req.body;
-    
+
     const insertData = {
       user_id: req.userId,
       category,
@@ -155,13 +169,13 @@ router.post('/recurring', [
       day_of_week,
       is_active: true
     };
-    
+
     if (req.teamId) insertData.team_id = req.teamId;
 
     const { data, error } = await supabase.from('recurring_transactions').insert(insertData).select().single();
     if (error) throw error;
 
-    // Após criar, já processa para gerar a primeira incidência se necessário
+
     await processRecurring(req.userId, req.teamId);
 
     res.status(201).json(data);
@@ -171,23 +185,25 @@ router.post('/recurring', [
   }
 });
 
-// DELETE /finances/recurring/:id - Deletar recorrente
+
 router.delete('/recurring/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { deleteAll } = req.query; // ?deleteAll=true para limpar histórico
+    const { deleteAll } = req.query;
 
-    // 1. Verificar se existe
-    const { data: existing } = await supabase
-      .from('recurring_transactions')
-      .select('id')
-      .eq('id', id)
-      .eq('user_id', req.userId)
-      .single();
-    
+
+    const { userId, teamId } = req;
+    let query = supabase.from('recurring_transactions').select('id').eq('id', id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
+
     if (!existing) return res.status(404).json({ error: 'Recorrência não encontrada' });
 
-    // 2. Se deleteAll for true, apaga o histórico gerado
+
     if (deleteAll === 'true') {
       const { error: histErr } = await supabase
         .from('finances')
@@ -196,12 +212,12 @@ router.delete('/recurring/:id', async (req, res) => {
       if (histErr) throw histErr;
     }
 
-    // 3. Apaga a própria recorrente
+
     const { error: delErr } = await supabase
       .from('recurring_transactions')
       .delete()
       .eq('id', id);
-    
+
     if (delErr) throw delErr;
 
     res.status(204).send();
@@ -211,10 +227,10 @@ router.delete('/recurring/:id', async (req, res) => {
   }
 });
 
-// Atualizar a listagem normal para processar recorrências automaticamente ao abrir
+
 router.get('/', async (req, res) => {
   try {
-    // Processar antes de listar
+
     await processRecurring(req.userId, req.teamId);
 
     let query = supabase.from('finances').select('*');
@@ -223,7 +239,7 @@ router.get('/', async (req, res) => {
     } else {
       query = query.eq('user_id', req.userId).is('team_id', null);
     }
-    
+
     if (req.query.type && ['income', 'expense'].includes(req.query.type)) {
       query = query.eq('type', req.query.type);
     }

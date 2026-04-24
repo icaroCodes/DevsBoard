@@ -6,12 +6,12 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-// GET all boards for user/team
+
 router.get('/', async (req, res) => {
   try {
     let query = supabase.from('task_boards').select('*');
     
-    // ISOLAMENTO ESTRITO - Evita misturar quadros pessoais com de equipe
+    
     if (req.teamId) {
       query = query.eq('team_id', req.teamId);
     } else {
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST create board
+
 router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
@@ -62,7 +62,7 @@ router.post('/', [
   }
 });
 
-// PUT update board
+
 router.put('/:id', async (req, res) => {
   try {
     const { name, color } = req.body;
@@ -89,10 +89,10 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE board (cascade: lists + cards)
+
 router.delete('/:id', async (req, res) => {
   try {
-    // Get lists in this board
+    
     const { data: lists } = await supabase
       .from('task_lists')
       .select('id')
@@ -101,9 +101,9 @@ router.delete('/:id', async (req, res) => {
 
     if (lists && lists.length > 0) {
       const listIds = lists.map(l => l.id);
-      // Delete cards in those lists
+      
       await supabase.from('task_cards').delete().in('list_id', listIds).eq('user_id', req.userId);
-      // Delete lists
+      
       await supabase.from('task_lists').delete().in('id', listIds).eq('user_id', req.userId);
     }
 

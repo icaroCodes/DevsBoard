@@ -6,7 +6,7 @@ import { api } from '../lib/api';
 
 const AchievementContext = createContext(null);
 
-// ─── Tier config (espelho do Achievements.jsx) ────────────────────────────────
+
 
 const TIERS = {
   bronze:  { label: 'Bronze',  color: '#CD7F32', colorAlpha: 'rgba(205,127,50,',  medal: '/bronze.svg',  glowStrong: '0 0 60px rgba(205,127,50,0.30)',  border: '1px solid rgba(205,127,50,0.22)',  barColor: '#CD7F32'  },
@@ -15,7 +15,7 @@ const TIERS = {
   platina: { label: 'Platina', color: '#E2E8FF', colorAlpha: 'rgba(226,232,255,', medal: '/platina.svg', glowStrong: '0 0 80px rgba(200,200,255,0.40)', border: '1px solid rgba(226,232,255,0.25)', barColor: '#C8D0FF'  },
 };
 
-// ─── Som ──────────────────────────────────────────────────────────────────────
+
 
 function playUnlockSound(tier) {
   try {
@@ -26,7 +26,7 @@ function playUnlockSound(tier) {
   } catch (_) {}
 }
 
-// ─── Confetti ─────────────────────────────────────────────────────────────────
+
 
 function fireConfetti(tier) {
   const colors = {
@@ -56,7 +56,7 @@ function fireConfetti(tier) {
   }
 }
 
-// ─── Popup ────────────────────────────────────────────────────────────────────
+
 
 function UnlockPopup({ achievement, onClose }) {
   const tier       = TIERS[achievement.tier] || TIERS.bronze;
@@ -86,7 +86,7 @@ function UnlockPopup({ achievement, onClose }) {
       style={{ background: 'linear-gradient(135deg,#111114,#18181c)', border: tier.border, boxShadow: `${tier.glowStrong},0 20px 60px rgba(0,0,0,0.7)` }}
       onClick={onClose}
     >
-      {/* Platina shimmer */}
+      {}
       {isPlatina && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -97,7 +97,7 @@ function UnlockPopup({ achievement, onClose }) {
       )}
 
       <div className="flex items-center gap-4 p-5">
-        {/* Medal */}
+        {}
         <motion.div
           initial={{ scale: 0.4, rotate: -15 }}
           animate={{ scale: 1,   rotate: 0 }}
@@ -121,7 +121,7 @@ function UnlockPopup({ achievement, onClose }) {
           </motion.div>
         </motion.div>
 
-        {/* Content */}
+        {}
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: tier.color }}>
             Conquista Desbloqueada!
@@ -150,7 +150,7 @@ function UnlockPopup({ achievement, onClose }) {
         </button>
       </div>
 
-      {/* Barra de auto-dismiss */}
+      {}
       <div className="h-[2px] bg-white/[0.04]">
         <div className="h-full transition-none" style={{ width: `${progress}%`, background: tier.barColor }} />
       </div>
@@ -158,7 +158,7 @@ function UnlockPopup({ achievement, onClose }) {
   );
 }
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
+
 
 const SEEN_KEY    = 'devsboard_seen_achievements';
 const DEBOUNCE_MS = 1500;
@@ -168,13 +168,13 @@ export function AchievementProvider({ children }) {
   const [current,    setCurrent]    = useState(null);
   const debounceRef = useRef(null);
 
-  // Enfileira conquistas para exibição + som + confetti
+  
   const showAchievements = useCallback((achievements) => {
     if (!achievements?.length) return;
     setQueue(q => [...q, ...achievements]);
   }, []);
 
-  // Chama o backend e retorna conquistas recém-desbloqueadas
+  
   const checkAchievements = useCallback(async () => {
     try {
       if (!localStorage.getItem('user')) return;
@@ -187,7 +187,7 @@ export function AchievementProvider({ children }) {
     }
   }, [showAchievements]);
 
-  // Escuta mutações da api.js
+  
   useEffect(() => {
     const handler = () => {
       clearTimeout(debounceRef.current);
@@ -200,7 +200,7 @@ export function AchievementProvider({ children }) {
     };
   }, [checkAchievements]);
 
-  // Gerencia fila: exibe uma por vez
+  
   useEffect(() => {
     if (current || !queue.length) return;
 
@@ -208,12 +208,12 @@ export function AchievementProvider({ children }) {
     setQueue(q => q.slice(1));
     setCurrent(next);
 
-    // Marca como vista no localStorage (evita re-exibição na página de conquistas)
+    
     const seen = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'));
     seen.add(next.slug);
     localStorage.setItem(SEEN_KEY, JSON.stringify([...seen]));
 
-    // Som + confetti
+    
     setTimeout(() => {
       playUnlockSound(next.tier);
       fireConfetti(next.tier);

@@ -13,21 +13,21 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useRealtime, useRealtimeSubscription } from '../contexts/RealtimeContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
-// ============================================
-// TEAMS PAGE — Times & Família com WebSocket
-// ============================================
+
+
+
 export default function Teams() {
   const { user } = useAuth();
   const { success, error: toastError } = useToast();
   const { confirm } = useConfirm();
 
-  // State
+  
   const [teams, setTeams] = useState([]);
   const [inbox, setInbox] = useState([]);
   const [sentInvites, setSentInvites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('teams'); // teams | inbox | create
-  const [showInviteModal, setShowInviteModal] = useState(null); // team id
+  const [activeTab, setActiveTab] = useState('teams'); 
+  const [showInviteModal, setShowInviteModal] = useState(null); 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -37,9 +37,9 @@ export default function Teams() {
   const [changeRequests, setChangeRequests] = useState([]);
   const { connected: realtimeConnected } = useRealtime() || {};
 
-  // ============================================
-  // FETCH DATA
-  // ============================================
+  
+  
+  
   const fetchTeams = useCallback(async () => {
     try {
       const data = await api('/teams');
@@ -67,7 +67,7 @@ export default function Teams() {
     }
   }, []);
 
-  // Change Requests
+  
   const fetchChangeRequests = useCallback(async () => {
     try {
       const data = await api('/teams/change-requests/inbox');
@@ -77,7 +77,7 @@ export default function Teams() {
     }
   }, []);
 
-  // Carregar detalhes do time selecionado
+  
   const fetchTeamDetail = useCallback(async (teamId) => {
     if (!teamId) return;
     try {
@@ -92,9 +92,9 @@ export default function Teams() {
     }
   }, []);
 
-  // ============================================
-  // INITIAL LOAD
-  // ============================================
+  
+  
+  
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
@@ -104,9 +104,9 @@ export default function Teams() {
     loadAll();
   }, [fetchTeams, fetchInbox, fetchSentInvites, fetchChangeRequests]);
 
-  // ============================================
-  // SUPABASE REALTIME via centralized RealtimeContext
-  // ============================================
+  
+  
+  
   useRealtimeSubscription(
     ['teams', 'team_members', 'team_invitations', 'team_invitations_sent', 'change_requests'],
     (detail) => {
@@ -120,7 +120,7 @@ export default function Teams() {
       }
       if (detail.table === 'team_members' || detail.table === 'teams') {
         fetchTeams();
-        // Se estiver vendo detalhes de um time, atualizar também
+        
         if (selectedTeam) {
           fetchTeamDetail(selectedTeam);
         }
@@ -128,9 +128,9 @@ export default function Teams() {
     }
   );
 
-  // ============================================
-  // ACTIONS
-  // ============================================
+  
+  
+  
   const handleCreateTeam = async (e) => {
     e.preventDefault();
     if (!newTeam.name.trim()) return;
@@ -284,9 +284,9 @@ export default function Teams() {
     }
   };
 
-  // ============================================
-  // HELPERS
-  // ============================================
+  
+  
+  
   const getRoleIcon = (role) => {
     if (role === 'owner') return <Crown size={14} className="text-amber-400" />;
     if (role === 'admin') return <Shield size={14} className="text-blue-400" />;
@@ -314,14 +314,14 @@ export default function Teams() {
     return `${Math.floor(diff / 86400)}d atrás`;
   };
 
-  // ============================================
-  // LOADING STATE
-  // ============================================
+  
+  
+  
   if (loading) return <LoadingSkeleton variant="teams" />;
 
-  // ============================================
-  // TEAM DETAIL VIEW
-  // ============================================
+  
+  
+  
   if (selectedTeam) {
     const team = selectedTeamData || teams.find(t => t.id === selectedTeam);
     if (!team) {
@@ -332,7 +332,7 @@ export default function Teams() {
 
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
-        {/* Header */}
+        {}
         <div className="mb-8 px-1">
           <button
             onClick={() => { setSelectedTeam(null); setSelectedTeamData(null); }}
@@ -350,7 +350,7 @@ export default function Teams() {
                 ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' 
                 : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
             }`}>
-              {/* Subtle background glow */}
+              {}
               <div className={`absolute inset-0 opacity-20 blur-xl ${team.type === 'family' ? 'bg-pink-500' : 'bg-[#0A84FF]'}`} />
               <div className="relative z-10 scale-125">
                 {team.type === 'family' ? <Heart size={28} /> : <Briefcase size={28} />}
@@ -373,7 +373,7 @@ export default function Teams() {
           </div>
         </div>
 
-        {/* Members */}
+        {}
         <section className="bg-transparent mb-8">
           <div className="flex items-center justify-between mb-5 px-1">
             <h2 className="text-[18px] font-bold text-white tracking-tight flex items-center gap-2">
@@ -456,7 +456,7 @@ export default function Teams() {
           </div>
         </section>
 
-        {/* Danger Zone */}
+        {}
         {team.my_role === 'owner' && (
           <section className="bg-[#1C1C1E] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-6">
             <div className="flex items-center justify-between p-4 bg-[#FF453A]/5 border border-[#FF453A]/10 rounded-2xl">
@@ -477,14 +477,14 @@ export default function Teams() {
     );
   }
 
-  // ============================================
-  // MAIN VIEW
-  // ============================================
+  
+  
+  
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
       <div className="mb-8 flex items-end justify-between px-1">
         <div className="flex-1 min-w-0">
-          {/* Unified Header */}
+          {}
           <h1 className="text-[28px] sm:text-[32px] font-bold text-white tracking-tighter sm:tracking-tight mb-1">
             Times <span className="font-light text-white/30">&</span> Família
           </h1>
@@ -554,9 +554,9 @@ export default function Teams() {
         </div>
       </div>
 
-      {/* ============================================ */}
-      {/* TAB: MEUS TIMES */}
-      {/* ============================================ */}
+      {}
+      {}
+      {}
       <AnimatePresence mode="wait">
         {activeTab === 'teams' && (
           <motion.div
@@ -593,7 +593,7 @@ export default function Teams() {
                     onClick={() => { setSelectedTeam(team.id); fetchTeamDetail(team.id); }}
                     className="group relative bg-[#1C1C1E] border border-white/[0.05] rounded-[24px] p-4 sm:p-5 hover:bg-[#242424] hover:border-white/[0.1] transition-all cursor-pointer overflow-hidden isolate active:scale-[0.99]"
                   >
-                    {/* Mobile Only Decorative Background */}
+                    {}
                     <div className="sm:hidden absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 pointer-events-none">
                       <div className={`absolute -top-[50%] -right-[20%] w-[150%] h-[150%] blur-[80px] rounded-full opacity-[0.15] ${
                         team.type === 'family' ? 'bg-pink-500' : 'bg-[#0A84FF]'
@@ -601,7 +601,7 @@ export default function Teams() {
                     </div>
 
                     <div className="flex items-center gap-4 sm:gap-6 relative z-10 transition-transform">
-                      {/* Icon */}
+                      {}
                       <div className={`w-14 h-14 sm:w-12 sm:h-12 rounded-[20px] sm:rounded-xl shrink-0 flex items-center justify-center transition-all duration-500 group-hover:scale-105 ${
                         team.type === 'family'
                           ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
@@ -610,7 +610,7 @@ export default function Teams() {
                         {getTypeIcon(team.type)}
                       </div>
 
-                      {/* Content */}
+                      {}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="text-[17px] sm:text-[18px] font-bold text-white truncate">
@@ -655,7 +655,7 @@ export default function Teams() {
                         </div>
                       </div>
 
-                      {/* Desktop Seta */}
+                      {}
                       <div className="hidden sm:flex w-8 h-8 rounded-full bg-white/5 items-center justify-center text-[#86868B] group-hover:bg-white group-hover:text-black transition-all shrink-0">
                         <ChevronDown size={14} strokeWidth={3} className="-rotate-90" />
                       </div>
@@ -667,9 +667,9 @@ export default function Teams() {
           </motion.div>
         )}
 
-        {/* ============================================ */}
-        {/* TAB: CAIXA DE ENTRADA */}
-        {/* ============================================ */}
+        {}
+        {}
+        {}
         {activeTab === 'inbox' && (
           <motion.div
             key="inbox"
@@ -688,7 +688,7 @@ export default function Teams() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Aprovações de alterações */}
+                {}
                 {changeRequests?.length > 0 && (
                   <div className="mb-10">
                     <div className="flex items-center gap-3 px-1 mb-5">
@@ -812,7 +812,7 @@ export default function Teams() {
                   </motion.div>
                 ))}
 
-                {/* Convites Enviados */}
+                {}
                 {sentInvites.length > 0 && (
                   <div className="mt-8">
                     <h3 className="text-[14px] font-semibold text-[#86868B] uppercase tracking-wider px-1 mb-3">
@@ -847,9 +847,9 @@ export default function Teams() {
           </motion.div>
         )}
 
-        {/* ============================================ */}
-        {/* TAB: CRIAR NOVO */}
-        {/* ============================================ */}
+        {}
+        {}
+        {}
         {activeTab === 'create' && (
           <motion.div
             key="create"
@@ -880,7 +880,7 @@ export default function Teams() {
                             : 'border-white/5 bg-[#1C1C1E] hover:border-white/10'
                           }`}
                       >
-                        {/* Selected Glow */}
+                        {}
                         {newTeam.type === opt.value && (
                           <div className={`absolute -inset-4 blur-[40px] opacity-[0.15] -z-10 ${opt.color === 'blue' ? 'bg-[#0A84FF]' : 'bg-pink-500'}`} />
                         )}
@@ -908,7 +908,7 @@ export default function Teams() {
                   </div>
                 </div>
 
-                {/* Name */}
+                {}
                 <div className="space-y-2">
                   <label className="text-[13px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Nome do Grupo</label>
                   <input
@@ -934,9 +934,9 @@ export default function Teams() {
         )}
       </AnimatePresence>
 
-      {/* ============================================ */}
-      {/* MODAL: CONVIDAR MEMBRO */}
-      {/* ============================================ */}
+      {}
+      {}
+      {}
       <AnimatePresence>
         {showInviteModal && (
           <motion.div
@@ -954,7 +954,7 @@ export default function Teams() {
               className="bg-[#1C1C1E] border border-white/10 rounded-[32px] p-8 w-full max-w-md shadow-2xl overflow-hidden relative isolate"
               onClick={e => e.stopPropagation()}
             >
-              {/* Background Glow */}
+              {}
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#0A84FF] opacity-[0.05] blur-[60px] -z-10" />
 
               <div className="flex items-center gap-4 mb-8">
@@ -1011,7 +1011,7 @@ export default function Teams() {
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Floating Action Button (FAB) for Mobile */}
+      {}
       <div className="fixed bottom-24 right-6 z-50 sm:hidden">
         <button
           onClick={() => setActiveTab('create')}

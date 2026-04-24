@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, ChevronDown, CheckSquare, GripVertical, Repeat, X, Clock, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, CheckSquare, GripVertical, Repeat, X, Clock, Loader2, CircleDashed } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -39,17 +39,12 @@ const dropAnimation = {
   }),
 };
 
-function TaskStatusCheck({ completed, colorClass = "bg-[#8E9C78]" }) {
-  if (completed) {
-    return (
-      <div className={`w-5 h-5 rounded-full ${colorClass} flex items-center justify-center shrink-0 shadow-sm transition-all`}>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.5 }}>
-          <CheckSquare size={12} className="text-white" strokeWidth={3} />
-        </motion.div>
-      </div>
-    );
-  }
-  return <div className={`w-5 h-5 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10`} />;
+function TaskStatusCheck({ completed }) {
+  return (
+    <div className={`flex items-center justify-center shrink-0 transition-all hover:scale-110 active:scale-95 cursor-pointer ${completed ? 'text-[#10B981]' : 'text-[#86868B] hover:text-[#F59E0B]'}`}>
+      <CircleDashed size={20} strokeWidth={2} />
+    </div>
+  );
 }
 
 function TaskPreview({ task, isOverlay = false }) {
@@ -73,7 +68,7 @@ function TaskPreview({ task, isOverlay = false }) {
         </div>
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="mt-1">
-            <TaskStatusCheck completed={task.completed} colorClass="bg-[#8E9C78]" />
+            <TaskStatusCheck completed={task.completed} />
           </div>
           <div className="flex-1 min-w-0 pr-2">
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -127,7 +122,7 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
 
   const formatTime = (time) => {
     if (!time) return null;
-    return time.substring(0, 5); // HH:mm
+    return time.substring(0, 5); 
   };
 
   return (
@@ -151,7 +146,7 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
         </div>
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="mt-1" onClick={(e) => { e.preventDefault(); onToggle(routineId, task); }}>
-            <TaskStatusCheck completed={task.completed} colorClass="bg-[#8E9C78]" />
+            <TaskStatusCheck completed={task.completed} />
           </div>
           <div className="flex-1 min-w-0 pr-2">
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -234,7 +229,7 @@ function RoutinePreview({ r, visualLabels, isOverlay = false }) {
         <div className="p-2 space-y-2 bg-[#111111] max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-hide">
           {r.tasks.map(t => (
             <div key={t.id} className="flex items-center gap-2 px-3 py-2.5 rounded-[12px] bg-[#222224] border border-white/20 shadow-md">
-              <div className="w-3.5 h-3.5 rounded-full border border-white/10 shrink-0" />
+              <CircleDashed size={14} strokeWidth={2} className="text-[#86868B] shrink-0" />
               <span className="text-[13px] text-[#E5E5EA] font-medium truncate flex-1">{t.title}</span>
             </div>
           ))}
@@ -292,7 +287,7 @@ function SortableRoutine({
             : 'glass-card bg-[#1C1C1E] border border-white/[0.04] shadow-sm hover:border-white/10'
         }`}
     >
-      {/* Indicador visual de inserção estilo "glow" quando o item é o destino do drop */}
+      {}
       {isDragging && (
         <div className="absolute inset-0 bg-[#8E9C78]/5 pointer-events-none animate-pulse" />
       )}
@@ -639,7 +634,7 @@ export default function Routines() {
 
     const newTasks = arrayMove(routine.tasks, oldIndex, newIndex);
 
-    // Check if we should auto-sort by time instead
+    
     const sortedTasks = [...newTasks].sort((a, b) => {
       if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time);
       if (a.start_time) return -1;

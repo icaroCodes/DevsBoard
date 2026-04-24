@@ -26,6 +26,7 @@ router.get('/', async (req, res) => {
       baseQuery('goals').select('id, completed'),
       baseQuery('goals').order('id', { ascending: false }).limit(5),
       baseQuery('routines').select('*, routine_tasks(*)').order('id', { ascending: false }),
+      supabase.from('users').select('current_streak, longest_streak, last_access_date').eq('id', userId).single(),
     ]);
 
     results.forEach((res, i) => {
@@ -43,9 +44,14 @@ router.get('/', async (req, res) => {
       ...r,
       tasks: routine_tasks || [],
     }));
+    const streak = results[7]?.data || {};
 
     const income = (financeData || []).filter(f => f.type === 'income').reduce((s, f) => s + Number(f.amount), 0);
     const expense = (financeData || []).filter(f => f.type === 'expense').reduce((s, f) => s + Number(f.amount), 0);
+
+    
+    const routineTasksAll = routines.flatMap(r => r.tasks || []);
+    const routineTasksDone = routineTasksAll.filter(t => t.completed).length;
 
     res.json({
       finance: {
@@ -65,6 +71,15 @@ router.get('/', async (req, res) => {
         items: goals || [],
       },
       routines: routines || [],
+      routineSummary: {
+        total: routineTasksAll.length,
+        completed: routineTasksDone,
+      },
+      streak: {
+        current: streak.current_streak || 0,
+        longest: streak.longest_streak || 0,
+        last_access_date: streak.last_access_date || null,
+      },
     });
   } catch (err) {
     console.error(err);

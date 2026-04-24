@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Pencil, X, Loader2, LayoutList,
-  GripVertical, Check, CheckSquare, ListTodo, Kanban, Circle, Clock, MoreHorizontal, CopyPlus, CheckCircle2
+  GripVertical, Check, CheckSquare, ListTodo, Kanban, Circle, Clock, MoreHorizontal, CopyPlus, CheckCircle2, CircleDashed
 } from 'lucide-react';
 import {
   DndContext,
@@ -34,9 +34,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
-/* ──────────────────────────────────────────────────────
-   VIEW TOGGLE
-────────────────────────────────────────────────────── */
+
 function ViewToggle({ view, onChange }) {
   const { t } = useTranslation();
   return (
@@ -66,29 +64,20 @@ function ViewToggle({ view, onChange }) {
   );
 }
 
-/* ──────────────────────────────────────────────────────
-   TASK STATUS CHECK (list view)
-────────────────────────────────────────────────────── */
+
 function TaskStatusCheck({ completed, priority, onClick }) {
-  const getBorderColor = () => {
-    if (priority === 'high') return 'border-[#FF453A] group-hover:bg-[#FF453A]/20';
-    if (priority === 'medium') return 'border-[#FF9F0A] group-hover:bg-[#FF9F0A]/20';
-    if (priority === 'low') return 'border-[#32D74B] group-hover:bg-[#32D74B]/20';
-    return 'border-[#86868B]/50 group-hover:bg-white/10';
+  const getColor = () => {
+    if (completed) return 'text-[#10B981] group-hover:text-[#10B981]/80'; 
+    if (priority === 'high') return 'text-[#EF4444] group-hover:text-[#EF4444]/80'; 
+    if (priority === 'medium') return 'text-[#F59E0B] group-hover:text-[#F59E0B]/80'; 
+    if (priority === 'low') return 'text-[#3B82F6] group-hover:text-[#3B82F6]/80'; 
+    return 'text-[#86868B] group-hover:text-[#A1A1AA]'; 
   };
 
-  if (completed) {
-    return (
-      <button type="button" onClick={onClick} className="w-6 h-6 rounded-full bg-[#0A84FF] flex items-center justify-center shrink-0 shadow-sm transition-all outline-none cursor-pointer">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", bounce: 0.5 }}>
-          <CheckSquare size={14} className="text-white" strokeWidth={3} />
-        </motion.div>
-      </button>
-    );
-  }
-
   return (
-    <button type="button" onClick={onClick} className={`w-6 h-6 rounded-full border-[2px] ${getBorderColor()} shrink-0 transition-all outline-none cursor-pointer`} />
+    <button type="button" onClick={onClick} className={`flex items-center justify-center shrink-0 transition-all outline-none cursor-pointer hover:scale-110 active:scale-95 ${getColor()}`}>
+      <CircleDashed size={20} strokeWidth={2} />
+    </button>
   );
 }
 
@@ -106,12 +95,10 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
 };
 
-/* ──────────────────────────────────────────────────────
-   LIST VIEW
-────────────────────────────────────────────────────── */
+
 function ListView() {
   const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState('all'); // all, pending, completed
+  const [filter, setFilter] = useState('all'); 
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -120,7 +107,7 @@ function ListView() {
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
-  // priorityLabels is defined at module scope
+  
 
   const load = () => {
     setLoading(true);
@@ -172,7 +159,7 @@ function ListView() {
       setItems(await api('/tasks'));
     } catch (err) {
       showError(err.message);
-      load(); // revert
+      load(); 
     }
   };
 
@@ -383,9 +370,7 @@ function ListView() {
   );
 }
 
-/* ──────────────────────────────────────────────────────
-   BOARD VIEW — Kanban
-────────────────────────────────────────────────────── */
+
 function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -394,7 +379,7 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
-    const date = new Date(dateStr + 'T12:00:00'); // enforce local timezone parsing avoidance
+    const date = new Date(dateStr + 'T12:00:00'); 
     return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
   };
 
@@ -413,8 +398,8 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
         )}
         <div className="flex flex-col gap-1.5 px-3 py-3">
           <div className="flex items-center gap-2">
-            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onToggle(card)} className="text-[#86868B] hover:text-[#32D74B] transition-colors outline-none shrink-0" title="Marcar como concluída">
-              {card.completed ? <CheckCircle2 size={16} className="text-[#32D74B]" /> : <Circle size={16} className="text-[#86868B]" />}
+            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onToggle(card)} className="transition-colors outline-none shrink-0 border-none hover:scale-110 active:scale-95" title="Mudar status">
+              {card.completed ? <CircleDashed size={18} strokeWidth={2} className="text-[#10B981]" /> : <CircleDashed size={18} strokeWidth={2} className="text-[#86868B] hover:text-[#F59E0B]" />}
             </button>
             <div className="flex-1 flex flex-col min-w-0 pr-6">
               <span className={`text-[14px] font-medium leading-tight truncate transition-colors ${card.completed ? 'line-through text-[#86868B]' : 'text-[#E5E5EA]'}`}>
@@ -432,7 +417,7 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
           )}
         </div>
 
-        {/* Edit Button matching Trello's hover icon on cards */}
+        {}
         <div className="absolute top-2.5 right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
           <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onEdit(card)} className="p-2 sm:p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none bg-black/40 backdrop-blur-sm shadow-lg" title="Editar"><Pencil size={14} /></button>
           <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(card.id)} className="p-2 sm:p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none bg-black/40 backdrop-blur-sm shadow-lg" title="Excluir"><Trash2 size={14} /></button>
@@ -451,7 +436,7 @@ function CardPreview({ card, isOverlay = false }) {
         </div>
       )}
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <Circle size={14} className="text-[#86868B] shrink-0" />
+        <CircleDashed size={16} strokeWidth={2} className="text-[#86868B] shrink-0" />
         <span className="flex-1 text-[13px] font-medium leading-tight text-[#E5E5EA] truncate">{card.name}</span>
       </div>
     </div>
@@ -1357,9 +1342,7 @@ function BoardKanban({ board, onBack }) {
   );
 }
 
-/* ──────────────────────────────────────────────────────
-   BOARD VIEW — router between gallery and kanban
-────────────────────────────────────────────────────── */
+
 function BoardView() {
   const [activeBoard, setActiveBoard] = useState(() => {
     const saved = localStorage.getItem('active_board');
@@ -1385,9 +1368,7 @@ function BoardView() {
   return <BoardGallery onOpenBoard={handleOpenBoard} />;
 }
 
-/* ──────────────────────────────────────────────────────
-   ROOT PAGE
-────────────────────────────────────────────────────── */
+
 export default function Tasks() {
   const [view, setView] = useState(() => localStorage.getItem('tasks_view') || 'list');
 
@@ -1401,7 +1382,7 @@ export default function Tasks() {
       className="max-w-5xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: FONT }}
     >
-      {/* View toggle — sits above content, top-right corner */}
+      {}
       <div className="flex justify-end mb-6">
         <ViewToggle view={view} onChange={handleViewChange} />
       </div>

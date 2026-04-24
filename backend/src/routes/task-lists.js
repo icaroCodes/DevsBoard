@@ -6,7 +6,7 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-// GET all lists with their cards (optionally filtered by board_id)
+
 router.get('/', async (req, res) => {
   try {
     let query = supabase
@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
     const { data: lists, error: listErr } = await query;
     if (listErr) throw listErr;
 
-    // Fetch cards for these lists
+    
     const listIds = lists.map(l => l.id);
     let cards = [];
     if (listIds.length > 0) {
@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST create list
+
 router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
@@ -56,7 +56,7 @@ router.post('/', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    // Determine next position
+    
     const { data: existing } = await supabase
       .from('task_lists')
       .select('position')
@@ -81,7 +81,7 @@ router.post('/', [
   }
 });
 
-// PUT update list name
+
 router.put('/:id', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
@@ -110,7 +110,7 @@ router.put('/:id', [
   }
 });
 
-// DELETE list (cascade deletes cards via DB or manually)
+
 router.delete('/:id', async (req, res) => {
   try {
     const { data: existing } = await supabase
@@ -122,7 +122,7 @@ router.delete('/:id', async (req, res) => {
 
     if (!existing) return res.status(404).json({ error: 'Lista não encontrada' });
 
-    // Delete cards first
+    
     await supabase.from('task_cards').delete().eq('list_id', req.params.id).eq('user_id', req.userId);
 
     const { error } = await supabase
@@ -139,8 +139,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// POST reorder lists in bulk
-// Body: { items: [{id, position}] }
+
+
 router.post('/reorder', [
   body('items').isArray({ min: 1 }).withMessage('items deve ser um array'),
 ], async (req, res) => {
@@ -150,7 +150,7 @@ router.post('/reorder', [
 
     const { items } = req.body;
 
-    // Update each list sequentially
+    
     const updates = await Promise.all(
       items.map(({ id, position }) =>
         supabase

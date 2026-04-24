@@ -6,7 +6,7 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-// POST create card in a list
+
 router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
   body('list_id').notEmpty().withMessage('list_id é obrigatório'),
@@ -17,7 +17,7 @@ router.post('/', [
 
     const { name, list_id } = req.body;
 
-    // Verify list ownership
+    
     const { data: list } = await supabase
       .from('task_lists')
       .select('id')
@@ -27,7 +27,7 @@ router.post('/', [
 
     if (!list) return res.status(404).json({ error: 'Lista não encontrada' });
 
-    // Determine next position within list
+    
     const { data: existing } = await supabase
       .from('task_cards')
       .select('position')
@@ -51,7 +51,7 @@ router.post('/', [
   }
 });
 
-// PUT update card (name and/or move to different list)
+
 router.put('/:id', [
   body('name').optional().trim().notEmpty(),
   body('list_id').optional(),
@@ -89,8 +89,8 @@ router.put('/:id', [
   }
 });
 
-// POST reorder cards in bulk (within a list or cross-list)
-// Body: { items: [{id, position}] }
+
+
 router.post('/reorder', [
   body('items').isArray({ min: 1 }).withMessage('items deve ser um array'),
 ], async (req, res) => {
@@ -100,7 +100,7 @@ router.post('/reorder', [
 
     const { items } = req.body;
 
-    // Update each card sequentially (Supabase JS v2 doesn't support bulk upsert with per-row filter)
+    
     const updates = await Promise.all(
       items.map(({ id, position }) =>
         supabase
@@ -121,7 +121,7 @@ router.post('/reorder', [
   }
 });
 
-// PUT update card (name and/or move to different list)
+
 router.put('/:id', [
   body('name').optional().trim().notEmpty(),
   body('list_id').optional(),
@@ -159,7 +159,7 @@ router.put('/:id', [
   }
 });
 
-// DELETE card
+
 router.delete('/:id', async (req, res) => {
   try {
     const { data, error } = await supabase

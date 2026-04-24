@@ -1,23 +1,23 @@
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 
-// Rate limiter para Auth (evita Brute Force)
+
 export const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 20, // Limite de 20 tentativas por IP em auth
+  windowMs: 15 * 60 * 1000, 
+  max: 20, 
   message: { error: 'Muitas tentativas de acesso. Tente novamente em 15 minutos.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Rate limiter Global para API
+
 export const apiRateLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minuto
-  max: 100, // Limite de 100 requisições/min
+  windowMs: 1 * 60 * 1000, 
+  max: 100, 
   message: { error: 'Limite de requisições excedido.' },
 });
 
-// Middleware Helmet configurado para API moderna
+
 export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {

@@ -195,17 +195,17 @@ export default function Projects() {
         projectId = created.id;
       }
 
-      // Delete removed images
+      
       await Promise.all(removedImageIds.map(imgId =>
         api(`/projects/${projectId}/images/${imgId}`, { method: 'DELETE' })
       ));
 
-      // Delete removed references
+      
       await Promise.all(removedRefIds.map(refId =>
         api(`/projects/${projectId}/references/${refId}`, { method: 'DELETE' })
       ));
 
-      // Upload new extra images
+      
       await Promise.all(
         extraImages
           .filter(img => !img.id && img.preview)
@@ -217,7 +217,7 @@ export default function Projects() {
           )
       );
 
-      // Upload new references
+      
       await Promise.all(
         references
           .filter(ref => !ref.id)
@@ -546,7 +546,7 @@ export default function Projects() {
                               <div key={key} className="space-y-1.5">
                                 <div className="flex items-center gap-2 text-[#86868B]">
                                   {icon}
-                                  <p className="text-[12px] font-bold uppercase tracking-wider">{t.projFields[key]}</p>
+                                  <p className="text-[12px] font-bold uppercase tracking-wider">{t.projFields?.[key] || key}</p>
                                 </div>
                                 <p className="text-[15px] text-[#F5F5F7] leading-relaxed whitespace-pre-wrap pl-1">{p[key]}</p>
                               </div>
@@ -584,7 +584,7 @@ export default function Projects() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5 max-h-[70vh] overflow-y-auto pr-3 thin-scrollbar">
-                {/* Name */}
+                {}
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Qual o nome desse projeto?</label>
                   <input
@@ -597,7 +597,7 @@ export default function Projects() {
                   />
                 </div>
 
-                {/* Logo + Figma */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <ImageUploadField
                     label="Foto ou Símbolo"
@@ -617,7 +617,7 @@ export default function Projects() {
                   />
                 </div>
 
-                {/* ── Extra Images ── */}
+                {}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider flex items-center gap-2">
@@ -664,7 +664,7 @@ export default function Projects() {
                   ))}
                 </div>
 
-                {/* ── References ── */}
+                {}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider flex items-center gap-2">
@@ -724,11 +724,11 @@ export default function Projects() {
                   ))}
                 </div>
 
-                {/* Text fields */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {FIELDS.map(({ key }) => (
                     <div key={key} className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.projFields[key]}</label>
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.projFields?.[key] || key}</label>
                       <textarea
                         value={form[key]}
                         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
@@ -760,7 +760,7 @@ export default function Projects() {
         )}
       </AnimatePresence>
 
-      {/* Lightbox */}
+      {}
       <AnimatePresence>
         {lightbox && (
           <motion.div

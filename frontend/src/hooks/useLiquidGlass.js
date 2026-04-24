@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useTheme, THEMES } from '../contexts/ThemeContext';
 
-// Tuning rationale:
-//  - Reduced blur and refraction to prevent "milky" or washed-out areas, keeping text behind it readable.
-//  - Lowered fresnel and edgeHighlight for subtle, refined reflections without harsh lighting.
-//  - Added slight background darkening (brightness: -0.02) to boost contrast for readability.
+
+
+
+
 const GLASS_CONFIG = {
   floating: false,
   blurAmount: 0.035,
@@ -70,9 +70,9 @@ function makeGhost(target, rootRect) {
   ghost.style.contain = 'layout paint';
   ghost.style.borderRadius = window.getComputedStyle(target).borderRadius;
   ghost.style.pointerEvents = 'none';
-  // Born invisible: the WebGL canvas the lib injects renders its first
-  // (default-cleared) frame as opaque white. Stay hidden until init()
-  // resolves and the first refraction pass has actually painted.
+  
+  
+  
   ghost.style.opacity = '0';
   ghost.style.transition = 'opacity 120ms ease-out';
   return ghost;
@@ -124,9 +124,9 @@ export function useLiquidGlass(rootRef) {
       return true;
     };
 
-    // Double-buffered sync: build new ghosts + new instance BEFORE
-    // destroying the old. Eliminates the "white flash" gap that the
-    // previous destroy-then-recreate approach caused on every re-sync.
+    
+    
+    
     const syncGhostElements = async () => {
       if (cancelled || !rootRef.current) return;
       if (isSyncing) { pendingSync = true; return; }
@@ -142,8 +142,8 @@ export function useLiquidGlass(rootRef) {
 
         const targets = Array.from(document.querySelectorAll(GLASS_SELECTOR));
 
-        // If the SET of targets is unchanged, skip the re-init entirely
-        // and just re-paint at current positions. No white flash possible.
+        
+        
         if (instanceRef.current && targetsEqual(targets, targetsRef.current)) {
           updatePositions();
           markGlassDirty();
@@ -151,7 +151,7 @@ export function useLiquidGlass(rootRef) {
         }
 
         if (targets.length === 0) {
-          // No glass targets on this page → tear down silently.
+          
           if (instanceRef.current) {
             try { instanceRef.current.destroy(); } catch (_) {}
             instanceRef.current = null;
@@ -163,7 +163,7 @@ export function useLiquidGlass(rootRef) {
           return;
         }
 
-        // Build new ghosts (alongside any existing ones, in the same root).
+        
         const rootRect = rootRef.current.getBoundingClientRect();
         const newGhosts = targets.map(t => makeGhost(t, rootRect));
         newGhosts.forEach(g => rootRef.current.appendChild(g));
@@ -175,12 +175,12 @@ export function useLiquidGlass(rootRef) {
             glassElements: newGhosts,
           });
         } catch (e) {
-          // New init failed — clean up new ghosts, KEEP old instance running.
-          // This is the key win: a transient failure doesn't blank the screen.
+          
+          
           newGhosts.forEach(g => g.remove());
           console.warn('[LiquidGlass] re-init failed; keeping previous instance', e);
           if (!instanceRef.current) {
-            // We had nothing to fall back to → flip to CSS mode.
+            
             body.classList.remove('glass-webgl-active');
             body.classList.add('glass-fallback-mode');
           }
@@ -193,7 +193,7 @@ export function useLiquidGlass(rootRef) {
           return;
         }
 
-        // Atomic swap in one frame: tear down old AFTER new is fully ready.
+        
         const oldInstance = instanceRef.current;
         const oldGhosts = ghostContainerRef.current;
         instanceRef.current = newInstance;
@@ -201,14 +201,14 @@ export function useLiquidGlass(rootRef) {
         targetsRef.current = targets;
         body.classList.add('glass-webgl-active');
 
-        // Force one render so the WebGL canvas has actual content (not
-        // the default white framebuffer) BEFORE we reveal the ghosts.
+        
+        
         if (typeof newInstance.markChanged === 'function') newInstance.markChanged();
         else if (typeof newInstance.update === 'function') newInstance.update();
         else if (typeof newInstance.render === 'function') newInstance.render();
 
-        // Wait one rAF: the lib's first frame paints, THEN we fade the
-        // new ghosts in and tear down the old ones in the same tick.
+        
+        
         requestAnimationFrame(() => {
           newGhosts.forEach(g => { g.style.opacity = '1'; });
           requestAnimationFrame(() => {
@@ -230,11 +230,11 @@ export function useLiquidGlass(rootRef) {
 
     debounceTimer = setTimeout(syncGhostElements, 100);
 
-    // Observer is intentionally narrow: only fires on actual childList
-    // changes that touch a glass element. Hover/class changes do NOT
-    // trigger sync. The set-equality check inside sync is the second
-    // line of defense — even if observer fires, identical target sets
-    // skip re-init entirely.
+    
+    
+    
+    
+    
     const observer = new MutationObserver((mutations) => {
       let needsSync = false;
       for (const m of mutations) {

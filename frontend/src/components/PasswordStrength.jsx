@@ -14,19 +14,19 @@ const PasswordStrength = ({ password }) => {
         let score = 0;
         const len = pwd.length;
 
-        // 1️⃣ Tamanho da senha
+        
         if (len >= 6 && len <= 7) score += 1;
         else if (len >= 8 && len <= 11) score += 2;
         else if (len >= 12) score += 3;
 
         let typesCount = 0;
-        // 2️⃣ Letras minúsculas
+        
         if (/[a-z]/.test(pwd)) { typesCount++; score += 1; }
-        // 3️⃣ Letras maiúsculas
+        
         if (/[A-Z]/.test(pwd)) { typesCount++; score += 1; }
-        // 4️⃣ Números
+        
         if (/\d/.test(pwd)) { typesCount++; score += 1; }
-        // 5️⃣ Caracteres especiais
+        
         if (/[!@#$%^&*()_+\-=[\]{};':",.<>/?]/.test(pwd)) { typesCount++; score += 1; }
 
         // 6️⃣ Combinação forte
@@ -38,10 +38,10 @@ const PasswordStrength = ({ password }) => {
     const score = getStrength(password);
 
     const getLevel = (s) => {
-        if (s <= 2) return { label: 'Senha ruim', bars: 1, color: '#e74c3c' }; // Red
-        if (s <= 4) return { label: 'Quase lá', bars: 2, color: '#f39c12' }; // Orange
-        if (s <= 6) return { label: 'Boa', bars: 3, color: '#f1c40f' }; // Yellow
-        return { label: 'Perfeita', bars: 4, color: 'rgb(72 92 17)' }; // Theme Green
+        if (s <= 2) return { label: 'Senha ruim', bars: 1, color: '#e74c3c' }; 
+        if (s <= 4) return { label: 'Quase lá', bars: 2, color: '#f39c12' }; 
+        if (s <= 6) return { label: 'Boa', bars: 3, color: '#f1c40f' }; 
+        return { label: 'Perfeita', bars: 4, color: 'rgb(72 92 17)' }; 
     };
 
     const level = getLevel(score);

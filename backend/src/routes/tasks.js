@@ -9,7 +9,7 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     let query = supabase.from('tasks').select('*');
-    
+
     if (req.teamId) {
       query = query.eq('team_id', req.teamId);
     } else {
@@ -36,11 +36,11 @@ router.post('/', [
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { title, description, priority = 'medium' } = req.body;
-    const insertData = { 
-      user_id: req.userId, 
-      title, 
-      description: description || null, 
-      priority 
+    const insertData = {
+      user_id: req.userId,
+      title,
+      description: description || null,
+      priority
     };
 
     if (req.teamId) {
@@ -67,8 +67,14 @@ router.put('/:id', [
   body('completed').optional().isBoolean(),
 ], async (req, res) => {
   try {
-    const { data: existing } = await supabase
-      .from('tasks').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { userId, teamId } = req;
+    let query = supabase.from('tasks').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
     if (!existing) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
     const updates = {};
@@ -88,10 +94,18 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('tasks').delete().eq('id', req.params.id).eq('user_id', req.userId).select();
+    const { userId, teamId } = req;
+    let query = supabase.from('tasks').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
+    if (!existing) return res.status(404).json({ error: 'Tarefa não encontrada' });
+
+    const { error } = await supabase.from('tasks').delete().eq('id', req.params.id);
     if (error) throw error;
-    if (!data || data.length === 0) return res.status(404).json({ error: 'Tarefa não encontrada' });
     res.status(204).send();
   } catch (err) {
     console.error(err);

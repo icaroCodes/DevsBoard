@@ -127,7 +127,7 @@ export function ThemeProvider({ children }) {
     });
 
     document.body.setAttribute('data-theme', themeName);
-    // Forçar cores do body para evitar flash branco ou classes hardcoded que ignoram vars
+    
     document.body.style.backgroundColor = config.vars['--db-bg'];
     document.body.style.color = config.vars['--db-text'];
   };
@@ -135,7 +135,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     applyTheme(theme);
     
-    // Escutar mudanças globais (ex: vindas do Login/Auth)
+    
     const handleThemeChange = (e) => {
       const newTheme = e.detail;
       if (newTheme && THEMES[newTheme]) {
@@ -152,12 +152,12 @@ export function ThemeProvider({ children }) {
   const setTheme = async (newTheme) => {
     if (!THEMES[newTheme]) return;
     
-    // Update local immediately for UI responsiveness
+    
     setThemeState(newTheme);
     localStorage.setItem('db_theme', newTheme);
     applyTheme(newTheme);
 
-    // Persist to database
+    
     try {
       await api('/settings', {
         method: 'PUT',

@@ -6,20 +6,20 @@ import { api } from '../lib/api';
 
 const RealtimeContext = createContext(null);
 
-// ═══════════════════════════════════════════════════════
-// REALTIME PROVIDER — WebSocket em tempo real robusto
-// ═══════════════════════════════════════════════════════
-// Arquitetura:
-//   1) Canal global do usuário   → convites de time
-//   2) Canal pessoal do usuário  → dados sem time (modo pessoal)
-//   3) Canal do time ativo       → dados do time
-//   4) Canal do time management  → membros, times, convites
-//
-// Cada canal emite CustomEvents no window que os componentes
-// escutam para re-fetch dos dados — sem page refresh.
-// ═══════════════════════════════════════════════════════
 
-// Tabelas que são rastreadas para dados de time/pessoal
+
+
+
+
+
+
+
+
+
+
+
+
+
 const DATA_TABLES = [
   'finances',
   'task_boards',
@@ -32,14 +32,14 @@ const DATA_TABLES = [
   'projects',
 ];
 
-// Tabelas de gerenciamento de times
+
 const TEAM_MGMT_TABLES = [
   'teams',
   'team_members',
   'team_invitations',
 ];
 
-// Labels amigáveis para notificações
+
 const TABLE_LABELS = {
   finances: 'finanças',
   task_boards: 'quadros',
@@ -55,9 +55,7 @@ const TABLE_LABELS = {
   team_invitations: 'convites',
 };
 
-/**
- * Debounce helper - agrupa disparos rápidos em um só
- */
+
 function createDebouncedDispatcher(delayMs = 300) {
   const pending = new Map();
 
@@ -84,10 +82,10 @@ export function RealtimeProvider({ children }) {
   const { success } = useToast();
   const [notifications, setNotifications] = useState([]);
   const [connected, setConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected | connecting | connected | error
+  const [connectionStatus, setConnectionStatus] = useState('disconnected'); 
   const [lastEvent, setLastEvent] = useState(null);
 
-  // Refs para evitar stale closures
+  
   const activeTeamRef = useRef(activeTeam);
   const userRef = useRef(user);
   const dispatcherRef = useRef(createDebouncedDispatcher(250));
@@ -95,7 +93,7 @@ export function RealtimeProvider({ children }) {
   useEffect(() => { activeTeamRef.current = activeTeam; }, [activeTeam]);
   useEffect(() => { userRef.current = user; }, [user]);
 
-  // ─── CANAL GLOBAL: convites de time para o usuário ───
+  
   useEffect(() => {
     if (!supabase || !user) return;
 
@@ -137,7 +135,7 @@ export function RealtimeProvider({ children }) {
         }
       });
 
-    // Carga inicial de notificações
+    
     api('/teams/invitations/inbox').then(setNotifications).catch(console.error);
 
     return () => {
@@ -145,7 +143,7 @@ export function RealtimeProvider({ children }) {
     };
   }, [user, success]);
 
-  // ─── CANAL PESSOAL: dados do usuário (sem time ativo) ───
+  
   useEffect(() => {
     if (!supabase || !user || activeTeam) return;
 
@@ -181,7 +179,7 @@ export function RealtimeProvider({ children }) {
     };
   }, [user, activeTeam, success]);
 
-  // ─── CANAL DO TIME ATIVO: dados do time ───
+  
   useEffect(() => {
     if (!supabase || !user || !activeTeam) return;
 
@@ -220,7 +218,7 @@ export function RealtimeProvider({ children }) {
     };
   }, [user, activeTeam, success]);
 
-  // ─── CANAL DE GERENCIAMENTO: times, membros, convites ───
+  
   useEffect(() => {
     if (!supabase || !user) return;
 
@@ -230,7 +228,7 @@ export function RealtimeProvider({ children }) {
       config: { broadcast: { self: true } },
     });
 
-    // Escutar mudanças em teams
+    
     mgmtChannel.on('postgres_changes', {
       event: '*',
       schema: 'public',
@@ -240,7 +238,7 @@ export function RealtimeProvider({ children }) {
       dispatcherRef.current('teams', payload);
     });
 
-    // Escutar mudanças em team_members
+    
     mgmtChannel.on('postgres_changes', {
       event: '*',
       schema: 'public',
@@ -250,19 +248,19 @@ export function RealtimeProvider({ children }) {
       dispatcherRef.current('team_members', payload);
     });
 
-    // Escutar mudanças no perfil dos usuários (para avatar/nome)
+    
     mgmtChannel.on('postgres_changes', {
       event: 'UPDATE',
       schema: 'public',
       table: 'users',
     }, (payload) => {
       console.log('📡 [MGMT] Perfil de usuário atualizado:', payload.new?.id);
-      // Notificar que times e team_members mudaram (porque mostram avatares)
+      
       dispatcherRef.current('team_members', payload);
       dispatcherRef.current('teams', payload);
     });
 
-    // Convites enviados pelo usuário
+    
     mgmtChannel.on('postgres_changes', {
       event: '*',
       schema: 'public',
@@ -289,7 +287,7 @@ export function RealtimeProvider({ children }) {
       }
     });
 
-    // Broadcast channel para notificações instantâneas entre membros do time
+    
     mgmtChannel.on('broadcast', { event: 'team-action' }, (payload) => {
       console.log('📡 [MGMT] Broadcast recebido:', payload);
       dispatcherRef.current('teams', payload);
@@ -306,7 +304,7 @@ export function RealtimeProvider({ children }) {
     };
   }, [user]);
 
-  // ─── HELPER: hook para componentes escutarem eventos ───
+  
   const subscribe = useCallback((tables, callback) => {
     const handler = (e) => {
       if (tables.includes(e.detail.table)) {
@@ -335,16 +333,7 @@ export function useRealtime() {
   return ctx;
 }
 
-/**
- * Hook utilitário para componentes se inscreverem em mudanças de tabelas específicas
- *
- * @param {string[]} tables - Lista de tabelas para escutar
- * @param {Function} callback - Função chamada quando uma mudança ocorre
- * @param {any[]} deps - Dependências adicionais para recriar o listener
- *
- * @example
- * useRealtimeSubscription(['tasks', 'task_cards'], () => { load(); });
- */
+
 export function useRealtimeSubscription(tables, callback, deps = []) {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
@@ -357,5 +346,5 @@ export function useRealtimeSubscription(tables, callback, deps = []) {
     };
     window.addEventListener('team-data-changed', handler);
     return () => window.removeEventListener('team-data-changed', handler);
-  }, [tables.join(','), ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tables.join(','), ...deps]); 
 }

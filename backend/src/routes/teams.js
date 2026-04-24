@@ -5,15 +5,15 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
-// Middleware de autenticação em todas as rotas
+
 router.use(authenticate);
 
-// ============================================
-// GET /teams — Listar meus times
-// ============================================
+
+
+
 router.get('/', async (req, res) => {
   try {
-    // Buscar times do usuário via team_members
+    
     const { data: memberships, error: memErr } = await supabase
       .from('team_members')
       .select('team_id, role')
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
 
     if (teamsErr) throw teamsErr;
 
-    // Enriquecer com role do usuário e contagem de membros
+    
     const enriched = await Promise.all(teams.map(async (team) => {
       const membership = memberships.find(m => m.team_id === team.id);
 
@@ -44,13 +44,13 @@ router.get('/', async (req, res) => {
         .select('*', { count: 'exact', head: true })
         .eq('team_id', team.id);
 
-      // Buscar membros com seus dados
+      
       const { data: members } = await supabase
         .from('team_members')
         .select('user_id, role, joined_at')
         .eq('team_id', team.id);
 
-      // Buscar info de cada membro
+      
       const memberIds = members?.map(m => m.user_id) || [];
       const { data: users } = await supabase
         .from('users')
@@ -77,9 +77,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ============================================
-// POST /teams — Criar time/família
-// ============================================
+
+
+
 router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
   body('type').isIn(['team', 'family']).withMessage('Tipo deve ser "team" ou "family"'),
@@ -90,7 +90,7 @@ router.post('/', [
 
     const { name, type } = req.body;
 
-    // Criar time
+    
     const { data: team, error: teamErr } = await supabase
       .from('teams')
       .insert({ name, type, owner_id: req.userId })
@@ -99,7 +99,7 @@ router.post('/', [
 
     if (teamErr) throw teamErr;
 
-    // Adicionar criador como membro owner
+    
     const { error: memberErr } = await supabase
       .from('team_members')
       .insert({ team_id: team.id, user_id: req.userId, role: 'owner' });
@@ -113,16 +113,16 @@ router.post('/', [
   }
 });
 
-// ============================================
-// PUT /teams/:id — Atualizar time
-// ============================================
+
+
+
 router.put('/:id', [
   body('name').optional().trim().notEmpty(),
 ], async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verificar se é owner/admin
+    
     const { data: membership } = await supabase
       .from('team_members')
       .select('role')
@@ -153,14 +153,14 @@ router.put('/:id', [
   }
 });
 
-// ============================================
-// DELETE /teams/:id — Deletar time
-// ============================================
+
+
+
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Apenas owner pode deletar
+    
     const { data: team } = await supabase
       .from('teams')
       .select('owner_id')
@@ -184,9 +184,9 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// ============================================
-// POST /teams/:id/invite — Convidar por email
-// ============================================
+
+
+
 router.post('/:id/invite', [
   body('email').trim().isEmail().withMessage('Email inválido').normalizeEmail(),
 ], async (req, res) => {
@@ -197,7 +197,7 @@ router.post('/:id/invite', [
     const { id } = req.params;
     const { email } = req.body;
 
-    // Verificar se é membro do time
+    
     const { data: membership } = await supabase
       .from('team_members')
       .select('role')
@@ -209,7 +209,7 @@ router.post('/:id/invite', [
       return res.status(403).json({ error: 'Você não é membro deste time' });
     }
 
-    // Verificar se não está convidando a si mesmo
+    
     const { data: selfUser } = await supabase
       .from('users')
       .select('email')
@@ -220,7 +220,7 @@ router.post('/:id/invite', [
       return res.status(400).json({ error: 'Você não pode convidar a si mesmo' });
     }
 
-    // Buscar usuário pelo email
+    
     const { data: invitedUser } = await supabase
       .from('users')
       .select('id, name, email')
@@ -231,7 +231,7 @@ router.post('/:id/invite', [
       return res.status(404).json({ error: 'Nenhum usuário encontrado com este email' });
     }
 
-    // Verificar se já é membro
+    
     const { data: existingMember } = await supabase
       .from('team_members')
       .select('id')
@@ -243,7 +243,7 @@ router.post('/:id/invite', [
       return res.status(400).json({ error: 'Este usuário já é membro do time' });
     }
 
-    // Verificar se já tem convite pendente
+    
     const { data: existingInvite } = await supabase
       .from('team_invitations')
       .select('id, status')
@@ -256,7 +256,7 @@ router.post('/:id/invite', [
       return res.status(400).json({ error: 'Já existe um convite pendente para este email' });
     }
 
-    // Criar convite
+    
     const { data: invitation, error: invErr } = await supabase
       .from('team_invitations')
       .insert({
@@ -271,7 +271,7 @@ router.post('/:id/invite', [
 
     if (invErr) throw invErr;
 
-    // Buscar info do time e do remetente para retornar completo
+    
     const { data: team } = await supabase
       .from('teams')
       .select('name, type')
@@ -296,12 +296,12 @@ router.post('/:id/invite', [
   }
 });
 
-// ============================================
-// GET /teams/invitations/inbox — Caixa de entrada
-// ============================================
+
+
+
 router.get('/invitations/inbox', async (req, res) => {
   try {
-    // Buscar email do usuário
+    
     const { data: user } = await supabase
       .from('users')
       .select('email')
@@ -310,7 +310,7 @@ router.get('/invitations/inbox', async (req, res) => {
 
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
-    // Buscar convites pendentes pelo email OU pelo user_id
+    
     const { data: invitations, error } = await supabase
       .from('team_invitations')
       .select('*')
@@ -320,7 +320,7 @@ router.get('/invitations/inbox', async (req, res) => {
 
     if (error) throw error;
 
-    // Enriquecer com dados do time e remetente
+    
     const enriched = await Promise.all((invitations || []).map(async (inv) => {
       const { data: team } = await supabase
         .from('teams')
@@ -348,9 +348,9 @@ router.get('/invitations/inbox', async (req, res) => {
   }
 });
 
-// ============================================
-// GET /teams/invitations/sent — Convites enviados
-// ============================================
+
+
+
 router.get('/invitations/sent', async (req, res) => {
   try {
     const { data: invitations, error } = await supabase
@@ -388,12 +388,12 @@ router.get('/invitations/sent', async (req, res) => {
   }
 });
 
-// ============================================
-// GET /teams/change-requests/inbox — Caixa de Entrada de solicitações
-// ============================================
+
+
+
 router.get('/change-requests/inbox', async (req, res) => {
   try {
-    // Buscar times que sou admin ou owner
+    
     const { data: myMemberships } = await supabase
       .from('team_members')
       .select('team_id')
@@ -406,7 +406,7 @@ router.get('/change-requests/inbox', async (req, res) => {
 
     const teamIds = myMemberships.map(m => m.team_id);
 
-    // Buscar change_requests pending
+    
     const { data, error } = await supabase
       .from('change_requests')
       .select('*, user:users(name, avatar_url), team:teams(name)')
@@ -422,14 +422,14 @@ router.get('/change-requests/inbox', async (req, res) => {
   }
 });
 
-// ============================================
-// POST /teams/invitations/:invitationId/accept — Aceitar convite
-// ============================================
+
+
+
 router.post('/invitations/:invitationId/accept', async (req, res) => {
   try {
     const { invitationId } = req.params;
 
-    // Buscar o convite
+    
     const { data: invitation } = await supabase
       .from('team_invitations')
       .select('*')
@@ -440,7 +440,7 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
       return res.status(404).json({ error: 'Convite não encontrado' });
     }
 
-    // Verificar se é o destinatário
+    
     const { data: user } = await supabase
       .from('users')
       .select('email')
@@ -455,7 +455,7 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
       return res.status(400).json({ error: 'Este convite já foi processado' });
     }
 
-    // Atualizar status do convite
+    
     const { error: updateErr } = await supabase
       .from('team_invitations')
       .update({ status: 'accepted', invited_user_id: req.userId })
@@ -463,14 +463,14 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
 
     if (updateErr) throw updateErr;
 
-    // Adicionar como membro
+    
     const { error: memberErr } = await supabase
       .from('team_members')
       .insert({ team_id: invitation.team_id, user_id: req.userId, role: 'member' });
 
     if (memberErr) throw memberErr;
 
-    // Buscar o time atualizado
+    
     const { data: team } = await supabase
       .from('teams')
       .select('*')
@@ -484,9 +484,9 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
   }
 });
 
-// ============================================
-// POST /teams/invitations/:invitationId/reject — Rejeitar convite
-// ============================================
+
+
+
 router.post('/invitations/:invitationId/reject', async (req, res) => {
   try {
     const { invitationId } = req.params;
@@ -529,14 +529,14 @@ router.post('/invitations/:invitationId/reject', async (req, res) => {
   }
 });
 
-// ============================================
-// DELETE /teams/:id/members/:userId — Remover membro
-// ============================================
+
+
+
 router.delete('/:id/members/:memberId', async (req, res) => {
   try {
     const { id, memberId } = req.params;
 
-    // Verificar se é admin/owner ou removendo a si mesmo
+    
     const { data: myMembership } = await supabase
       .from('team_members')
       .select('role')
@@ -555,7 +555,7 @@ router.delete('/:id/members/:memberId', async (req, res) => {
       return res.status(403).json({ error: 'Sem permissão para remover membros' });
     }
 
-    // Não pode remover o owner
+    
     const { data: targetMember } = await supabase
       .from('team_members')
       .select('role')
@@ -581,9 +581,9 @@ router.delete('/:id/members/:memberId', async (req, res) => {
   }
 });
 
-// ============================================
-// PUT /teams/:id/members/:memberId/role — Alterar papel
-// ============================================
+
+
+
 router.put('/:id/members/:memberId/role', async (req, res) => {
   try {
     const { id, memberId } = req.params;
@@ -605,9 +605,9 @@ router.put('/:id/members/:memberId/role', async (req, res) => {
   }
 });
 
-// ============================================
-// POST /teams/change-requests/:id/approve — Approve change request
-// ============================================
+
+
+
 router.post('/change-requests/:id/approve', async (req, res) => {
   try {
     const { id } = req.params;
@@ -621,21 +621,21 @@ router.post('/change-requests/:id/approve', async (req, res) => {
 
     let finalPayload = { ...(request.payload || {}) };
     
-    // Injetar contexto ausente (que normalmente é inserido pela rota principal)
+    
     if (request.action_type === 'create') {
       const entity = request.entity_type;
       
-      // Apenas injeta em tabelas que sabemos que usam user_id e team_id
+      
       if (['finances', 'routines', 'goals'].includes(entity)) {
         finalPayload.team_id = request.team_id;
         finalPayload.user_id = request.user_id;
       }
       
       if (entity === 'projects') {
-        finalPayload.user_id = request.user_id; // Projects usa user_id
+        finalPayload.user_id = request.user_id; 
       }
       
-      // tasks, task_lists, task_boards normalmente usam board_id e project_id (já vindo no payload)
+      
     }
 
     let updateErr = null;
@@ -663,9 +663,9 @@ router.post('/change-requests/:id/approve', async (req, res) => {
   }
 });
 
-// ============================================
-// POST /teams/change-requests/:id/reject — Reject change request
-// ============================================
+
+
+
 router.post('/change-requests/:id/reject', async (req, res) => {
   try {
     const { id } = req.params;

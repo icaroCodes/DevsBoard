@@ -86,7 +86,7 @@ export default function Finances() {
           body: JSON.stringify(payload),
         });
       } else if (form.is_recurring) {
-        // Criar transação recorrente
+        
         await api('/finances/recurring', {
           method: 'POST',
           body: JSON.stringify({
@@ -147,7 +147,7 @@ export default function Finances() {
       confirmText: 'Apagar Tudo',
       cancelText: 'Apenas Próximas (Manter histórico)',
       onConfirm: async () => {
-        // Apaga tudo
+        
         try {
           await api(`/finances/recurring/${id}?deleteAll=true`, { method: 'DELETE' });
           success('Recorrência e histórico removidos');
@@ -157,7 +157,7 @@ export default function Finances() {
         }
       },
       onCancel: async () => {
-        // Apaga apenas a regra
+        
         try {
           await api(`/finances/recurring/${id}`, { method: 'DELETE' });
           success('Apenas as próximas foram canceladas');
@@ -203,15 +203,15 @@ export default function Finances() {
 
   const modalOverlayRef = useRef(null);
 
-  // Apple dark mode aesthetic values
-  // bg app: #000000
-  // container cards: #1C1C1E
-  // elevated fields: #2C2C2E
-  // primary text: #F5F5F7
-  // secondary text: #86868B
-  // blue accent: #0A84FF
-  // green accent: #30D158
-  // red accent: #FF453A
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   if (loading) return <LoadingSkeleton variant="finances" />;
 
@@ -224,7 +224,7 @@ export default function Finances() {
   const maxExpense = Math.max(...Object.values(categoryStats).map(c => c.expense), 1);
   const maxIncome = Math.max(...Object.values(categoryStats).map(c => c.income), 1);
 
-  // Recharts Data Prep
+  
   const expensesData = Object.entries(categoryStats)
     .filter(([, s]) => s.expense > 0)
     .map(([name, value]) => ({ name, value: value.expense }))
@@ -261,7 +261,7 @@ export default function Finances() {
       className="max-w-6xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
-      {/* Header */}
+      {}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">
           <h1 className="text-[32px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meu Dinheiro</h1>
@@ -303,7 +303,7 @@ export default function Finances() {
         </div>
       </motion.div>
 
-      {/* Overview Cards */}
+      {}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
@@ -315,7 +315,7 @@ export default function Finances() {
           <p className={`text-[36px] font-semibold tracking-tight z-10 ${balance >= 0 ? 'text-[#F5F5F7]' : 'text-[#FF453A]'}`}>
             R$ {balance.toFixed(2).replace('.', ',')}
           </p>
-          {/* Subtle gradient blob for aesthetic */}
+          {}
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.06]"></div>
         </div>
 
@@ -347,7 +347,7 @@ export default function Finances() {
       </motion.div>
 
       <div className="flex flex-col gap-5">
-        {/* Transactions Formatted specifically for SaaS look */}
+        {}
         <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Últimas anotações</h2>
@@ -356,7 +356,7 @@ export default function Finances() {
             </div>
           </div>
 
-          {/* Seção de Recorrências se houver */}
+          {}
           {recurringItems.length > 0 && (
             <div className="px-6 py-4 bg-[#0A84FF]/[0.02] border-b border-white/[0.04]">
               <div className="flex items-center gap-2 mb-3">
@@ -424,9 +424,9 @@ export default function Finances() {
           )}
         </motion.div>
 
-        {/* Charts Sections - Side by Side on large screens */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Top Expenses */}
+          {}
           <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowDownRight size={18} className="text-[#FF453A]" />
@@ -461,7 +461,7 @@ export default function Finances() {
             </div>
           </motion.div>
 
-          {/* Top Incomes */}
+          {}
           <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowUpRight size={18} className="text-[#30D158]" />
@@ -492,7 +492,7 @@ export default function Finances() {
         </div>
       </div>
 
-      {/* Modal */}
+      {}
       <AnimatePresence>
         {modalOpen && (
           <div className="fixed inset-0 bg-[#000000]/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -512,7 +512,7 @@ export default function Finances() {
               </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Segmented Control */}
+                  {}
                   <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
                     {['income', 'expense'].map((type) => (
                       <button

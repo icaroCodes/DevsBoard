@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../lib/api';
 
-const HEARTBEAT_INTERVAL = 30000; // 30 segundos
+const HEARTBEAT_INTERVAL = 30000; 
 const SESSION_KEY = 'devsboard_session';
 
 function generateSessionId() {
@@ -36,10 +36,10 @@ export function useSessionTracker(isAuthenticated, userId) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Flag para cancelar callbacks assíncronos se o efeito for limpo antes
+    
     let cancelled = false;
 
-    // Reusa a sessão apenas se pertencer ao mesmo usuário
+    
     let sessionId = null;
     let isExisting = false;
     try {
@@ -54,7 +54,7 @@ export function useSessionTracker(isAuthenticated, userId) {
       sessionId = generateSessionId();
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ sessionId, userId, activeSeconds: 0 }));
     } else {
-      // Se já existia no sessionStorage, carrega o tempo guardado imediatamente para evitar o "zero"
+      
       const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY));
       if (stored?.activeSeconds > 0) {
         activeSecondsRef.current = stored.activeSeconds;
@@ -79,13 +79,18 @@ export function useSessionTracker(isAuthenticated, userId) {
       .finally(() => {
         if (cancelled) return;
 
-        // Contador de 1 em 1 segundo
+        
+        let lastTick = Date.now();
         intervalRef.current = setInterval(() => {
-          if (isActiveRef.current) {
-            activeSecondsRef.current += 1;
+          const now = Date.now();
+          const deltaSecs = Math.round((now - lastTick) / 1000);
+          
+          if (deltaSecs > 0) {
+            activeSecondsRef.current += deltaSecs;
+            lastTick = now;
             setActiveSeconds(prev => {
-              const newVal = prev + 1;
-              // Salva no sessionStorage para persistir no refresh
+              const newVal = prev + deltaSecs;
+              
               try {
                 const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
                 sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...stored, activeSeconds: newVal }));
@@ -95,7 +100,7 @@ export function useSessionTracker(isAuthenticated, userId) {
           }
         }, 1000);
 
-        // Heartbeat para persistir no backend a cada 30s
+        
         heartbeatRef.current = setInterval(() => {
           if (sessionIdRef.current && activeSecondsRef.current > 0) {
             api('/sessions/heartbeat', {
@@ -118,13 +123,13 @@ export function useSessionTracker(isAuthenticated, userId) {
       clearInterval(heartbeatRef.current);
       intervalRef.current = null;
       heartbeatRef.current = null;
-      // DO NOT remove SESSION_KEY here to allow persistence across refreshes
+      
       activeSecondsRef.current = 0;
       setActiveSeconds(0);
     };
   }, [isAuthenticated, userId]);
 
-  // Detectar visibilidade da aba
+  
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -145,7 +150,7 @@ export function useSessionTracker(isAuthenticated, userId) {
     };
   }, [isAuthenticated]);
 
-  // Heartbeat final ao fechar a aba
+  
   useEffect(() => {
     if (!isAuthenticated) return;
 

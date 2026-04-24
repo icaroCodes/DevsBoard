@@ -8,7 +8,7 @@ import { authRateLimiter } from '../middleware/security.js';
 
 const router = Router();
 
-// Esquemas Zod para validação
+
 const registerSchema = z.object({
   name: z.string().min(2, 'Nome muito curto').max(255),
   email: z.string().email('Email inválido'),
@@ -34,8 +34,8 @@ const setAuthCookies = (res, { accessToken, refreshToken }) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, 
   };
   
-  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); // 15m
-  res.cookie('refreshToken', refreshToken, cookieOptions); // 7d
+  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); 
+  res.cookie('refreshToken', refreshToken, cookieOptions); 
 };
 
 router.post('/register', authRateLimiter, async (req, res) => {
@@ -46,7 +46,7 @@ router.post('/register', authRateLimiter, async (req, res) => {
     const { data: existing } = await supabase.from('users').select('id').eq('email', email).single();
     if (existing) return res.status(400).json({ error: 'Email já cadastrado' });
 
-    const password_hash = await bcrypt.hash(password, 12); // Salt maior
+    const password_hash = await bcrypt.hash(password, 12); 
     const { data: newUser, error } = await supabase
       .from('users')
       .insert({ name, email, password_hash })

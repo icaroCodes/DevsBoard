@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export const globalTranslations = {
   pt: {
-    // Shared
+    
     loading: "Carregando...",
     viewAll: "Ver todas",
     manage: "Gerenciar",
@@ -11,7 +11,7 @@ export const globalTranslations = {
     cancel: "Cancelar",
     save: "Salvar",
 
-    // Layout nav
+    
     navHome: "Início",
     navFinances: "Finanças",
     navTasks: "Tarefas",
@@ -34,7 +34,7 @@ export const globalTranslations = {
     layoutTeamMode: "Modo de Equipe:",
     layoutBackPersonal: "Voltar para Pessoal",
 
-    // Finances
+    
     finLoading: 'Carregando dados financeiros...',
     finTitle: 'Finanças',
     finSubtitle: 'Acompanhe seu fluxo de caixa detalhado.',
@@ -81,7 +81,7 @@ export const globalTranslations = {
     catLeisure: 'Lazer',
     catOthers: 'Outros',
 
-    // Dashboard
+    
     dashHello: "Bom dia",
     dashPrep: "Organizando suas informações...",
     dashFinances: "Meu Dinheiro",
@@ -104,11 +104,20 @@ export const globalTranslations = {
     goalType: {
       financial: "Para economizar",
       performance: "Meta pessoal"
+    },
+    projFields: {
+      concept: "Conceito",
+      objective: "Objetivo",
+      problem: "Problema que resolve",
+      target_audience: "Público-alvo",
+      initial_scope: "Escopo inicial",
+      functional_requirements: "Requisitos funcionais",
+      interface_requirements: "Requisitos de interface",
     }
   },
 
   en: {
-    // Shared
+    
     loading: "Loading...",
     viewAll: "View all",
     manage: "Manage",
@@ -117,7 +126,7 @@ export const globalTranslations = {
     cancel: "Cancel",
     save: "Save",
 
-    // Layout nav
+    
     navHome: "Home",
     navFinances: "Finances",
     navTasks: "Tasks",
@@ -140,7 +149,7 @@ export const globalTranslations = {
     layoutTeamMode: "Team Mode:",
     layoutBackPersonal: "Back to Personal",
 
-    // Finances
+    
     finLoading: 'Loading financial data...',
     finTitle: 'Finances',
     finSubtitle: 'Track your detailed cash flow.',
@@ -187,7 +196,7 @@ export const globalTranslations = {
     catLeisure: 'Leisure',
     catOthers: 'Others',
 
-    // Dashboard
+    
     dashHello: "Hello",
     dashPrep: "Preparing your dashboard...",
     dashFinances: "Finances",
@@ -205,7 +214,7 @@ export const globalTranslations = {
     routineType: { daily: "Daily", weekly: "Weekly" },
     goalType: { financial: "Financial", performance: "Performance" },
 
-    // Tasks (list)
+    
     taskTitle: "Tasks",
     taskLoading: "Loading tasks...",
     taskFilterAll: "All",
@@ -238,7 +247,7 @@ export const globalTranslations = {
     priorityMedium: "Medium",
     priorityHigh: "High",
 
-    // Boards (Kanban)
+    
     boardTitle: "Boards",
     boardNewBtn: "New Board",
     boardNewInlineBtn: "New board",
@@ -289,7 +298,7 @@ export const globalTranslations = {
     boardListsUnit: "lists",
     boardCardsUnit: "cards",
 
-    // Routines
+    
     routinesTitle: "Routines",
     routinesSubtitle: "Manage your recurring habits",
     routinesNewBtn: "New Routine",
@@ -325,7 +334,7 @@ export const globalTranslations = {
     routineSave: "Save",
     routineNewTask: "New Task",
 
-    // Goals
+    
     goalTitle: "Goals",
     goalSubtitle: "Set and reach your goals",
     goalNewBtn: "New Goal",
@@ -355,7 +364,7 @@ export const globalTranslations = {
     goalDelMsgEmpty: "Are you sure you want to delete this goal?",
     deadlineType: { monthly: "Monthly", yearly: "Yearly", indefinite: "Open-ended" },
 
-    // Projects
+    
     projTitle: "Projects",
     projSubtitle: "Plan and visualize your big ideas",
     projNewBtn: "New Project",
@@ -404,7 +413,7 @@ export const globalTranslations = {
       interface_requirements: "Interface requirements",
     },
 
-    // Settings
+    
     settingsTitle: "Settings",
     settingsSubtitle: "Manage your identity and preferences",
     settingsYourName: "Your Name",
@@ -430,7 +439,7 @@ export const globalTranslations = {
 export function useTranslation() {
   const [lang, setLangState] = useState(() => localStorage.getItem('lang') || 'pt');
 
-  // Sync whenever any component broadcasts a language change (DB or local)
+  
   useEffect(() => {
     const handler = (e) => {
       const newLang = e?.detail?.lang || localStorage.getItem('lang');
@@ -441,12 +450,12 @@ export function useTranslation() {
   }, []);
 
   const setLang = async (newLang) => {
-    // Optimistic update
+    
     localStorage.setItem('lang', newLang);
     setLangState(newLang);
     window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: newLang } }));
 
-    // Persist to database (requires token — silent fail if not logged in)
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) return;

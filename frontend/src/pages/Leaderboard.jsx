@@ -13,7 +13,7 @@ const TIER_CONFIG = {
   bronze:  { color: '#CD7F32', medal: '/bronze.svg',  label: 'Bronze'  },
 };
 
-// qual medalha aparece no pódio de cada posição
+
 const PODIUM_MEDAL = {
   1: { src: '/platina.svg', color: '#E2E8FF', glow: 'rgba(226,232,255,0.35)', border: 'rgba(226,232,255,0.3)',  bg: 'linear-gradient(145deg,#0e0e14,#13131a)', pedestal: 'h-32' },
   2: { src: '/prata.svg',   color: '#C8D4E3', glow: 'rgba(200,212,227,0.25)', border: 'rgba(200,212,227,0.22)', bg: 'linear-gradient(145deg,#111114,#0e0e11)', pedestal: 'h-24' },
@@ -75,7 +75,7 @@ function PodiumCard({ user, position, isMe }) {
       className="flex flex-col items-center gap-2"
       style={{ flex: isFirst ? '0 0 40%' : '0 0 27%' }}
     >
-      {/* Avatar flutuando acima do pedestal */}
+      {}
       <div className="relative">
         <div
           className="rounded-full p-[2px]"
@@ -97,7 +97,7 @@ function PodiumCard({ user, position, isMe }) {
         )}
       </div>
 
-      {/* Pedestal */}
+      {}
       <div
         className={`w-full rounded-[18px] flex flex-col items-center justify-end gap-2 pb-4 pt-3 px-3 ${cfg.pedestal}`}
         style={{
@@ -106,7 +106,7 @@ function PodiumCard({ user, position, isMe }) {
           boxShadow:  `0 0 40px ${cfg.glow}`,
         }}
       >
-        {/* Medalha do tier */}
+        {}
         <img
           src={cfg.src}
           alt={`#${position}`}
@@ -114,7 +114,7 @@ function PodiumCard({ user, position, isMe }) {
           style={{ width: isFirst ? 36 : 28, height: isFirst ? 36 : 28 }}
         />
 
-        {/* Nome */}
+        {}
         <p
           className="text-center font-black leading-tight w-full"
           style={{
@@ -128,7 +128,7 @@ function PodiumCard({ user, position, isMe }) {
           {user.name.length > 14 ? user.name.slice(0, 13) + '…' : user.name}
         </p>
 
-        {/* Total */}
+        {}
         <p
           className="text-[10px] font-black"
           style={{ color: cfg.color }}
@@ -160,7 +160,7 @@ function RankRow({ user, position, isMe, index }) {
         border:     isMe ? '1px solid rgba(142,156,120,0.2)' : '1px solid rgba(255,255,255,0.05)',
       }}
     >
-      {/* Posição */}
+      {}
       <div className="w-7 flex items-center justify-center shrink-0">
         {positionMedal ? (
           <img src={positionMedal.src} alt={`#${position}`} className="w-5 h-5 object-contain" />
@@ -171,10 +171,10 @@ function RankRow({ user, position, isMe, index }) {
         )}
       </div>
 
-      {/* Avatar */}
+      {}
       <Avatar user={user} size={40} fontSize={15} />
 
-      {/* Nome + badges */}
+      {}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <p className="text-[13px] font-bold text-white truncate">{user.name}</p>
@@ -190,7 +190,7 @@ function RankRow({ user, position, isMe, index }) {
         <TierBadges user={user} />
       </div>
 
-      {/* Total */}
+      {}
       <span className="text-[13px] font-black text-zinc-400 shrink-0">{user.total}</span>
     </motion.div>
   );
@@ -218,7 +218,7 @@ export default function Leaderboard() {
       className="max-w-2xl mx-auto pb-32 px-4 md:px-6 font-sans select-none"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif' }}
     >
-      {/* Header */}
+      {}
       <div className="pt-10 pb-8 flex items-start justify-between">
         <div>
           <motion.button
@@ -259,17 +259,17 @@ export default function Leaderboard() {
         </div>
       ) : (
         <>
-          {/* ── Pódio ── */}
+          {}
           {podium.length >= 1 && (
             <div className="mb-8">
               <div className="flex items-end justify-center gap-3">
-                {/* 2º lugar à esquerda */}
+                {}
                 {podium[1] && (
                   <PodiumCard user={podium[1]} position={2} isMe={podium[1].id === user?.id} />
                 )}
-                {/* 1º lugar no centro */}
+                {}
                 <PodiumCard user={podium[0]} position={1} isMe={podium[0].id === user?.id} />
-                {/* 3º lugar à direita */}
+                {}
                 {podium[2] && (
                   <PodiumCard user={podium[2]} position={3} isMe={podium[2].id === user?.id} />
                 )}
@@ -277,7 +277,7 @@ export default function Leaderboard() {
             </div>
           )}
 
-          {/* ── Top 5 lista ── */}
+          {}
           {top5.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-700 mb-2">
@@ -295,7 +295,7 @@ export default function Leaderboard() {
             </div>
           )}
 
-          {/* Minha posição fora do top 50 */}
+          {}
           {data?.mePosition && data.mePosition > 50 && (
             <div
               className="glass-card mt-6 p-4 rounded-[16px] text-center"

@@ -9,7 +9,7 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     let query = supabase.from('routines').select('*, routine_tasks(*)');
-    
+
     if (req.teamId) {
       query = query.eq('team_id', req.teamId);
     } else {
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
     const { data, error } = await query
       .order('position', { ascending: true })
       .order('id', { ascending: false });
-      
+
     if (error) throw error;
     res.json(data.map(r => ({
       ...r,
@@ -46,7 +46,7 @@ router.post('/', [
 
     const { name, visual_type } = req.body;
     const insertData = { user_id: req.userId, name, visual_type };
-    
+
     if (req.teamId) {
       insertData.team_id = req.teamId;
     }
@@ -66,8 +66,14 @@ router.put('/:id', [
   body('visual_type').optional().isIn(['daily', 'weekly']),
 ], async (req, res) => {
   try {
-    const { data: existing } = await supabase
-      .from('routines').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { userId, teamId } = req;
+    let query = supabase.from('routines').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
     if (!existing) return res.status(404).json({ error: 'Rotina não encontrada' });
 
     const updates = {};
@@ -85,10 +91,18 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('routines').delete().eq('id', req.params.id).eq('user_id', req.userId).select();
+    const { userId, teamId } = req;
+    let query = supabase.from('routines').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: existing } = await query.single();
+    if (!existing) return res.status(404).json({ error: 'Rotina não encontrada' });
+
+    const { error } = await supabase.from('routines').delete().eq('id', req.params.id);
     if (error) throw error;
-    if (!data || data.length === 0) return res.status(404).json({ error: 'Rotina não encontrada' });
     res.status(204).send();
   } catch (err) {
     console.error(err);
@@ -104,8 +118,14 @@ router.post('/:id/tasks', [
   body('day_of_week').optional().isInt({ min: 0, max: 6 }).withMessage('Dia inválido'),
 ], async (req, res) => {
   try {
-    const { data: routine } = await supabase
-      .from('routines').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { userId, teamId } = req;
+    let query = supabase.from('routines').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: routine } = await query.single();
     if (!routine) return res.status(404).json({ error: 'Rotina não encontrada' });
 
     const { title, description, priority = 'medium', start_time, day_of_week } = req.body;
@@ -135,8 +155,14 @@ router.put('/:id/tasks/:taskId', [
   body('completed').optional().isBoolean(),
 ], async (req, res) => {
   try {
-    const { data: routine } = await supabase
-      .from('routines').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { userId, teamId } = req;
+    let query = supabase.from('routines').select('id').eq('id', req.params.id);
+    if (teamId) {
+      query = query.eq('team_id', teamId);
+    } else {
+      query = query.eq('user_id', userId).is('team_id', null);
+    }
+    const { data: routine } = await query.single();
     if (!routine) return res.status(404).json({ error: 'Rotina não encontrada' });
 
     const updates = {};
@@ -157,9 +183,13 @@ router.put('/:id/tasks/:taskId', [
 
 router.post('/reorder', async (req, res) => {
   try {
-    const { items } = req.body; // [{id, position}]
+    const { items } = req.body;
+    const { userId, teamId } = req;
     for (const item of items) {
-      await supabase.from('routines').update({ position: item.position }).eq('id', item.id).eq('user_id', req.userId);
+      let query = supabase.from('routines').update({ position: item.position }).eq('id', item.id);
+      if (teamId) query = query.eq('team_id', teamId);
+      else query = query.eq('user_id', userId).is('team_id', null);
+      await query;
     }
     res.json({ success: true });
   } catch (err) {
@@ -170,8 +200,12 @@ router.post('/reorder', async (req, res) => {
 
 router.post('/:id/tasks/reorder', async (req, res) => {
   try {
-    const { items } = req.body; // [{id, position}]
-    const { data: routine } = await supabase.from('routines').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { items } = req.body;
+    const { userId, teamId } = req;
+    let query = supabase.from('routines').select('id').eq('id', req.params.id);
+    if (teamId) query = query.eq('team_id', teamId);
+    else query = query.eq('user_id', userId).is('team_id', null);
+    const { data: routine } = await query.single();
     if (!routine) return res.status(404).json({ error: 'Rotina não encontrada' });
 
     for (const item of items) {
@@ -186,8 +220,11 @@ router.post('/:id/tasks/reorder', async (req, res) => {
 
 router.delete('/:id/tasks/:taskId', async (req, res) => {
   try {
-    const { data: routine } = await supabase
-      .from('routines').select('id').eq('id', req.params.id).eq('user_id', req.userId).single();
+    const { userId, teamId } = req;
+    let query = supabase.from('routines').select('id').eq('id', req.params.id);
+    if (teamId) query = query.eq('team_id', teamId);
+    else query = query.eq('user_id', userId).is('team_id', null);
+    const { data: routine } = await query.single();
     if (!routine) return res.status(404).json({ error: 'Rotina não encontrada' });
 
     const { error } = await supabase
