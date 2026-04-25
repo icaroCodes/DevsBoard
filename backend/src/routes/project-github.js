@@ -172,6 +172,15 @@ router.get('/callback', async (req, res) => {
 router.post(
   '/webhook/:projectId',
   async (req, res) => {
+    console.log('🔥 webhook hit', {
+      event: req.headers['x-github-event'],
+      projectId: req.params.projectId,
+      method: req.method,
+      url: req.originalUrl,
+      hasRawBody: !!req.rawBody,
+      hasSignature: !!req.headers['x-hub-signature-256'],
+    });
+
     try {
       if (!WEBHOOK_SECRET) {
         console.warn('[GH webhook] GITHUB_WEBHOOK_SECRET ausente — recusando');
@@ -181,7 +190,6 @@ router.post(
       const sig = req.headers['x-hub-signature-256'];
       if (!sig) return res.status(401).json({ error: 'sem assinatura' });
 
-      // raw body capturado pelo `verify` callback do express.json
       const raw = req.rawBody;
       if (!raw) {
         console.error('[GH webhook] req.rawBody ausente — verify callback não rodou');
@@ -202,17 +210,23 @@ router.post(
       const event = req.headers['x-github-event'];
       const payload = req.body;
 
-      // valida que o repo do payload bate com o do projeto
-      const { data: project } = await supabase
+      if (event === 'ping') {
+        return res.status(200).json({ ok: true, msg: 'pong' });
+      }
+
+      const { data: project, error: projErr } = await supabase
         .from('projects')
         .select('id, github_repo_id, github_default_branch')
         .eq('id', req.params.projectId).single();
-      if (!project) return res.status(404).json({ error: 'projeto não existe' });
+
+      if (projErr || !project) {
+        console.error('[GH webhook] projeto não encontrado:', req.params.projectId, projErr);
+        return res.status(404).json({ error: 'projeto não existe' });
+      }
+
       if (!project.github_repo_id || project.github_repo_id !== payload.repository?.id) {
         return res.status(400).json({ error: 'repo não confere com o projeto' });
       }
-
-      if (event === 'ping') return res.json({ ok: true, msg: 'pong' });
 
       if (event === 'push') {
         const branch = (payload.ref || '').replace('refs/heads/', '');
@@ -239,12 +253,12 @@ router.post(
           .update({ github_last_sync_at: new Date().toISOString() })
           .eq('id', project.id);
 
-        return res.json({ ok: true, processed: commits.length });
+        return res.status(200).json({ ok: true, processed: commits.length });
       }
 
       if (event === 'pull_request') {
         const pr = payload.pull_request;
-        if (!pr) return res.json({ ok: true });
+        if (!pr) return res.status(200).json({ ok: true });
 
         let state = pr.state;
         if (pr.draft) state = 'draft';
@@ -269,7 +283,6 @@ router.post(
           raw: pr,
         }, { onConflict: 'project_id,github_pr_id' });
 
-        // log atividade
         const action = payload.action;
         if (action === 'opened' || action === 'reopened') {
           await supabase.from('project_activity').insert({
@@ -283,14 +296,15 @@ router.post(
           });
         }
 
-        return res.json({ ok: true });
+        return res.status(200).json({ ok: true });
       }
 
-      // outros eventos: ignorados silenciosamente
-      res.json({ ok: true, ignored: event });
+      return res.status(200).json({ ok: true, ignored: event });
     } catch (err) {
-      console.error('[GH webhook]', err);
-      res.status(500).json({ error: 'erro processando webhook' });
+      console.error('[GH webhook] ERRO:', err);
+      if (!res.headersSent) {
+        return res.status(500).json({ error: 'erro processando webhook' });
+      }
     }
   }
 );

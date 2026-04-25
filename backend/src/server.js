@@ -48,10 +48,16 @@ app.use(apiRateLimiter);
 
 app.use('/auth', authRoutes);
 app.use('/auth/github', githubRoutes);
-app.use('/project-github', projectGithubRoutes);
+app.use('/project-github', (req, res, next) => {
+  console.log('[DEBUG] /project-github hit:', req.method, req.originalUrl);
+  next();
+}, projectGithubRoutes);
 
 
-app.use(authenticate);
+app.use((req, res, next) => {
+  console.log('[DEBUG] Caiu no authenticate global:', req.method, req.originalUrl);
+  authenticate(req, res, next);
+});
 
 
 app.use((req, _res, next) => {
