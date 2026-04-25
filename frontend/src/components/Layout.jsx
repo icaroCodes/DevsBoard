@@ -32,7 +32,8 @@ import {
   Briefcase,
   LogOut,
   Trophy,
-  Timer
+  Timer,
+  PanelLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';
@@ -205,31 +206,35 @@ export default function Layout({ children }) {
       <div className="pt-8 pb-4 px-4 shrink-0 relative">
         {(!isExpanded && !isMobile) ? (
           // Colapsado: ícone único que expande ao clicar.
-          <button
+          <motion.button
             onClick={handleToggleExpand}
             aria-label="Expandir sidebar"
-            className="mx-auto w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer shadow-lg overflow-hidden border border-white/[0.08] bg-[#1C1C1E]"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.93 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="mx-auto w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer shadow-lg border border-white/8 bg-[#1C1C1E]"
           >
-            {activeTeam?.avatar_url ? (
-              <img src={activeTeam.avatar_url} alt={activeTeam.name} className="w-full h-full object-cover" />
-            ) : (
-              <img src="/devsboard.png" alt="DevsBoard" className="w-full h-full object-cover rounded-[10px]" />
-            )}
-          </button>
+            <motion.div
+              initial={false}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+            >
+              <PanelLeft size={20} className="text-[#A1A1AA]" strokeWidth={1.5} />
+            </motion.div>
+          </motion.button>
         ) : (
           // Expandido: icon = colapsa sidebar; texto + chevron = abre switcher.
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
               onClick={handleToggleExpand}
               aria-label="Recolher sidebar"
-              className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-lg overflow-hidden border border-white/[0.08] bg-[#1C1C1E] hover:opacity-90 transition-opacity cursor-pointer"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.93 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-lg border border-white/8 bg-[#1C1C1E] hover:bg-white/8 transition-colors cursor-pointer"
             >
-              {activeTeam?.avatar_url ? (
-                <img src={activeTeam.avatar_url} alt={activeTeam.name} className="w-full h-full object-cover" />
-              ) : (
-                <img src="/devsboard.png" alt="DevsBoard" className="w-full h-full object-cover rounded-[10px]" />
-              )}
-            </button>
+              <PanelLeft size={20} className="text-[#A1A1AA]" strokeWidth={1.5} />
+            </motion.button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -342,7 +347,6 @@ export default function Layout({ children }) {
             {section.title && (isExpanded || isMobile) && (
               <div className="flex items-center justify-between px-3 mb-1">
                 <span className="text-[12px] font-bold text-[#86868B]">{section.title}</span>
-                {idx === 1 && <Plus size={14} className="text-[#86868B] cursor-pointer hover:text-white transition-colors" />}
               </div>
             )}
             {section.items.map(({ to, icon: Icon, key, label: fallbackLabel }) => {
@@ -364,18 +368,27 @@ export default function Layout({ children }) {
                   title={(!isExpanded && !isMobile) ? label : ''}
                   style={{ width: isExpanded || isMobile ? '100%' : '56px', margin: (!isExpanded && !isMobile) ? '0 auto' : undefined }}
                 >
-                  <Icon
-                    size={18}
-                    className={`shrink-0 ${iconColor}`}
-                    strokeWidth={isActive ? 2 : 1.5}
-                  />
-                  <AnimatePresence initial={false}>
+                  <motion.div
+                    layout
+                    animate={{ scale: 1 }}
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                    className="shrink-0"
+                  >
+                    <Icon
+                      size={18}
+                      className={iconColor}
+                      strokeWidth={isActive ? 2 : 1.5}
+                    />
+                  </motion.div>
+                  <AnimatePresence initial={false} mode="wait">
                     {(isExpanded || isMobile) && (
                       <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ opacity: 0, width: 0, x: -6 }}
+                        animate={{ opacity: 1, width: 'auto', x: 0 }}
+                        exit={{ opacity: 0, width: 0, x: -4 }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
                         className={`whitespace-nowrap overflow-hidden text-[13px] ${isActive ? 'font-semibold text-[#F5F5F7]' : 'font-medium text-[#A1A1AA] group-hover:text-[#F5F5F7]'}`}
                       >
                         {label}

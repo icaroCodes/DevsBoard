@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, ChevronDown, FolderKanban, X, Layout, Target, HelpCircle, Users, ListFilter, Monitor, Loader2, Image, Figma, Upload, ExternalLink, Link } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronDown, FolderKanban, X, Layout, Target, HelpCircle, Users, ListFilter, Monitor, Loader2, Image, Figma, Upload, ExternalLink, Link, LayoutGrid } from 'lucide-react';
+import ProjectBoard from './ProjectBoard';
 import { api } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
@@ -155,6 +156,7 @@ export default function Projects() {
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
   const [lightbox, setLightbox] = useState(null);
+  const [boardProject, setBoardProject] = useState(null);
 
   const load = () => {
     api('/projects').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
@@ -391,6 +393,9 @@ export default function Projects() {
 
                   <div className="flex items-center gap-4">
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => setBoardProject(p)} className="p-2 text-[#86868B] hover:text-[#0A84FF] rounded-full hover:bg-[#0A84FF]/10 transition-colors" title="Abrir quadro">
+                        <LayoutGrid size={16} />
+                      </button>
                       <button onClick={() => openEdit(p)} className="p-2 text-[#86868B] hover:text-[#0A84FF] rounded-full hover:bg-[#0A84FF]/10 transition-colors">
                         <Pencil size={16} />
                       </button>
@@ -782,6 +787,22 @@ export default function Projects() {
               <X size={20} />
             </button>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {boardProject && (
+          <ProjectBoard
+            project={boardProject}
+            onClose={() => setBoardProject(null)}
+            onProjectUpdated={() => {
+              load();
+              api(`/projects`).then(items => {
+                const updated = items.find(p => p.id === boardProject.id);
+                if (updated) setBoardProject(updated);
+              }).catch(() => {});
+            }}
+          />
         )}
       </AnimatePresence>
     </motion.div>
