@@ -12,7 +12,7 @@ import routinesRoutes from './routes/routines.js';
 import goalsRoutes from './routes/goals.js';
 import projectsRoutes from './routes/projects.js';
 import projectTasksRoutes from './routes/project-tasks.js';
-import projectGithubRoutes from './routes/project-github.js';
+import projectGithubRoutes, { webhookHandler } from './routes/project-github.js';
 import settingsRoutes from './routes/settings.js';
 import taskListsRoutes from './routes/task-lists.js';
 import taskCardsRoutes from './routes/task-cards.js';
@@ -48,16 +48,12 @@ app.use(apiRateLimiter);
 
 app.use('/auth', authRoutes);
 app.use('/auth/github', githubRoutes);
-app.use('/project-github', (req, res, next) => {
-  console.log('[DEBUG] /project-github hit:', req.method, req.originalUrl);
-  next();
-}, projectGithubRoutes);
+app.post('/project-github/webhook/:projectId', webhookHandler);
+
+app.use('/project-github', projectGithubRoutes);
 
 
-app.use((req, res, next) => {
-  console.log('[DEBUG] Caiu no authenticate global:', req.method, req.originalUrl);
-  authenticate(req, res, next);
-});
+app.use(authenticate);
 
 
 app.use((req, _res, next) => {
