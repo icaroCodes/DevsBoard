@@ -11,8 +11,6 @@ import tasksRoutes from './routes/tasks.js';
 import routinesRoutes from './routes/routines.js';
 import goalsRoutes from './routes/goals.js';
 import projectsRoutes from './routes/projects.js';
-import projectTasksRoutes from './routes/project-tasks.js';
-import projectGithubRoutes, { webhookHandler } from './routes/project-github.js';
 import settingsRoutes from './routes/settings.js';
 import taskListsRoutes from './routes/task-lists.js';
 import taskCardsRoutes from './routes/task-cards.js';
@@ -39,18 +37,12 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-team-id']
 }));
-app.use(express.json({
-  limit: '50mb',
-  verify: (req, _res, buf) => { req.rawBody = buf; },
-}));
+app.use(express.json({ limit: '50mb' }));
 app.use(apiRateLimiter);
 
 
 app.use('/auth', authRoutes);
 app.use('/auth/github', githubRoutes);
-app.post('/project-github/webhook/:projectId', webhookHandler);
-
-app.use('/project-github', projectGithubRoutes);
 
 
 app.use(authenticate);
@@ -69,7 +61,6 @@ app.use('/tasks', interceptMembers('tasks'), tasksRoutes);
 app.use('/routines', interceptMembers('routines'), routinesRoutes);
 app.use('/goals', interceptMembers('goals'), goalsRoutes);
 app.use('/projects', interceptMembers('projects'), projectsRoutes);
-app.use('/project-board', projectTasksRoutes);
 app.use('/settings', settingsRoutes);
 app.use('/task-lists', interceptMembers('task_lists'), taskListsRoutes);
 app.use('/task-cards', interceptMembers('task_cards'), taskCardsRoutes);
