@@ -40,6 +40,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+body.grabbing-active,
+body.grabbing-active *,
+body:has(.drag-handle:active),
+body:has(.drag-handle:active) * {
+  cursor: grabbing !important;
+}
+
 /* Light theme should not force dark color-scheme on form elements */
 body[data-theme="arctic"] {
   color-scheme: light;

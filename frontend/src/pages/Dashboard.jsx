@@ -175,17 +175,18 @@ export default function Dashboard() {
   }, [routineOrderByTab]);
 
   const toggleTaskComplete = async (task) => {
+    const nextStatus = task.status === 'done' ? 'todo' : 'done';
     try {
       setData(prev => ({
         ...prev,
         tasks: {
           ...prev.tasks,
-          items: prev.tasks.items.map(it => it.id === task.id ? { ...it, completed: !it.completed } : it)
+          items: prev.tasks.items.map(it => it.id === task.id ? { ...it, status: nextStatus, completed: nextStatus === 'done' } : it)
         }
       }));
-      await api(`/tasks/${task.id}`, {
+      await api(`/projects/${task.project_id}/tasks/${task.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ completed: !task.completed }),
+        body: JSON.stringify({ status: nextStatus }),
       });
       api('/dashboard').then(setData);
     } catch (err) {
@@ -354,7 +355,7 @@ export default function Dashboard() {
               <CheckSquare size={18} className="text-[#F5F5F7]" />
               <h3 className="text-[17px] font-semibold text-[#F5F5F7]">{t.dashTasksPending}</h3>
             </div>
-            <Link to="/tasks" className="text-[14px] font-medium text-[#0A84FF] hover:text-[#5E94FF] transition-colors">
+            <Link to="/projects" className="text-[14px] font-medium text-[#0A84FF] hover:text-[#5E94FF] transition-colors">
               {t.manage}
             </Link>
           </div>

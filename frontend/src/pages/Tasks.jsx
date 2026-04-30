@@ -386,41 +386,63 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.35 : 1 }}
       className="group outline-none pb-2"
-      {...attributes} {...listeners}
     >
-      <div className="flex flex-col relative rounded-[12px] transition-all overflow-hidden border border-transparent hover:border-white/80 touch-none shadow-[0_2px_4px_rgba(0,0,0,0.12)] cursor-grab active:cursor-grabbing" style={{ background: '#222224' }}>
+      <div
+        className="flex flex-col relative rounded-[14px] overflow-hidden border border-white/[0.06] hover:border-white/15 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-all duration-200"
+        style={{ background: 'linear-gradient(180deg, #1F1F22 0%, #1A1A1D 100%)', boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 2px 6px rgba(0,0,0,0.25)' }}>
+        
+        {/* Dedicated Drag Handle */}
+        <div 
+          {...listeners}
+          {...attributes}
+          className="absolute inset-y-0 left-0 w-8 flex items-center justify-center text-[#86868B] hover:text-[#F5F5F7] opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-30 touch-none pointer-events-auto"
+          title="Arrastar"
+        >
+          <div className="p-1 rounded-[6px] hover:bg-white/10">
+            <GripVertical size={14} />
+          </div>
+        </div>
         {card.cover_url && (
-          <div className="w-full h-[120px] bg-[#1C1C1E] relative group/cover shrink-0 pointer-events-none">
-            <img src={card.cover_url} alt="Cover" className="w-full h-full object-cover" />
+          <div className="w-full h-[128px] bg-[#0F0F11] relative shrink-0 pointer-events-none overflow-hidden">
+            <img src={card.cover_url} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
           </div>
         )}
-        <div className="flex flex-col gap-1.5 px-3 py-3">
-          <div className="flex items-center gap-2">
-            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onToggle(card)} className="transition-colors outline-none shrink-0 border-none hover:scale-110 active:scale-95" title="Mudar status">
-              {card.completed ? <CircleDashed size={18} strokeWidth={2} className="text-[#10B981]" /> : <CircleDashed size={18} strokeWidth={2} className="text-[#86868B] hover:text-[#F59E0B]" />}
+        <div className="flex flex-col gap-2 px-3.5 py-3 pl-8">
+          <div className="flex items-start gap-2.5">
+            <button type="button" onClick={() => onToggle(card)}
+              className="mt-[2px] shrink-0 transition-all outline-none border-none hover:scale-110 active:scale-95" title="Concluir">
+              {card.completed ? (
+                <div className="w-[17px] h-[17px] rounded-full bg-[#30D158] flex items-center justify-center shadow-[0_0_8px_rgba(48,209,88,0.4)]">
+                  <Check size={11} strokeWidth={3} className="text-black" />
+                </div>
+              ) : (
+                <div className="w-[17px] h-[17px] rounded-full border-[1.5px] border-[#48484A] hover:border-[#30D158] transition-colors" />
+              )}
             </button>
-            <div className="flex-1 flex flex-col min-w-0 pr-6">
-              <span className={`text-[14px] font-medium leading-tight truncate transition-colors ${card.completed ? 'line-through text-[#86868B]' : 'text-[#E5E5EA]'}`}>
+            <div className="flex-1 min-w-0 pr-7">
+              <span className={`block text-[13.5px] font-medium leading-snug tracking-tight transition-colors ${card.completed ? 'line-through text-[#63646B]' : 'text-[#F5F5F7]'}`}>
                 {card.name}
               </span>
             </div>
           </div>
 
           {card.due_date && (
-            <div className="mt-1 flex pl-6">
-              <span className="flex items-center gap-1.5 text-[12px] px-2 py-0.5 rounded-[4px] font-medium" style={{ background: '#FACC15', color: '#111111' }}>
-                <Clock size={12} strokeWidth={2.5} /> {formatDate(card.due_date)}
+            <div className="flex pl-[26px]">
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.5 py-0.5 rounded-[6px] text-[#FFD60A] bg-[#FFD60A]/10 border border-[#FFD60A]/20">
+                <Clock size={10} strokeWidth={2.5} /> {formatDate(card.due_date)}
               </span>
             </div>
           )}
         </div>
 
-        {}
-        <div className="absolute top-2.5 right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onEdit(card)} className="p-2 sm:p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none bg-black/40 backdrop-blur-sm shadow-lg" title="Editar"><Pencil size={14} /></button>
-          <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(card.id)} className="p-2 sm:p-1.5 rounded-[6px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors outline-none bg-black/40 backdrop-blur-sm shadow-lg" title="Excluir"><Trash2 size={14} /></button>
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 z-20">
+          <button type="button" onClick={() => onEdit(card)}
+            className="p-1.5 rounded-[7px] text-[#A1A1AA] hover:text-white hover:bg-white/[0.08] transition-colors outline-none backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.45)' }} title="Editar"><Pencil size={12} /></button>
+          <button type="button" onClick={() => onDelete(card.id)}
+            className="p-1.5 rounded-[7px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition-colors outline-none backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.45)' }} title="Excluir"><Trash2 size={12} /></button>
         </div>
       </div>
     </div>
@@ -429,15 +451,16 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
 
 function CardPreview({ card, isOverlay = false }) {
   return (
-    <div className={`flex flex-col relative rounded-[12px] overflow-hidden border border-white/20 shadow-xl pb-2 ${isOverlay ? 'rotate-2 opacity-95 scale-[1.02]' : ''}`} style={{ background: '#222224' }}>
+    <div className={`flex flex-col relative rounded-[14px] overflow-hidden border border-white/15 ${isOverlay ? 'rotate-1 scale-[1.03]' : ''}`}
+      style={{ background: 'linear-gradient(180deg, #232326 0%, #1B1B1E 100%)', boxShadow: '0 14px 36px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset' }}>
       {card.cover_url && (
-        <div className="w-full h-[100px] bg-[#1C1C1E] relative shrink-0">
-          <img src={card.cover_url} alt="Cover" className="w-full h-full object-cover" />
+        <div className="w-full h-[110px] overflow-hidden shrink-0">
+          <img src={card.cover_url} alt="" className="w-full h-full object-cover" />
         </div>
       )}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <CircleDashed size={16} strokeWidth={2} className="text-[#86868B] shrink-0" />
-        <span className="flex-1 text-[13px] font-medium leading-tight text-[#E5E5EA] truncate">{card.name}</span>
+      <div className="flex items-center gap-2.5 px-3.5 py-3 pl-8">
+        <div className="w-[17px] h-[17px] rounded-full border-[1.5px] border-[#48484A] shrink-0" />
+        <span className="flex-1 text-[13.5px] font-medium leading-tight text-[#F5F5F7] tracking-tight truncate">{card.name}</span>
       </div>
     </div>
   );
@@ -518,26 +541,37 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
       className="w-[280px] sm:w-[300px] flex-shrink-0 snap-center sm:snap-align-none"
     >
-      <div className="rounded-[16px] flex flex-col pt-3 shadow-xl backdrop-blur-sm border border-transparent ring-1 ring-white/[0.03]" style={{ background: '#111111', maxHeight: '75vh' }}>
+      <div
+        className="rounded-[18px] flex flex-col pt-3 border border-white/[0.05]"
+        style={{
+          background: 'rgba(20,20,22,0.72)',
+          backdropFilter: 'blur(24px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
+          maxHeight: '75vh'
+        }}>
         <div className="flex items-center justify-between px-4 pb-3 cursor-grab active:cursor-grabbing touch-none" {...attributes} {...listeners}>
           {editingTitle ? (
             <div className="flex-1 flex items-center gap-2">
               <input ref={titleRef} value={titleVal} onChange={e => setTitleVal(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setTitleVal(list.name); setEditingTitle(false); } }}
                 onBlur={saveTitle} onPointerDown={e => e.stopPropagation()}
-                className="flex-1 rounded-[8px] px-2 py-1 text-[14px] font-semibold text-[#F5F5F7] outline-none border border-[#0A84FF]/60 min-w-0"
+                className="flex-1 rounded-[8px] px-2 py-1 text-[13.5px] font-semibold text-[#F5F5F7] outline-none border border-[#0A84FF]/60 min-w-0"
                 style={{ background: '#222224' }} />
               {saving && <Loader2 size={13} className="animate-spin text-[#86868B] shrink-0" />}
             </div>
           ) : (
-            <h3 onDoubleClick={() => setEditingTitle(true)}
-              className="text-[14px] font-semibold text-[#F5F5F7] truncate cursor-default select-none pointer-events-auto">
-              {list.name}
-            </h3>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h3 onDoubleClick={() => setEditingTitle(true)}
+                className="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-[#E5E5EA] truncate cursor-default select-none pointer-events-auto">
+                {list.name}
+              </h3>
+              <span className="text-[10.5px] font-semibold text-[#63646B] bg-white/[0.05] px-1.5 py-0.5 rounded-full">{list.cards.length}</span>
+            </div>
           )}
 
-          <div className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
-            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(list.id)} className="p-1 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/10 transition-colors outline-none cursor-pointer group/options tooltip" title="Deletar Lista">
+          <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
+            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(list.id)} className="p-1 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/[0.08] transition-colors outline-none cursor-pointer" title="Opções da coluna">
               <MoreHorizontal size={16} />
             </button>
           </div>
@@ -572,11 +606,11 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
               </div>
             </div>
           ) : (
-            <div className="pt-1 pb-2">
+            <div className="pt-1 pb-2 px-1">
               <button type="button" onClick={() => setShowAdd(true)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-[12px] text-[14px] font-medium text-[#A1A1AA] hover:text-[#F5F5F7] hover:bg-white/5 transition-colors outline-none cursor-pointer group/add">
-                <span className="flex items-center gap-2"><Plus size={16} strokeWidth={2} className="opacity-80 group-hover/add:opacity-100 transition-opacity" /> Colocar um novo recado</span>
-                <CopyPlus size={15} strokeWidth={1.5} className="opacity-60 group-hover/add:opacity-100 transition-opacity" />
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-[10px] text-[12.5px] font-medium text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.04] transition-colors outline-none cursor-pointer group/add">
+                <Plus size={14} strokeWidth={2.2} className="opacity-70 group-hover/add:opacity-100 transition-opacity" />
+                <span className="tracking-tight">Adicionar tarefa</span>
               </button>
             </div>
           )}
@@ -964,33 +998,53 @@ function BoardKanban({ board, onBack }) {
     if (!scrollContainer) return;
 
     const autoScroll = () => {
+      if (!activeCard && !activeList) return;
+
       const { x } = mousePos.current;
       const rect = scrollContainer.getBoundingClientRect();
-      const edgeSize = 150; // Distance from edge to start scrolling
-      const speed = 10; // Scroll speed multiplier
+      const edgeSize = 120;
+      const maxSpeed = 40;
 
+      // Horizontal
       if (x < rect.left + edgeSize) {
-        const intensity = (rect.left + edgeSize - x) / edgeSize;
-        scrollContainer.scrollLeft -= speed * intensity;
+        const intensity = Math.pow((rect.left + edgeSize - x) / edgeSize, 2);
+        scrollContainer.scrollLeft -= maxSpeed * intensity;
       } else if (x > rect.right - edgeSize) {
-        const intensity = (x - (rect.right - edgeSize)) / edgeSize;
-        scrollContainer.scrollLeft += speed * intensity;
+        const intensity = Math.pow((x - (rect.right - edgeSize)) / edgeSize, 2);
+        scrollContainer.scrollLeft += maxSpeed * intensity;
+      }
+
+      // Vertical (for the whole page/board container)
+      const { y } = mousePos.current;
+      if (y < rect.top + edgeSize) {
+        const intensity = Math.pow((rect.top + edgeSize - y) / edgeSize, 2);
+        window.scrollBy(0, -maxSpeed * intensity);
+      } else if (y > rect.bottom - edgeSize) {
+        const intensity = Math.pow((y - (rect.bottom - edgeSize)) / edgeSize, 2);
+        window.scrollBy(0, maxSpeed * intensity);
       }
 
       animationFrameId.current = requestAnimationFrame(autoScroll);
     };
 
-    animationFrameId.current = requestAnimationFrame(autoScroll);
-    return () => cancelAnimationFrame(animationFrameId.current);
-  }, []);
+    if (activeCard || activeList) {
+      animationFrameId.current = requestAnimationFrame(autoScroll);
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+
+    return () => {
+      cancelAnimationFrame(animationFrameId.current);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [activeCard, activeList]);
 
   const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: { distance: 10 },
+    activationConstraint: { distance: 3 },
   });
   
   const touchSensor = useSensor(TouchSensor, {
-    // Delay of 250ms and 5px tolerance allows for scrolling before drag starts
-    activationConstraint: { delay: 250, tolerance: 5 },
+    // Delay of 150ms and 5px tolerance allows for scrolling before drag starts
+    activationConstraint: { delay: 150, tolerance: 5 },
   });
 
   const sensors = useSensors(mouseSensor, touchSensor);
@@ -1095,6 +1149,7 @@ function BoardKanban({ board, onBack }) {
 
   function onDragStart({ active }) {
     const d = active.data.current;
+    document.body.classList.add('grabbing-active');
     if (d?.type === 'card') {
       setActiveCard(d.card);
       dragOriginListId.current = d.listId;
@@ -1170,6 +1225,7 @@ function BoardKanban({ board, onBack }) {
   async function onDragEnd({ active, over }) {
     setActiveCard(null);
     setActiveList(null);
+    document.body.classList.remove('grabbing-active');
 
     const aData = active.data.current;
     const oData = over?.data.current;
@@ -1243,27 +1299,29 @@ function BoardKanban({ board, onBack }) {
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
-        <div className="flex items-center gap-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
+        <div className="flex items-start gap-3">
           <button type="button" onClick={onBack}
-            className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+            className="mt-1 p-1.5 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           </button>
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-[4px] shrink-0" style={{ background: board.color || '#2C2C2E' }} />
-              <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">{board.name}</h1>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: board.color || '#0A84FF', boxShadow: `0 0 10px ${board.color || '#0A84FF'}80` }} />
+              <h1 className="text-[28px] md:text-[32px] leading-none font-bold text-[#F5F5F7] tracking-tight">{board.name}</h1>
             </div>
-            <p className="text-[17px] text-[#86868B] pl-7">{lists.length} coluna{lists.length !== 1 ? 's' : ''} · {lists.reduce((a, l) => a + l.cards.length, 0)} recados</p>
+            <div className="flex items-center gap-3 text-[12.5px] text-[#86868B] pl-5">
+              <span><span className="text-[#E5E5EA] font-semibold">{lists.length}</span> coluna{lists.length !== 1 ? 's' : ''}</span>
+              <span className="w-1 h-1 rounded-full bg-[#48484A]" />
+              <span><span className="text-[#E5E5EA] font-semibold">{lists.reduce((a, l) => a + l.cards.length, 0)}</span> tarefa{lists.reduce((a, l) => a + l.cards.length, 0) !== 1 ? 's' : ''}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <button type="button" onClick={() => setShowAddList(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
-            <Plus size={14} strokeWidth={3} /> {t.boardNewListBtn}
-          </button>
-        </div>
+        <button type="button" onClick={() => setShowAddList(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] bg-white text-black text-[12.5px] font-semibold hover:bg-white/90 active:scale-[0.97] transition-all cursor-pointer self-start sm:self-auto shadow-sm">
+          <Plus size={13} strokeWidth={2.5} /> {t.boardNewListBtn}
+        </button>
       </motion.div>
 
       <DndContext sensors={sensors} collisionDetection={closestCorners}
@@ -1310,9 +1368,8 @@ function BoardKanban({ board, onBack }) {
               </div>
             ) : (
               <button type="button" onClick={() => setShowAddList(true)}
-                className="w-[300px] shrink-0 flex items-center justify-center gap-2 px-4 py-4 rounded-[16px] text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.04] transition-all cursor-pointer outline-none self-start"
-                style={{ background: 'transparent' }}>
-                <Plus size={16} strokeWidth={2} /> {t.boardAddListInline}
+                className="w-[300px] shrink-0 flex items-center justify-center gap-2 py-3.5 rounded-[18px] text-[12.5px] font-medium text-[#63646B] hover:text-[#A1A1AA] border border-dashed border-white/[0.06] hover:border-white/15 hover:bg-white/[0.02] transition-all cursor-pointer outline-none self-start">
+                <Plus size={14} strokeWidth={2} /> {t.boardAddListInline}
               </button>
             )}
           </div>

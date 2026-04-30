@@ -62,7 +62,7 @@ router.get('/', async (req, res) => {
       },
       tasks: {
         total: tasksAll?.length || 0,
-        completed: tasksAll?.filter(t => t.completed).length || 0,
+        completed: tasksAll?.filter(t => t.status === 'done').length || 0,
         items: tasks || [],
       },
       goals: {

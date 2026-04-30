@@ -1,789 +1,293 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, ChevronDown, FolderKanban, X, Layout, Target, HelpCircle, Users, ListFilter, Monitor, Loader2, Image, Figma, Upload, ExternalLink, Link } from 'lucide-react';
-import { api } from '../lib/api';
+import { Plus, Pencil, Trash2, X, FolderKanban, Upload, Search, MoreHorizontal } from 'lucide-react';
+import { useProjects } from '../hooks/useProjects';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useRealtimeSubscription } from '../contexts/RealtimeContext';
-import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
-const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const COLORS = ['#0A84FF', '#FF9F0A', '#30D158', '#BF5AF2', '#FF375F', '#5E5CE6', '#64D2FF', '#FFD60A'];
 
-const FIELDS = [
-  { key: 'concept', label: 'O que é isso?', icon: <HelpCircle size={16} /> },
-  { key: 'objective', label: 'Para que vou fazer?', icon: <Target size={16} /> },
-  { key: 'problem', label: 'O que isso resolve?', icon: <X size={16} /> },
-  { key: 'target_audience', label: 'Quem vai participar?', icon: <Users size={16} /> },
-  { key: 'initial_scope', label: 'O que pretendo fazer primeiro?', icon: <Layout size={16} /> },
-  { key: 'functional_requirements', label: 'O que precisa ter?', icon: <ListFilter size={16} /> },
-  { key: 'interface_requirements', label: 'Como deve ser o visual?', icon: <Monitor size={16} /> },
-];
+function ProjectModal({ initial, onClose, onSubmit }) {
+  const [form, setForm] = useState({
+    name: initial?.name || '',
+    description: initial?.description || '',
+    color: initial?.color || COLORS[0],
+    logo_base64: null,
+    logo_url: initial?.logo_url || null,
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const fileRef = useRef(null);
 
-function ImageUploadField({ label, icon, value, preview, onChange, onRemove }) {
-  const inputRef = useRef(null);
-  const [dragOver, setDragOver] = useState(false);
-  const { t } = useTranslation();
+  const handleFile = (file) => {
+    if (!file?.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = (e) => setForm(f => ({ ...f, logo_base64: e.target.result, logo_url: e.target.result }));
+    r.readAsDataURL(file);
+  };
 
-  function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (e) => onChange(e.target.result);
-    reader.readAsDataURL(file);
-  }
-
-  function handleDrop(e) {
+  const submit = async (e) => {
     e.preventDefault();
-    setDragOver(false);
-    handleFile(e.dataTransfer.files[0]);
-  }
-
-  const displayUrl = preview || value;
+    if (!form.name.trim()) return;
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        name: form.name.trim(),
+        description: form.description,
+        color: form.color,
+        ...(form.logo_base64 ? { logo_base64: form.logo_base64 } : {}),
+      });
+      onClose();
+    } finally { setSubmitting(false); }
+  };
 
   return (
-    <div className="space-y-1.5">
-      <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider flex items-center gap-2">
-        {icon} {label}
-      </label>
-      {displayUrl ? (
-        <div className="relative group rounded-[16px] overflow-hidden border border-white/[0.08] bg-[#2C2C2E]">
-          <img src={displayUrl} alt={label} className="w-full h-[180px] object-contain bg-[#1A1A1C] p-2" />
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
-            <button type="button" onClick={() => inputRef.current?.click()}
-              className="p-1.5 rounded-[8px] bg-black/60 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/80 transition-colors outline-none cursor-pointer">
-              <Pencil size={13} />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+      onClick={onClose}>
+      <motion.form onSubmit={submit} onClick={e => e.stopPropagation()}
+        initial={{ scale: 0.97, y: 12, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.97, y: 8, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+        className="w-full max-w-[440px] bg-[#161618] border border-white/[0.06] rounded-[18px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4">
+          <h2 className="text-[15px] font-semibold text-[#F5F5F7] tracking-tight">
+            {initial ? 'Editar projeto' : 'Novo projeto'}
+          </h2>
+          <button type="button" onClick={onClose}
+            className="text-[#86868B] hover:text-white p-1 -mr-1 rounded-md hover:bg-white/5 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="px-6 pb-5 space-y-5">
+          <div className="flex items-center gap-4">
+            <button type="button" onClick={() => fileRef.current?.click()}
+              className="w-14 h-14 rounded-[12px] flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:scale-[1.03]"
+              style={{ background: form.logo_url ? 'transparent' : form.color }}>
+              {form.logo_url
+                ? <img src={form.logo_url} alt="" className="w-full h-full object-cover" />
+                : <Upload size={18} className="text-white/90" strokeWidth={1.8} />}
             </button>
-            <button type="button" onClick={onRemove}
-              className="p-1.5 rounded-[8px] bg-black/60 backdrop-blur-sm text-white/80 hover:text-[#FF453A] hover:bg-black/80 transition-colors outline-none cursor-pointer">
-              <Trash2 size={13} />
-            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files[0])} />
+            <div className="flex-1">
+              <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#6E6E73] mb-2">Cor de destaque</div>
+              <div className="flex gap-1.5">
+                {COLORS.map(c => (
+                  <button type="button" key={c} onClick={() => setForm(f => ({ ...f, color: c }))}
+                    className={`w-5 h-5 rounded-full transition-all ${form.color === c ? 'ring-2 ring-white/90 ring-offset-2 ring-offset-[#161618]' : 'hover:scale-110'}`}
+                    style={{ background: c }} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-[#86868B]">Nome</label>
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              autoFocus placeholder="Nome do projeto"
+              className="w-full px-3 py-2.5 bg-[#0E0E10] border border-white/[0.06] rounded-[10px] text-[14px] text-[#F5F5F7] placeholder-[#48484A] outline-none transition-colors focus:border-white/20" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-[#86868B]">Descrição <span className="text-[#48484A]">(opcional)</span></label>
+            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3}
+              placeholder="Sobre o que é este projeto?"
+              className="w-full px-3 py-2.5 bg-[#0E0E10] border border-white/[0.06] rounded-[10px] text-[14px] text-[#F5F5F7] placeholder-[#48484A] outline-none resize-none transition-colors focus:border-white/20" />
           </div>
         </div>
-      ) : (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
-          className={`flex flex-col items-center justify-center gap-2 py-8 rounded-[16px] border-2 border-dashed cursor-pointer transition-all ${dragOver ? 'border-[#0A84FF] bg-[#0A84FF]/10' : 'border-white/[0.08] hover:border-white/20 bg-[#2C2C2E]/50 hover:bg-[#2C2C2E]'}`}
-        >
-          <Upload size={24} className="text-[#86868B]" strokeWidth={1.5} />
-          <span className="text-[13px] text-[#86868B]">{t.projUploadHint}</span>
+
+        <div className="flex items-center justify-end gap-2 px-6 py-3.5 bg-[#0E0E10]/60 border-t border-white/[0.04]">
+          <button type="button" onClick={onClose}
+            className="px-3.5 py-1.5 text-[13px] font-medium text-[#A1A1AA] hover:text-white transition-colors rounded-[8px]">
+            Cancelar
+          </button>
+          <button type="submit" disabled={submitting || !form.name.trim()}
+            className="px-3.5 py-1.5 text-[13px] font-semibold bg-white text-black rounded-[8px] hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+            {submitting ? 'Salvando…' : initial ? 'Salvar' : 'Criar projeto'}
+          </button>
         </div>
-      )}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden"
-        onChange={(e) => { handleFile(e.target.files[0]); e.target.value = ''; }} />
-    </div>
+      </motion.form>
+    </motion.div>
   );
 }
 
-// Compact image upload for extra images / reference images
-function CompactImageUpload({ value, onChange, onRemove }) {
-  const inputRef = useRef(null);
-  const { t } = useTranslation();
-
-  function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (e) => onChange(e.target.result);
-    reader.readAsDataURL(file);
-  }
+function ProjectCard({ project, onEdit, onDelete }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const accent = project.color || '#0A84FF';
 
   return (
-    <div>
-      {value ? (
-        <div className="relative group rounded-[12px] overflow-hidden border border-white/[0.08] bg-[#2C2C2E]">
-          <img src={value} alt="" className="w-full h-[120px] object-contain bg-[#1A1A1C] p-2" />
-          <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-            <button type="button" onClick={() => inputRef.current?.click()}
-              className="p-1 rounded-[6px] bg-black/60 text-white/80 hover:text-white hover:bg-black/80 transition-colors outline-none cursor-pointer">
-              <Pencil size={11} />
-            </button>
-            <button type="button" onClick={onRemove}
-              className="p-1 rounded-[6px] bg-black/60 text-white/80 hover:text-[#FF453A] hover:bg-black/80 transition-colors outline-none cursor-pointer">
-              <Trash2 size={11} />
-            </button>
+    <motion.div layout
+      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      className="group relative">
+      <Link to={`/projects/${project.id}`}
+        className="block relative rounded-[14px] bg-[#141416] border border-white/[0.05] hover:border-white/[0.1] hover:bg-[#181819] transition-all duration-200 overflow-hidden">
+        {/* Subtle accent line on top */}
+        <div className="h-[2px] w-full opacity-70" style={{ background: accent }} />
+
+        <div className="p-5">
+          <div className="flex items-start gap-3.5 mb-4">
+            {project.logo_url ? (
+              <img src={project.logo_url} alt={project.name}
+                className="w-10 h-10 rounded-[9px] object-cover shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-[9px] flex items-center justify-center shrink-0"
+                style={{ background: `${accent}1f`, color: accent }}>
+                <FolderKanban size={18} strokeWidth={1.8} />
+              </div>
+            )}
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h3 className="text-[14.5px] font-semibold text-[#F5F5F7] tracking-tight truncate">
+                {project.name}
+              </h3>
+              <p className="text-[12px] text-[#86868B] mt-0.5">
+                {new Date(project.updated_at || project.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+              </p>
+            </div>
           </div>
+
+          <p className="text-[13px] text-[#86868B] leading-relaxed line-clamp-2 min-h-[36px]">
+            {project.description || <span className="text-[#48484A]">Sem descrição</span>}
+          </p>
         </div>
-      ) : (
-        <div
-          onClick={() => inputRef.current?.click()}
-          className="flex items-center justify-center gap-2 py-4 rounded-[12px] border-2 border-dashed border-white/[0.08] hover:border-white/20 bg-[#2C2C2E]/50 hover:bg-[#2C2C2E] cursor-pointer transition-all"
-        >
-          <Upload size={16} className="text-[#86868B]" strokeWidth={1.5} />
-          <span className="text-[12px] text-[#86868B]">{t.projUploadHint}</span>
-        </div>
-      )}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden"
-        onChange={(e) => { handleFile(e.target.files[0]); e.target.value = ''; }} />
-    </div>
+      </Link>
+
+      {/* Actions menu */}
+      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(v => !v); }}
+          className="p-1.5 rounded-[7px] bg-[#1C1C1E]/90 backdrop-blur border border-white/10 text-[#A1A1AA] hover:text-white hover:bg-[#2C2C2E] transition-colors">
+          <MoreHorizontal size={14} />
+        </button>
+        <AnimatePresence>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={(e) => { e.preventDefault(); setMenuOpen(false); }} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                transition={{ duration: 0.12 }}
+                className="absolute right-0 mt-1.5 z-20 w-36 bg-[#1C1C1E] border border-white/[0.08] rounded-[10px] shadow-[0_12px_32px_rgba(0,0,0,0.5)] py-1 overflow-hidden">
+                <button onClick={(e) => { e.preventDefault(); setMenuOpen(false); onEdit(); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] text-[#F5F5F7] hover:bg-white/5 transition-colors">
+                  <Pencil size={12} className="text-[#86868B]" /> Editar
+                </button>
+                <button onClick={(e) => { e.preventDefault(); setMenuOpen(false); onDelete(); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] text-[#FF453A] hover:bg-[#FF453A]/10 transition-colors">
+                  <Trash2 size={12} /> Excluir
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
 
 export default function Projects() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [expanded, setExpanded] = useState({});
-  const [logoPreview, setLogoPreview] = useState(null);
-  const [figmaPreview, setFigmaPreview] = useState(null);
-
-  // Extra images: { id (existing), title, url (existing), preview (new base64) }
-  const [extraImages, setExtraImages] = useState([]);
-  // Removed existing image IDs
-  const [removedImageIds, setRemovedImageIds] = useState([]);
-
-  // References: { id (existing), title, url, imageUrl (existing), imagePreview (new base64) }
-  const [references, setReferences] = useState([]);
-  const [removedRefIds, setRemovedRefIds] = useState([]);
-
-  const [form, setForm] = useState({
-    name: '',
-    concept: '',
-    objective: '',
-    problem: '',
-    target_audience: '',
-    initial_scope: '',
-    functional_requirements: '',
-    interface_requirements: '',
-    submitting: false,
-  });
-  const { success, error } = useToast();
+  const { projects, loading, create, update, remove } = useProjects();
+  const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
-  const { activeTeam } = useAuth();
-  const { t } = useTranslation();
-  const [lightbox, setLightbox] = useState(null);
+  const [modal, setModal] = useState(null);
+  const [query, setQuery] = useState('');
 
-  const load = () => {
-    api('/projects').then(setItems).catch(err => error(err.message)).finally(() => setLoading(false));
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return projects;
+    return projects.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q)
+    );
+  }, [projects, query]);
+
+  const handleCreate = async (payload) => {
+    try { await create(payload); showSuccess('Projeto criado'); }
+    catch (e) { showError(e.message); throw e; }
+  };
+  const handleUpdate = async (payload) => {
+    try { await update(modal.project.id, payload); showSuccess('Projeto atualizado'); }
+    catch (e) { showError(e.message); throw e; }
+  };
+  const handleDelete = async (p) => {
+    const ok = await confirm({ title: 'Excluir projeto?', message: `"${p.name}" e todos seus dados serão removidos.`, confirmText: 'Excluir', danger: true });
+    if (!ok) return;
+    try { await remove(p.id); showSuccess('Projeto excluído'); }
+    catch (e) { showError(e.message); }
   };
 
-  useEffect(() => { load(); }, [activeTeam]);
-  useRealtimeSubscription(['projects'], () => { load(); });
-
-  const resetForm = () => {
-    setForm({ name: '', concept: '', objective: '', problem: '', target_audience: '', initial_scope: '', functional_requirements: '', interface_requirements: '', submitting: false });
-    setLogoPreview(null);
-    setFigmaPreview(null);
-    setExtraImages([]);
-    setRemovedImageIds([]);
-    setReferences([]);
-    setRemovedRefIds([]);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (form.submitting) return;
-    setForm(prev => ({ ...prev, submitting: true }));
-    try {
-      const payload = { ...form };
-      delete payload.submitting;
-
-      if (logoPreview && logoPreview.startsWith('data:')) payload.logo_base64 = logoPreview;
-      if (figmaPreview && figmaPreview.startsWith('data:')) payload.figma_base64 = figmaPreview;
-
-      let projectId;
-      if (editing) {
-        if (!logoPreview && !editing.logo_url) payload.logo_url = null;
-        if (!figmaPreview && !editing.figma_url) payload.figma_url = null;
-        await api(`/projects/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
-        projectId = editing.id;
-      } else {
-        const created = await api('/projects', { method: 'POST', body: JSON.stringify(payload) });
-        projectId = created.id;
-      }
-
-      
-      await Promise.all(removedImageIds.map(imgId =>
-        api(`/projects/${projectId}/images/${imgId}`, { method: 'DELETE' })
-      ));
-
-      
-      await Promise.all(removedRefIds.map(refId =>
-        api(`/projects/${projectId}/references/${refId}`, { method: 'DELETE' })
-      ));
-
-      
-      await Promise.all(
-        extraImages
-          .filter(img => !img.id && img.preview)
-          .map(img =>
-            api(`/projects/${projectId}/images`, {
-              method: 'POST',
-              body: JSON.stringify({ title: img.title, image_base64: img.preview }),
-            })
-          )
-      );
-
-      
-      await Promise.all(
-        references
-          .filter(ref => !ref.id)
-          .map(ref =>
-            api(`/projects/${projectId}/references`, {
-              method: 'POST',
-              body: JSON.stringify({ title: ref.title, url: ref.url || null, image_base64: ref.imagePreview || null }),
-            })
-          )
-      );
-
-      setModalOpen(false);
-      setEditing(null);
-      resetForm();
-      success(editing ? 'Legal, as informações do projeto foram salvas!' : 'Muito bom! Seu novo projeto foi iniciado.');
-      load();
-    } catch (err) {
-      error(err.message);
-      setForm(prev => ({ ...prev, submitting: false }));
-    }
-  };
-
-  const handleDelete = async (id) => {
-    confirm({
-      title: 'Apagar este projeto inteiro?',
-      message: 'Você tem certeza? Tudo o que você planejou aqui será apagado para sempre.',
-      onConfirm: async () => {
-        try {
-          await api(`/projects/${id}`, { method: 'DELETE' });
-          success(t.projDeleted);
-          load();
-        } catch (err) {
-          error(err.message);
-        }
-      }
-    });
-  };
-
-  const openEdit = (p) => {
-    setEditing(p);
-    setForm({
-      name: p.name,
-      concept: p.concept || '',
-      objective: p.objective || '',
-      problem: p.problem || '',
-      target_audience: p.target_audience || '',
-      initial_scope: p.initial_scope || '',
-      functional_requirements: p.functional_requirements || '',
-      interface_requirements: p.interface_requirements || '',
-    });
-    setLogoPreview(p.logo_url || null);
-    setFigmaPreview(p.figma_url || null);
-    // Load existing extra images
-    setExtraImages((p.project_images || []).map(img => ({
-      id: img.id, title: img.title, url: img.image_url, preview: null,
-    })));
-    setRemovedImageIds([]);
-    // Load existing references
-    setReferences((p.project_references || []).map(ref => ({
-      id: ref.id, title: ref.title, url: ref.url || '', imageUrl: ref.image_url, imagePreview: null,
-    })));
-    setRemovedRefIds([]);
-    setModalOpen(true);
-  };
-
-  const openNew = () => {
-    setEditing(null);
-    resetForm();
-    setModalOpen(true);
-  };
-
-  const handleRemoveLogo = () => {
-    setLogoPreview(null);
-    if (editing) setEditing({ ...editing, logo_url: null });
-  };
-
-  const handleRemoveFigma = () => {
-    setFigmaPreview(null);
-    if (editing) setEditing({ ...editing, figma_url: null });
-  };
-
-  // Extra images handlers
-  const addExtraImage = () => setExtraImages(prev => [...prev, { id: null, title: '', preview: null, url: null }]);
-
-  const updateExtraImage = (idx, patch) => setExtraImages(prev => prev.map((img, i) => i === idx ? { ...img, ...patch } : img));
-
-  const removeExtraImage = (idx) => {
-    const img = extraImages[idx];
-    if (img.id) setRemovedImageIds(prev => [...prev, img.id]);
-    setExtraImages(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  // References handlers
-  const addReference = () => setReferences(prev => [...prev, { id: null, title: '', url: '', imageUrl: null, imagePreview: null }]);
-
-  const updateReference = (idx, patch) => setReferences(prev => prev.map((ref, i) => i === idx ? { ...ref, ...patch } : ref));
-
-  const removeReference = (idx) => {
-    const ref = references[idx];
-    if (ref.id) setRemovedRefIds(prev => [...prev, ref.id]);
-    setReferences(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.05 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
-  };
+  if (loading) return <LoadingSkeleton />;
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="show"
-      variants={containerVariants}
-      className="max-w-4xl mx-auto pb-12 font-sans"
-      style={{ fontFamily: FONT }}
-    >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
-        <div>
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Projetos</h1>
-          <p className="text-[17px] text-[#86868B] mt-1">Organize coisas maiores, como uma reforma ou uma viagem longa.</p>
+    <div className="max-w-6xl mx-auto px-1">
+      {/* Header */}
+      <div className="mb-10">
+        <div className="flex items-end justify-between gap-6 mb-1">
+          <div>
+            <h1 className="text-[32px] font-semibold text-[#F5F5F7] tracking-[-0.02em] leading-none">
+              Projetos
+            </h1>
+            <p className="text-[13.5px] text-[#86868B] mt-2.5">
+              {projects.length === 0
+                ? 'Nenhum projeto ainda. Crie o primeiro para começar.'
+                : `${projects.length} ${projects.length === 1 ? 'projeto' : 'projetos'}`}
+            </p>
+          </div>
+
+          <button onClick={() => setModal({ mode: 'create' })}
+            className="shrink-0 flex items-center gap-1.5 h-9 px-3.5 bg-white text-black text-[13px] font-semibold rounded-[9px] hover:bg-white/90 transition-colors shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_8px_24px_-12px_rgba(0,0,0,0.6)]">
+            <Plus size={15} strokeWidth={2.2} />
+            Novo projeto
+          </button>
         </div>
-        <button
-          onClick={openNew}
-          className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#0A84FF] text-white font-medium hover:bg-[#007AFF] transition-all focus:outline-none focus:ring-2 focus:ring-[#0A84FF]/50 shadow-sm outline-none"
-        >
-          <Plus size={18} strokeWidth={2.5} /> Criar Novo Projeto
-        </button>
       </div>
 
-      {loading ? (
-        <LoadingSkeleton variant="projects" />
-      ) : (
-        <div className="space-y-4">
-          {items.length === 0 ? (
-            <div className="glass-card flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
-              <FolderKanban size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
-              <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhum projeto.</p>
-              <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-xs">Aqui você pode planejar as etapas de algo grande que queira fazer.</p>
-            </div>
-          ) : (
-            items.map((p) => (
-              <motion.div
-                key={p.id}
-                variants={itemVariants}
-                className="glass-card bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] overflow-hidden shadow-sm hover:border-white/10 transition-all duration-300 group"
-              >
-                <div
-                  className="flex justify-between items-center p-6 cursor-pointer select-none"
-                  onClick={() => setExpanded({ ...expanded, [p.id]: !expanded[p.id] })}
-                >
-                  <div className="flex items-center gap-4">
-                    {p.logo_url ? (
-                      <div className="w-12 h-12 rounded-[14px] overflow-hidden bg-white/5 flex items-center justify-center shrink-0 border border-white/[0.08] shadow-sm ring-4 ring-white/[0.02]">
-                        <img src={p.logo_url} alt="Logo" className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 rounded-[14px] bg-white/5 flex items-center justify-center text-[#8E9C78] border border-white/[0.08] shadow-sm">
-                        <FolderKanban size={24} />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-semibold text-[18px] text-[#F5F5F7] tracking-tight">{p.name}</p>
-                      <p className="text-[13px] text-[#86868B] mt-0.5">Tudo organizado aqui</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => openEdit(p)} className="p-2 text-[#86868B] hover:text-[#0A84FF] rounded-full hover:bg-[#0A84FF]/10 transition-colors">
-                        <Pencil size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-2 text-[#86868B] hover:text-[#FF453A] rounded-full hover:bg-[#FF453A]/10 transition-colors">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <motion.div
-                      animate={{ rotate: expanded[p.id] ? 180 : 0 }}
-                      className="text-[#86868B]"
-                    >
-                      <ChevronDown size={20} />
-                    </motion.div>
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {expanded[p.id] && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="border-t border-white/[0.04] bg-[#161618]/50"
-                    >
-                      <div className="p-6 space-y-8">
-                        {/* Logo + Figma */}
-                        {(p.logo_url || p.figma_url) && (
-                          <div className="flex flex-col gap-6 p-1">
-                            {p.logo_url && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-white/[0.04]"
-                              >
-                                <div
-                                  className="w-24 h-24 rounded-[20px] overflow-hidden border border-white/[0.08] bg-[#1A1A1C] shadow-2xl cursor-pointer hover:border-white/20 transition-all flex items-center justify-center p-2 group"
-                                  onClick={() => setLightbox(p.logo_url)}
-                                >
-                                  <img src={p.logo_url} alt="Logo" className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
-                                </div>
-                                <div className="space-y-1 text-center sm:text-left">
-                                  <div className="flex items-center justify-center sm:justify-start gap-2 text-[#86868B] mb-1">
-                                    <Image size={14} className="opacity-60" />
-                                    <p className="text-[11px] font-bold uppercase tracking-[0.1em]">Foto ou Símbolo</p>
-                                  </div>
-                                  <h4 className="text-[18px] font-semibold text-[#F5F5F7]">Imagem do Projeto</h4>
-                                  <p className="text-[14px] text-[#86868B]">A representação visual central e o DNA da marca.</p>
-                                </div>
-                              </motion.div>
-                            )}
-                            {p.figma_url && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="space-y-3"
-                              >
-                                <div className="flex items-center gap-2 text-[#86868B] ml-1">
-                                  <Figma size={14} className="opacity-60" />
-                                  <p className="text-[11px] font-bold uppercase tracking-[0.1em]">Desenhos ou Fotos extras</p>
-                                </div>
-                                <div
-                                  className="rounded-[24px] overflow-hidden border border-white/[0.08] bg-[#1A1A1C] shadow-2xl cursor-pointer hover:border-white/20 hover:bg-[#212124] transition-all group relative aspect-video"
-                                  onClick={() => setLightbox(p.figma_url)}
-                                >
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6 z-10">
-                                    <div className="flex items-center gap-2 text-white">
-                                      <Layout size={18} />
-                                      <span className="font-medium">{t.projViewFull}</span>
-                                    </div>
-                                  </div>
-                                  <img src={p.figma_url} alt="Figma Screen" className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
-                                </div>
-                              </motion.div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Extra Images Grid */}
-                        {p.project_images && p.project_images.length > 0 && (
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-[#86868B] ml-1">
-                              <Image size={14} className="opacity-60" />
-                              <p className="text-[11px] font-bold uppercase tracking-[0.1em]">{t.projExtraImagesSection}</p>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                              {p.project_images.map((img) => (
-                                <div
-                                  key={img.id}
-                                  className="group cursor-pointer rounded-[16px] overflow-hidden border border-white/[0.08] bg-[#1A1A1C] hover:border-white/20 transition-all"
-                                  onClick={() => setLightbox(img.image_url)}
-                                >
-                                  <div className="aspect-video relative">
-                                    <img src={img.image_url} alt={img.title} className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </div>
-                                  <div className="px-3 py-2">
-                                    <p className="text-[12px] font-medium text-[#F5F5F7] truncate">{img.title}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* References */}
-                        {p.project_references && p.project_references.length > 0 && (
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-[#86868B] ml-1">
-                              <Link size={14} className="opacity-60" />
-                              <p className="text-[11px] font-bold uppercase tracking-[0.1em]">{t.projRefsSection}</p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {p.project_references.map((ref) => (
-                                <div
-                                  key={ref.id}
-                                  className="rounded-[16px] border border-white/[0.08] bg-[#1A1A1C] overflow-hidden hover:border-white/20 transition-all"
-                                >
-                                  {ref.image_url && (
-                                    <div
-                                      className="cursor-pointer group relative"
-                                      onClick={() => setLightbox(ref.image_url)}
-                                    >
-                                      <img src={ref.image_url} alt={ref.title} className="w-full h-[120px] object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                  )}
-                                  <div className="px-3 py-2.5 flex items-center justify-between gap-2">
-                                    <p className="text-[13px] font-medium text-[#F5F5F7] truncate">{ref.title}</p>
-                                    {ref.url && (
-                                      <a
-                                        href={ref.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="shrink-0 p-1.5 rounded-[8px] text-[#86868B] hover:text-[#0A84FF] hover:bg-[#0A84FF]/10 transition-colors"
-                                      >
-                                        <ExternalLink size={13} />
-                                      </a>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Text fields */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {FIELDS.map(({ key, icon }) => (
-                            p[key] && (
-                              <div key={key} className="space-y-1.5">
-                                <div className="flex items-center gap-2 text-[#86868B]">
-                                  {icon}
-                                  <p className="text-[12px] font-bold uppercase tracking-wider">{t.projFields?.[key] || key}</p>
-                                </div>
-                                <p className="text-[15px] text-[#F5F5F7] leading-relaxed whitespace-pre-wrap pl-1">{p[key]}</p>
-                              </div>
-                            )
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))
-          )}
+      {/* Search */}
+      {projects.length > 0 && (
+        <div className="relative mb-6 max-w-sm">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6E73]" />
+          <input value={query} onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar projetos…"
+            className="w-full pl-9 pr-3 h-9 bg-[#141416] border border-white/[0.05] rounded-[9px] text-[13px] text-[#F5F5F7] placeholder-[#48484A] outline-none transition-colors focus:border-white/15 focus:bg-[#181819]" />
         </div>
       )}
 
-      {/* Modal */}
-      <AnimatePresence>
-        {modalOpen && (
-          <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[32px] p-7 w-full max-w-2xl my-8 shadow-2xl relative"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-                  {editing ? 'Mudar Projeto' : 'Novo Projeto'}
-                </h2>
-                <button onClick={() => { setModalOpen(false); setEditing(null); resetForm(); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-full bg-white/[0.04] hover:bg-white/[0.08]">
-                  <X size={18} />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-5 max-h-[70vh] overflow-y-auto pr-3 thin-scrollbar">
-                {}
-                <div className="space-y-1.5">
-                  <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">Qual o nome desse projeto?</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-5 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-transparent text-[16px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/50"
-                    placeholder={t.projNamePh}
-                    required
-                  />
-                </div>
-
-                {}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <ImageUploadField
-                    label="Foto ou Símbolo"
-                    icon={<Image size={14} />}
-                    value={editing?.logo_url}
-                    preview={logoPreview}
-                    onChange={setLogoPreview}
-                    onRemove={handleRemoveLogo}
-                  />
-                  <ImageUploadField
-                    label="Outra imagem (opcional)"
-                    icon={<Figma size={14} />}
-                    value={editing?.figma_url}
-                    preview={figmaPreview}
-                    onChange={setFigmaPreview}
-                    onRemove={handleRemoveFigma}
-                  />
-                </div>
-
-                {}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider flex items-center gap-2">
-                      <Image size={14} /> {t.projExtraImagesSection}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={addExtraImage}
-                      className="flex items-center gap-1.5 text-[12px] font-medium text-[#0A84FF] hover:text-[#007AFF] transition-colors px-3 py-1.5 rounded-full hover:bg-[#0A84FF]/10"
-                    >
-                      <Plus size={14} strokeWidth={2.5} /> {t.projExtraImagesAdd}
-                    </button>
-                  </div>
-
-                  {extraImages.map((img, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-4 rounded-[18px] bg-[#2C2C2E]/60 border border-white/[0.06] space-y-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={img.title}
-                          onChange={(e) => updateExtraImage(idx, { title: e.target.value })}
-                          placeholder={t.projExtraImageTitlePh}
-                          className="flex-1 px-4 py-2.5 rounded-[12px] bg-[#1C1C1E] border border-transparent text-[14px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none placeholder:text-[#86868B]/40 transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeExtraImage(idx)}
-                          className="p-2 text-[#86868B] hover:text-[#FF453A] rounded-full hover:bg-[#FF453A]/10 transition-colors shrink-0"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                      <CompactImageUpload
-                        value={img.preview || img.url}
-                        onChange={(base64) => updateExtraImage(idx, { preview: base64 })}
-                        onRemove={() => updateExtraImage(idx, { preview: null, url: null })}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-
-                {}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider flex items-center gap-2">
-                      <Link size={14} /> {t.projRefsSection}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={addReference}
-                      className="flex items-center gap-1.5 text-[12px] font-medium text-[#0A84FF] hover:text-[#007AFF] transition-colors px-3 py-1.5 rounded-full hover:bg-[#0A84FF]/10"
-                    >
-                      <Plus size={14} strokeWidth={2.5} /> {t.projRefsAdd}
-                    </button>
-                  </div>
-
-                  {references.map((ref, idx) => (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-4 rounded-[18px] bg-[#2C2C2E]/60 border border-white/[0.06] space-y-3"
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={ref.title}
-                          onChange={(e) => updateReference(idx, { title: e.target.value })}
-                          placeholder={t.projRefTitlePh}
-                          className="flex-1 px-4 py-2.5 rounded-[12px] bg-[#1C1C1E] border border-transparent text-[14px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none placeholder:text-[#86868B]/40 transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeReference(idx)}
-                          className="p-2 text-[#86868B] hover:text-[#FF453A] rounded-full hover:bg-[#FF453A]/10 transition-colors shrink-0"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 px-4 py-2.5 rounded-[12px] bg-[#1C1C1E] border border-transparent focus-within:border-[#0A84FF] transition-all">
-                        <ExternalLink size={14} className="text-[#86868B] shrink-0" />
-                        <input
-                          type="url"
-                          value={ref.url}
-                          onChange={(e) => updateReference(idx, { url: e.target.value })}
-                          placeholder={t.projRefUrlPh}
-                          className="flex-1 bg-transparent text-[14px] text-[#F5F5F7] focus:outline-none placeholder:text-[#86868B]/40"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[11px] text-[#86868B] ml-1 uppercase tracking-wider">{t.projRefImage}</p>
-                        <CompactImageUpload
-                          value={ref.imagePreview || ref.imageUrl}
-                          onChange={(base64) => updateReference(idx, { imagePreview: base64 })}
-                          onRemove={() => updateReference(idx, { imagePreview: null, imageUrl: null })}
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {FIELDS.map(({ key }) => (
-                    <div key={key} className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1 uppercase tracking-wider">{t.projFields?.[key] || key}</label>
-                      <textarea
-                        value={form[key]}
-                        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                        className="w-full px-4 py-3 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[14px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/30 resize-none"
-                        rows={3}
-                        placeholder="..."
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-4 sticky bottom-0 bg-[#1C1C1E] pb-2">
-                  <button
-                    type="submit"
-                    disabled={form.submitting}
-                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
-                  >
-                    {form.submitting ? (
-                      <>
-                        <Loader2 size={20} className="animate-spin" />
-                        <span>Salvando tudo...</span>
-                      </>
-                    ) : editing ? 'Pronto, salvar tudo' : 'Começar agora'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+      {/* Grid */}
+      {projects.length === 0 ? (
+        <motion.button onClick={() => setModal({ mode: 'create' })}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="w-full max-w-md mx-auto block mt-16 p-12 rounded-[16px] border border-dashed border-white/[0.08] hover:border-white/15 bg-[#0E0E10]/40 hover:bg-[#141416] transition-all text-center group">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-[12px] bg-white/[0.04] border border-white/[0.06] flex items-center justify-center group-hover:bg-white/[0.06] transition-colors">
+            <Plus size={20} className="text-[#86868B] group-hover:text-white transition-colors" strokeWidth={1.8} />
           </div>
-        )}
-      </AnimatePresence>
+          <div className="text-[14.5px] font-semibold text-[#F5F5F7] mb-1">Criar primeiro projeto</div>
+          <div className="text-[12.5px] text-[#86868B]">Organize tarefas, docs e assets em um só lugar.</div>
+        </motion.button>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 text-[13px] text-[#86868B]">
+          Nenhum projeto encontrado para "{query}".
+        </div>
+      ) : (
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          initial="hidden" animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}>
+          {filtered.map(p => (
+            <ProjectCard key={p.id} project={p}
+              onEdit={() => setModal({ mode: 'edit', project: p })}
+              onDelete={() => handleDelete(p)} />
+          ))}
+        </motion.div>
+      )}
 
-      {}
       <AnimatePresence>
-        {lightbox && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-center justify-center z-[60] p-8 cursor-pointer"
-            onClick={() => setLightbox(null)}
-          >
-            <motion.img
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              src={lightbox}
-              alt="Preview"
-              className="max-w-full max-h-full object-contain rounded-[16px] shadow-2xl"
-            />
-            <button className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
-              <X size={20} />
-            </button>
-          </motion.div>
+        {modal && (
+          <ProjectModal
+            initial={modal.mode === 'edit' ? modal.project : null}
+            onClose={() => setModal(null)}
+            onSubmit={modal.mode === 'edit' ? handleUpdate : handleCreate}
+          />
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

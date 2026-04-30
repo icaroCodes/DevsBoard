@@ -53,7 +53,6 @@ const navSections = [
   {
     title: 'Feedbacks',
     items: [
-      { to: '/tasks', icon: CircleDashed, key: 'navTasks', label: 'Recebidos' },
       { to: '/routines', icon: RefreshCw, key: 'navRoutines', label: 'In Progress' },
       { to: '/goals', icon: Target, key: 'navGoals', label: 'Done' },
     ]
@@ -63,6 +62,7 @@ const navSections = [
     items: [
       { to: '/finances', icon: Wallet, key: 'navFinances', label: 'Finanças' },
       { to: '/projects', icon: Folder, key: 'navProjects', label: 'Projetos' },
+      { to: '/tasks', icon: CheckSquare, key: 'navTasks', label: 'Tarefas' },
       { to: '/teams', icon: Users, key: 'navTeams', label: 'Equipes' },
       { to: '/achievements', icon: Trophy, key: 'navAchievements', label: 'Conquistas' },
     ]
@@ -80,6 +80,7 @@ export default function Layout({ children }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
+  const isProjectFocus = /^\/projects\/\d+/.test(location.pathname);
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
   const { theme, setTheme } = useTheme();
@@ -568,6 +569,18 @@ export default function Layout({ children }) {
       )}
     </motion.aside>
   );
+
+  // Modo foco de projeto — esconde sidebar global, conteúdo full-width com bg dedicado.
+  if (isProjectFocus) {
+    return (
+      <div className="relative w-screen h-screen overflow-hidden font-[Poppins,sans-serif]" style={{ backgroundColor: '#191919' }}>
+        <div className="relative z-20 w-full h-full overflow-y-auto overflow-x-hidden" style={{ overscrollBehavior: 'none' }}>
+          {children}
+        </div>
+        <AudioPlayer />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-screen h-screen overflow-hidden selection:bg-[var(--db-accent-muted)] font-[Poppins,sans-serif]" style={{ backgroundColor: 'var(--db-bg)' }}>

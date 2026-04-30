@@ -1,0 +1,91 @@
+diff --git a/node_modules/tiptap-extension-global-drag-handle/dist/index.cjs b/node_modules/tiptap-extension-global-drag-handle/dist/index.cjs
+index 8e0aa34..375cdb7 100644
+--- a/node_modules/tiptap-extension-global-drag-handle/dist/index.cjs
++++ b/node_modules/tiptap-extension-global-drag-handle/dist/index.cjs
+@@ -71,7 +71,7 @@ function absoluteRect(node) {
+ function nodeDOMAtCoords(coords, options) {
+     const selectors = [
+         'li',
+-        'p:not(:first-child)',
++        'p',
+         'pre',
+         'blockquote',
+         'h1',
+@@ -84,8 +84,14 @@ function nodeDOMAtCoords(coords, options) {
+     ].join(', ');
+     return document
+         .elementsFromPoint(coords.x, coords.y)
+-        .find((elem) => elem.parentElement?.matches?.('.ProseMirror') ||
+-        elem.matches(selectors));
++        .find((elem) => {
++            const isMatch = elem.parentElement?.matches?.('.ProseMirror') || elem.matches(selectors);
++            if (!isMatch) return false;
++            if ((elem.tagName === 'P' || elem.tagName === 'LI') &&
++                !elem.textContent?.trim() &&
++                !elem.querySelector('img, video, [data-type], input')) return false;
++            return true;
++        });
+ }
+ function nodePosAtDOM(node, view, options) {
+     const boundingRect = node.getBoundingClientRect();
+diff --git a/node_modules/tiptap-extension-global-drag-handle/dist/index.js b/node_modules/tiptap-extension-global-drag-handle/dist/index.js
+index 1a245d8..74429d6 100644
+--- a/node_modules/tiptap-extension-global-drag-handle/dist/index.js
++++ b/node_modules/tiptap-extension-global-drag-handle/dist/index.js
+@@ -47,7 +47,7 @@ function absoluteRect(node) {
+ function nodeDOMAtCoords(coords, options) {
+     const selectors = [
+         'li',
+-        'p:not(:first-child)',
++        'p',
+         'pre',
+         'blockquote',
+         'h1',
+@@ -60,8 +60,15 @@ function nodeDOMAtCoords(coords, options) {
+     ].join(', ');
+     return document
+         .elementsFromPoint(coords.x, coords.y)
+-        .find((elem) => elem.parentElement?.matches?.('.ProseMirror') ||
+-        elem.matches(selectors));
++        .find((elem) => {
++            const isMatch = elem.parentElement?.matches?.('.ProseMirror') || elem.matches(selectors);
++            if (!isMatch) return false;
++            // Pula blocos completamente vazios (sem texto e sem mídia)
++            if ((elem.tagName === 'P' || elem.tagName === 'LI') &&
++                !elem.textContent?.trim() &&
++                !elem.querySelector('img, video, [data-type], input')) return false;
++            return true;
++        });
+ }
+ function nodePosAtDOM(node, view, options) {
+     const boundingRect = node.getBoundingClientRect();
+diff --git a/node_modules/tiptap-extension-global-drag-handle/dist/index.umd.js b/node_modules/tiptap-extension-global-drag-handle/dist/index.umd.js
+index 11d30d5..eec1396 100644
+--- a/node_modules/tiptap-extension-global-drag-handle/dist/index.umd.js
++++ b/node_modules/tiptap-extension-global-drag-handle/dist/index.umd.js
+@@ -68,7 +68,7 @@
+   function nodeDOMAtCoords(coords, options) {
+       const selectors = [
+           'li',
+-          'p:not(:first-child)',
++          'p',
+           'pre',
+           'blockquote',
+           'h1',
+@@ -81,8 +81,14 @@
+       ].join(', ');
+       return document
+           .elementsFromPoint(coords.x, coords.y)
+-          .find((elem) => elem.parentElement?.matches?.('.ProseMirror') ||
+-          elem.matches(selectors));
++          .find((elem) => {
++              const isMatch = elem.parentElement?.matches?.('.ProseMirror') || elem.matches(selectors);
++              if (!isMatch) return false;
++              if ((elem.tagName === 'P' || elem.tagName === 'LI') &&
++                  !elem.textContent?.trim() &&
++                  !elem.querySelector('img, video, [data-type], input')) return false;
++              return true;
++          });
+   }
+   function nodePosAtDOM(node, view, options) {
+       const boundingRect = node.getBoundingClientRect();

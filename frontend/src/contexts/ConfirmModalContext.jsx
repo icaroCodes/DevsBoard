@@ -1,14 +1,22 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, X } from 'lucide-react';
 
 const ConfirmContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
-    const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null, type: 'danger' });
+    const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'danger', onConfirm: null, onCancel: null });
+    const resolveRef = useRef(null);
 
-    const confirm = useCallback(({ title, message, onConfirm, onCancel, type = 'danger' }) => {
-        setModal({ isOpen: true, title, message, onConfirm, onCancel, type });
+    const confirm = useCallback(({ title, message, confirmText, type = 'danger', onConfirm, onCancel }) => {
+        if (onConfirm) {
+            setModal({ isOpen: true, title, message, type, onConfirm, onCancel });
+            return;
+        }
+        return new Promise((resolve) => {
+            resolveRef.current = resolve;
+            setModal({ isOpen: true, title, message, type, onConfirm: null, onCancel: null });
+        });
     }, []);
 
     const closeModal = useCallback(() => {
@@ -16,12 +24,22 @@ export function ConfirmProvider({ children }) {
     }, []);
 
     const handleConfirm = () => {
-        if (modal.onConfirm) modal.onConfirm();
+        if (modal.onConfirm) {
+            modal.onConfirm();
+        } else if (resolveRef.current) {
+            resolveRef.current(true);
+        }
+        resolveRef.current = null;
         closeModal();
     };
 
     const handleCancel = () => {
-        if (modal.onCancel) modal.onCancel();
+        if (modal.onCancel) {
+            modal.onCancel();
+        } else if (resolveRef.current) {
+            resolveRef.current(false);
+        }
+        resolveRef.current = null;
         closeModal();
     };
 
