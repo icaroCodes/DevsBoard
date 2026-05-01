@@ -26,6 +26,20 @@ export const SlashCommand = Extension.create({
       }),
     ];
   },
+
+  addKeyboardShortcuts() {
+    return {
+      'Space': ({ editor }) => {
+        const { selection } = editor.state;
+        // Se a seleção for vazia e estiver num parágrafo completamente vazio
+        if (selection.empty && selection.$head.parent.textContent === '' && selection.$head.parent.type.name === 'paragraph') {
+          editor.chain().focus().insertContent('/').run();
+          return true; // Intercepta o espaço
+        }
+        return false;
+      }
+    };
+  },
 });
 
 export const slashItems = ({ query }) => {
@@ -41,6 +55,9 @@ export const slashItems = ({ query }) => {
     { key: 'callout',  title: 'Callout',      hint: 'Destaque com ícone',         icon: '💡', cmd: (e, range) => e.chain().focus().deleteRange(range).insertContent({ type: 'callout', attrs: { emoji: '💡' }, content: [{ type: 'paragraph' }] }).run() },
     { key: 'toggle',   title: 'Alternar',     hint: 'Bloco retrátil',             icon: '▸',  cmd: (e, range) => e.chain().focus().deleteRange(range).insertContent({ type: 'toggle', attrs: { open: true }, content: [{ type: 'paragraph' }, { type: 'paragraph' }] }).run() },
     { key: 'code',     title: 'Código',       hint: 'Bloco monoespaço',           icon: '<>', cmd: (e, range) => e.chain().focus().deleteRange(range).toggleCodeBlock().run() },
+    { key: 'image',    title: 'Foto',         hint: 'Adicionar imagem',           icon: '🖼️', cmd: (e, range) => e.chain().focus().deleteRange(range).insertContent({ type: 'customImage' }).run() },
+    { key: 'video',    title: 'Vídeo',        hint: 'Integrar ou carregar vídeo', icon: '▶️', cmd: (e, range) => e.chain().focus().deleteRange(range).insertContent({ type: 'customVideo' }).run() },
+    { key: 'audio',    title: 'Áudio',        hint: 'Adicionar player de áudio',  icon: '🎵', cmd: (e, range) => e.chain().focus().deleteRange(range).insertContent({ type: 'customAudio' }).run() },
     { key: 'hr',       title: 'Divisor',      hint: 'Linha separadora',           icon: '─',  cmd: (e, range) => e.chain().focus().deleteRange(range).setHorizontalRule().run() },
   ];
   if (!query) return items;

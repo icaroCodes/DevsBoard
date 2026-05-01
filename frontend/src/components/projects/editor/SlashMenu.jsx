@@ -1,9 +1,19 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useState, useRef } from 'react';
 
 const SlashMenu = forwardRef(({ items, command }, ref) => {
   const [selected, setSelected] = useState(0);
+  const listRef = useRef(null);
 
   useEffect(() => setSelected(0), [items]);
+
+  useEffect(() => {
+    if (listRef.current) {
+      const selectedItem = listRef.current.children[selected];
+      if (selectedItem) {
+        selectedItem.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [selected]);
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
@@ -25,7 +35,7 @@ const SlashMenu = forwardRef(({ items, command }, ref) => {
   return (
     <div className="db-slash-menu">
       <div className="db-slash-header">Bloco</div>
-      <div className="db-slash-list">
+      <div className="db-slash-list" ref={listRef}>
         {items.map((item, i) => (
           <button
             key={item.key}

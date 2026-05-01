@@ -12,14 +12,18 @@ import AutoJoiner from 'tiptap-extension-auto-joiner';
 import { SlashCommand, slashItems, slashRender } from './extensions/SlashCommand.js';
 import { Callout } from './extensions/Callout.jsx';
 import { Toggle } from './extensions/Toggle.jsx';
+import { CustomCodeBlock } from './extensions/CodeBlock.jsx';
+import { CustomImage } from './extensions/Image.jsx';
+import { CustomAudio } from './extensions/Audio.jsx';
+import { CustomVideo } from './extensions/Video.jsx';
 import './editor.css';
 
-export default function Editor({ value, onChange, placeholder = "Comece a escrever ou digite '/' para abrir comandos...", autoFocus = false }) {
+export default function Editor({ value, onChange, placeholder = 'Barra de espaço ou “/” para acessar os comandos', autoFocus = false }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
-        codeBlock: { HTMLAttributes: { class: 'db-codeblock' } },
+        codeBlock: false,
         horizontalRule: { HTMLAttributes: { class: 'db-hr' } },
         blockquote: { HTMLAttributes: { class: 'db-quote' } },
         bulletList: { HTMLAttributes: { class: 'db-ul' } },
@@ -31,9 +35,9 @@ export default function Editor({ value, onChange, placeholder = "Comece a escrev
         placeholder: ({ node, editor: ed }) => {
           if (node.type.name === 'heading') return `Título ${node.attrs.level}`;
           if (ed.isEmpty) return placeholder;
-          return "Digite '/' para comandos";
+          return 'Barra de espaço ou “/” para acessar os comandos';
         },
-        showOnlyCurrent: false,
+        showOnlyCurrent: true,
         includeChildren: true,
       }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: 'db-link' } }),
@@ -42,11 +46,15 @@ export default function Editor({ value, onChange, placeholder = "Comece a escrev
         dragHandleWidth: 100,
         dragHandleSelector: '.drag-handle',
         excludedTags: [],
-        customNodes: ['callout', 'toggle'],
+        customNodes: ['callout', 'toggle', 'customImage', 'customAudio', 'customVideo'],
       }),
       AutoJoiner.configure({ elementsToJoin: ['bulletList', 'orderedList', 'taskList'] }),
       Callout,
       Toggle,
+      CustomCodeBlock,
+      CustomImage,
+      CustomAudio,
+      CustomVideo,
       SlashCommand.configure({
         suggestion: { items: slashItems, render: slashRender },
       }),
