@@ -381,14 +381,17 @@ router.post('/:id/comments', async (req, res) => {
     const userName   = u?.name || u?.email?.split('@')[0] || null;
     const userAvatar = u?.avatar_url || null;
 
-    const { data: c, error } = await supabase.from('project_comments')
-      .insert({
+    const insertPayload = {
         project_id: req.params.id,
         user_id: req.userId,
         content,
         user_name: userName,
         user_avatar: userAvatar,
-      })
+      };
+    if (req.body.parent_id) insertPayload.parent_id = req.body.parent_id;
+
+    const { data: c, error } = await supabase.from('project_comments')
+      .insert(insertPayload)
       .select('*').single();
     if (error) throw error;
 

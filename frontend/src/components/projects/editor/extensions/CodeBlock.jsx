@@ -5,6 +5,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { Copy, Check, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 /* ================================================================
    LANGUAGE LIST
@@ -426,23 +427,236 @@ function buildDecorations(doc) {
 }
 
 /* ================================================================
+   COMMENT BOXES — stacked layout to avoid overlap
+   ================================================================ */
+const COMMENT_BOX_GAP = 6;
+const REACTIONS = ['👍', '❤️', '🔥', '👀', '🎉', '😂'];
+
+function CommentBoxes({ comments, onUpdate, onDelete }) {
+  const boxRefs = useRef({});
+  const [offsets, setOffsets] = useState({});
+  const [hoveredId, setHoveredId] = useState(null);
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [replyingId, setReplyingId] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [reactPickerId, setReactPickerId] = useState(null);
+
+  const sorted = useMemo(() => {
+    return [...comments].sort((a, b) => {
+      const la = a.lineStart ?? a.line ?? 0;
+      const lb = b.lineStart ?? b.line ?? 0;
+      return la - lb;
+    });
+  }, [comments]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const newOffsets = {};
+      let prevBottom = -Infinity;
+      for (const c of sorted) {
+        const ls = c.lineStart ?? c.line ?? 0;
+        const naturalTop = 14 + ls * 21;
+        const el = boxRefs.current[c.id];
+        const h = el ? el.offsetHeight : 80;
+        const actualTop = Math.max(naturalTop, prevBottom + COMMENT_BOX_GAP);
+        newOffsets[c.id] = actualTop;
+        prevBottom = actualTop + h;
+      }
+      setOffsets(prev => {
+        const changed = sorted.some(c => prev[c.id] !== newOffsets[c.id]);
+        return changed ? newOffsets : prev;
+      });
+    });
+  }, [sorted, editingId, replyingId]);
+
+  useEffect(() => {
+    if (!menuOpenId && !reactPickerId) return;
+    const handler = () => { setMenuOpenId(null); setReactPickerId(null); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpenId, reactPickerId]);
+
+  const handleReact = (commentId, emoji) => {
+    const c = comments.find(x => x.id === commentId);
+    if (!c) return;
+    const reactions = { ...(c.reactions || {}) };
+    reactions[emoji] = (reactions[emoji] || 0) + 1;
+    onUpdate?.(commentId, { reactions });
+    setReactPickerId(null);
+  };
+
+  const handleResolve = (commentId) => {
+    const c = comments.find(x => x.id === commentId);
+    if (!c) return;
+    onUpdate?.(commentId, { resolved: !c.resolved });
+  };
+
+  const handleEditSave = (commentId) => {
+    if (!editText.trim()) return;
+    onUpdate?.(commentId, { text: editText });
+    setEditingId(null);
+  };
+
+  const handleReplySave = (commentId) => {
+    if (!replyText.trim()) return;
+    const c = comments.find(x => x.id === commentId);
+    if (!c) return;
+    const replies = [...(c.replies || []), { text: replyText, time: 'Agora mesmo' }];
+    onUpdate?.(commentId, { replies });
+    setReplyingId(null);
+    setReplyText('');
+  };
+
+  return sorted.map(c => {
+    const ls = c.lineStart ?? c.line ?? 0;
+    const le = c.lineEnd ?? c.line ?? 0;
+    const label = ls === le ? `L${ls + 1}` : `L${ls + 1}–${le + 1}`;
+    const topPx = offsets[c.id];
+    const isHovered = hoveredId === c.id;
+    const style = topPx != null
+      ? { top: `${topPx}px`, transform: 'none' }
+      : { top: `calc(14px + ${ls * 1.5}em)` };
+
+    return (
+      <div
+        key={c.id}
+        ref={el => { boxRefs.current[c.id] = el; }}
+        className={`db-codeblock-comment-box ${isHovered ? 'is-hovered' : ''} ${c.resolved ? 'is-resolved' : ''}`}
+        style={style}
+        onMouseEnter={() => setHoveredId(c.id)}
+        onMouseLeave={() => { setHoveredId(null); if (menuOpenId === c.id) setMenuOpenId(null); if (reactPickerId === c.id) setReactPickerId(null); }}
+      >
+        {/* Floating toolbar on hover */}
+        {isHovered && editingId !== c.id && (
+          <div className="db-comment-toolbar" onMouseDown={e => e.stopPropagation()}>
+            <button
+              title="Reagir"
+              onClick={(e) => { e.stopPropagation(); setReactPickerId(reactPickerId === c.id ? null : c.id); setMenuOpenId(null); }}
+            >😊</button>
+            <button
+              title={c.resolved ? 'Reabrir' : 'Resolver'}
+              onClick={(e) => { e.stopPropagation(); handleResolve(c.id); }}
+              className={c.resolved ? 'is-active' : ''}
+            >✓</button>
+            <button
+              title="Opções"
+              onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === c.id ? null : c.id); setReactPickerId(null); }}
+            >···</button>
+
+            {reactPickerId === c.id && (
+              <div className="db-comment-react-picker" onMouseDown={e => e.stopPropagation()}>
+                {REACTIONS.map(emoji => (
+                  <button key={emoji} onClick={(e) => { e.stopPropagation(); handleReact(c.id, emoji); }}>{emoji}</button>
+                ))}
+              </div>
+            )}
+
+            {menuOpenId === c.id && (
+              <div className="db-comment-dropdown" onMouseDown={e => e.stopPropagation()}>
+                <button onClick={(e) => { e.stopPropagation(); setEditingId(c.id); setEditText(c.text); setMenuOpenId(null); }}>Editar</button>
+                <button onClick={(e) => { e.stopPropagation(); setReplyingId(replyingId === c.id ? null : c.id); setReplyText(''); setMenuOpenId(null); }}>Responder</button>
+                <button className="delete" onClick={(e) => { e.stopPropagation(); onDelete?.(c.id); setMenuOpenId(null); }}>Excluir</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="db-codeblock-comment-header">
+          <div className="db-codeblock-comment-avatar">
+            {c.avatar ? (
+              <img src={c.avatar} alt={c.author} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} />
+            ) : (
+              <span>{c.author ? c.author.charAt(0).toUpperCase() : '?'}</span>
+            )}
+          </div>
+          <span className="db-codeblock-comment-author">{c.author || 'Usuário'}</span>
+          <span className="db-codeblock-comment-time">{c.time}</span>
+        </div>
+
+        <div className="db-codeblock-comment-line-badge">{label}</div>
+
+        {editingId === c.id ? (
+          <div>
+            <textarea autoFocus className="db-codeblock-comment-input" value={editText}
+              onChange={e => setEditText(e.target.value)}
+              onKeyDown={e => { e.stopPropagation(); if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleEditSave(c.id);} if(e.key==='Escape')setEditingId(null); }}
+            />
+            <div className="db-codeblock-comment-actions">
+              <button className="btn-cancel" onClick={()=>setEditingId(null)}>Cancelar</button>
+              <button className="btn-save" onClick={()=>handleEditSave(c.id)}>Salvar</button>
+            </div>
+          </div>
+        ) : (
+          <div className="db-codeblock-comment-text">{c.text}</div>
+        )}
+
+        {c.reactions && Object.keys(c.reactions).length > 0 && (
+          <div className="db-comment-reactions">
+            {Object.entries(c.reactions).map(([emoji, count]) => (
+              <button key={emoji} className="db-comment-reaction-chip" onClick={() => handleReact(c.id, emoji)}>
+                {emoji} <span>{count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {c.replies && c.replies.length > 0 && (
+          <div className="db-comment-replies">
+            {c.replies.map((r, i) => (
+              <div key={i} className="db-comment-reply">
+                <span className="db-comment-reply-text">{r.text}</span>
+                <span className="db-comment-reply-time">{r.time}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {replyingId === c.id && (
+          <div className="db-comment-reply-area">
+            <textarea autoFocus className="db-codeblock-comment-input" placeholder="Responder..."
+              value={replyText} onChange={e => setReplyText(e.target.value)}
+              onKeyDown={e => { e.stopPropagation(); if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleReplySave(c.id);} if(e.key==='Escape')setReplyingId(null); }}
+            />
+            <div className="db-codeblock-comment-actions">
+              <button className="btn-cancel" onClick={()=>setReplyingId(null)}>Cancelar</button>
+              <button className="btn-save" onClick={()=>handleReplySave(c.id)}>Responder</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  });
+}
+
+/* ================================================================
    REACT NODE VIEW COMPONENT
    ================================================================ */
-function CodeBlockComponent({ node, updateAttributes, editor, getPos }) {
+function CodeBlockComponent({ node, updateAttributes, editor, getPos, deleteNode }) {
   const [copied, setCopied] = useState(false);
   const [showLangs, setShowLangs] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedLinesCount, setSelectedLinesCount] = useState(0);
+  const [activeLineStart, setActiveLineStart] = useState(null);
+  const [activeLineEnd, setActiveLineEnd] = useState(null);
+  const [draftRange, setDraftRange] = useState(null); // { start, end }
+  const [draftText, setDraftText] = useState('');
+  
   const langSelectorRef = useRef(null);
   const listRef = useRef(null);
+  const menuRef = useRef(null);
+  const comments = Array.isArray(node.attrs.comments) ? node.attrs.comments : [];
+  const { user } = useAuth();
 
   // Total lines count
   const totalLines = useMemo(() => {
     return node.textContent.split('\n').length;
   }, [node.textContent]);
 
-  // Handle selection line count
+  // Handle selection line count and active line
   useEffect(() => {
     if (!editor) return;
 
@@ -453,6 +667,18 @@ function CodeBlockComponent({ node, updateAttributes, editor, getPos }) {
       
       const start = pos + 1;
       const end = start + node.nodeSize - 2;
+
+      // Active line range for commenting (only when text is selected)
+      if (from !== to && from >= start && to <= end) {
+        const textBeforeFrom = editor.state.doc.textBetween(start, from, '\n');
+        const clampedTo = Math.min(to, end);
+        const textBeforeTo = editor.state.doc.textBetween(start, clampedTo, '\n');
+        setActiveLineStart(textBeforeFrom.split('\n').length - 1);
+        setActiveLineEnd(textBeforeTo.split('\n').length - 1);
+      } else {
+        setActiveLineStart(null);
+        setActiveLineEnd(null);
+      }
 
       const selStart = Math.max(from, start);
       const selEnd = Math.min(to, end);
@@ -466,7 +692,6 @@ function CodeBlockComponent({ node, updateAttributes, editor, getPos }) {
     };
 
     editor.on('selectionUpdate', updateSelectionCount);
-    // Initial check
     updateSelectionCount();
     
     return () => {
@@ -479,14 +704,16 @@ function CodeBlockComponent({ node, updateAttributes, editor, getPos }) {
       if (langSelectorRef.current && !langSelectorRef.current.contains(e.target)) {
         setShowLangs(false);
       }
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
     };
-    if (showLangs) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showLangs]);
+  }, []);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(node.textContent);
@@ -594,15 +821,143 @@ function CodeBlockComponent({ node, updateAttributes, editor, getPos }) {
           <button onClick={copyToClipboard} title="Copiar código">
             {copied ? <Check size={14} /> : <Copy size={14} />}
           </button>
-          <button title="Opções">
-            <MoreHorizontal size={14} />
-          </button>
+          
+          <div className="db-codeblock-more" ref={menuRef}>
+            <button onClick={() => setShowMenu(!showMenu)} title="Opções">
+              <MoreHorizontal size={14} />
+            </button>
+            {showMenu && (
+              <div className="db-codeblock-menu" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => {
+                  editor.chain().focus().setTextSelection(getPos() + 1).run();
+                  setShowMenu(false);
+                }}>
+                  Editar
+                </button>
+                <button onClick={() => {
+                  deleteNode();
+                  setShowMenu(false);
+                }} className="delete">
+                  Excluir
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       
-      <pre>
-        <NodeViewContent as="code" className={`language-${currentLang}`} />
-      </pre>
+      <div className="db-codeblock-body" style={{ position: 'relative', fontSize: '14px', lineHeight: 1.5 }}>
+        <div className="db-codeblock-bg-layer" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+          {/* Saved comment highlights (multi-line) */}
+          {comments.map(c => {
+            const ls = c.lineStart ?? c.line ?? 0;
+            const le = c.lineEnd ?? c.line ?? 0;
+            const count = le - ls + 1;
+            return (
+              <div key={c.id} className="db-codeblock-line-highlight" style={{ top: `calc(14px + ${ls * 1.5}em)`, height: `${count * 1.5}em` }} />
+            );
+          })}
+          {/* Hover highlight for active selection */}
+          {activeLineStart !== null && !draftRange && (() => {
+            const count = activeLineEnd - activeLineStart + 1;
+            return (
+              <div className="db-codeblock-line-hover" style={{ position: 'absolute', left: 0, right: 0, height: `${count * 1.5}em`, top: `calc(14px + ${activeLineStart * 1.5}em)`, background: 'rgba(255, 255, 255, 0.03)' }} />
+            );
+          })()}
+        </div>
+
+        <pre className="db-codeblock-pre" style={{ position: 'relative', zIndex: 1, fontSize: '14px' }}>
+          <NodeViewContent as="code" className={`language-${currentLang}`} />
+        </pre>
+
+        {/* Add comment button — appears at the start of the selection */}
+        {activeLineStart !== null && !draftRange && (
+          <button 
+            className="db-codeblock-add-comment-btn"
+            style={{ top: `calc(14px + ${activeLineStart * 1.5}em)` }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraftRange({ start: activeLineStart, end: activeLineEnd });
+              setDraftText('');
+            }}
+            title={activeLineStart === activeLineEnd ? 'Comentar esta linha' : `Comentar linhas ${activeLineStart + 1}–${activeLineEnd + 1}`}
+          >
+            +
+          </button>
+        )}
+
+        <div className="db-codeblock-comments-layer">
+          {/* Saved comments — stacked to avoid overlap */}
+          <CommentBoxes 
+            comments={comments} 
+            onUpdate={(id, patch) => {
+              updateAttributes({
+                comments: comments.map(c => c.id === id ? { ...c, ...patch } : c)
+              });
+            }}
+            onDelete={(id) => {
+              updateAttributes({
+                comments: comments.filter(c => c.id !== id)
+              });
+            }}
+          />
+
+          {/* Draft comment */}
+          {draftRange && (
+            <div className="db-codeblock-comment-box is-draft" style={{ top: `calc(14px + ${draftRange.start * 1.5}em)` }}>
+              <div className="db-codeblock-comment-line-badge">
+                {draftRange.start === draftRange.end ? `Linha ${draftRange.start + 1}` : `Linhas ${draftRange.start + 1}–${draftRange.end + 1}`}
+              </div>
+              <textarea 
+                className="db-codeblock-comment-input"
+                autoFocus
+                placeholder="Escreva um comentário..."
+                value={draftText}
+                onChange={e => setDraftText(e.target.value)}
+                onKeyDown={e => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!draftText.trim()) return;
+                    updateAttributes({ 
+                      comments: [...comments, { 
+                        id: Date.now().toString(), 
+                        lineStart: draftRange.start,
+                        lineEnd: draftRange.end,
+                        text: draftText, 
+                        author: user?.name || 'Você',
+                        avatar: user?.avatar_url || null,
+                        time: 'Agora mesmo' 
+                      }] 
+                    });
+                    setDraftRange(null);
+                  }
+                  if (e.key === 'Escape') setDraftRange(null);
+                }}
+              />
+              <div className="db-codeblock-comment-actions">
+                <button className="btn-cancel" onClick={() => setDraftRange(null)}>Cancelar</button>
+                <button className="btn-save" onClick={() => {
+                  if (!draftText.trim()) return;
+                  updateAttributes({ 
+                    comments: [...comments, { 
+                      id: Date.now().toString(), 
+                      lineStart: draftRange.start,
+                      lineEnd: draftRange.end,
+                      text: draftText, 
+                      author: user?.name || 'Você',
+                      avatar: user?.avatar_url || null,
+                      time: 'Agora mesmo' 
+                    }] 
+                  });
+                  setDraftRange(null);
+                }}>Comentar</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </NodeViewWrapper>
   );
 }
@@ -611,12 +966,23 @@ function CodeBlockComponent({ node, updateAttributes, editor, getPos }) {
    EXTENSION
    ================================================================ */
 export const CustomCodeBlock = CodeBlock.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      comments: {
+        default: [],
+      },
+    };
+  },
+
   addNodeView() {
     return ReactNodeViewRenderer(CodeBlockComponent, {
       stopEvent: (event) => {
-        // Se o evento vier de dentro do seletor de linguagem, paramos ele aqui
-        // para que o ProseMirror não tente processar as setinhas/enter
-        return event.target.closest('.db-codeblock-lang-selector') !== null;
+        // Stop events from language selector and comments UI
+        if (event.target.closest('.db-codeblock-lang-selector') || event.target.closest('.db-codeblock-comments-layer')) {
+          return true;
+        }
+        return false;
       },
     });
   },

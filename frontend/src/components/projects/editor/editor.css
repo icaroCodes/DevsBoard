@@ -328,12 +328,58 @@
   color: #c7c7cc;
 }
 
+.db-codeblock-more {
+  position: relative;
+}
+
+.db-codeblock-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.db-codeblock-menu button {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+}
+
+.db-codeblock-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.db-codeblock-menu button.delete {
+  color: #FF453A;
+}
+
+.db-codeblock-menu button.delete:hover {
+  background: rgba(255, 69, 58, 0.15);
+}
+
 .db-codeblock-wrapper pre {
   margin: 0;
   padding: 14px 16px;
   overflow-x: auto;
   line-height: 1.5;
   background: transparent;
+  white-space: pre;
+  word-wrap: normal;
+  word-break: keep-all;
 }
 
 .db-codeblock-wrapper code {
@@ -341,6 +387,7 @@
   padding: 0;
   color: #ffffff;
   font-size: inherit;
+  white-space: pre;
 }
 
 .db-codeblock-info {
@@ -1198,4 +1245,408 @@ body:has(.drag-handle:active) * {
 
 .db-apple-time-sep {
   color: rgba(255, 255, 255, 0.15);
+}
+
+/* Code Block Comments */
+.db-codeblock-line-highlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5em;
+  background: rgba(218, 165, 32, 0.15);
+  border-left: 2px solid #DAA520;
+}
+
+.db-codeblock-line-hover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5em;
+  background: rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+}
+
+.db-codeblock-comments-layer {
+  position: absolute;
+  top: 0;
+  right: -260px;
+  width: 250px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.db-codeblock-comment-box {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  background: #191919;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  z-index: 10;
+  transition: top 0.2s ease;
+}
+
+.db-codeblock-comment-box.is-draft {
+  border-color: #2383E2;
+}
+
+.db-codeblock-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.db-codeblock-comment-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.db-codeblock-comment-author {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.db-codeblock-comment-time {
+  font-size: 11px;
+  color: #86868B;
+  margin-left: auto;
+}
+
+.db-codeblock-comment-line-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: rgba(218, 165, 32, 0.15);
+  color: #DAA520;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  letter-spacing: 0.02em;
+}
+
+.db-codeblock-comment-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.db-codeblock-comment-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  resize: none;
+  outline: none;
+  min-height: 40px;
+  font-family: inherit;
+}
+
+.db-codeblock-comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.db-codeblock-comment-actions button {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: #86868B;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.btn-save {
+  background: #2383E2;
+  color: #fff;
+}
+
+.btn-save:hover {
+  background: #1B6EC2;
+}
+
+.db-codeblock-add-comment-btn {
+  position: absolute;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #1e1e1e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: auto;
+  opacity: 0;
+  transition: all 0.2s;
+  transform: translateY(-20%);
+  z-index: 10;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.db-codeblock-body:hover .db-codeblock-add-comment-btn {
+  opacity: 1;
+}
+
+.db-codeblock-add-comment-btn:hover {
+  background: #2383E2;
+  border-color: #2383E2;
+  transform: translateY(-20%) scale(1.1);
+}
+
+/* Comment box hover effect — slide left + bg change */
+.db-codeblock-comment-box {
+  transition: 
+    top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.3s ease;
+}
+
+.db-codeblock-comment-box.is-hovered {
+  background: #202020;
+  transform: translateX(-8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.db-codeblock-comment-box.is-resolved {
+  opacity: 0.5;
+}
+
+.db-codeblock-comment-box.is-resolved .db-codeblock-comment-text {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Floating toolbar */
+.db-comment-toolbar {
+  position: absolute;
+  top: -14px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #2a2a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.db-comment-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.db-comment-toolbar button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.db-comment-toolbar button.is-active {
+  color: #34C759;
+  background: rgba(52, 199, 89, 0.15);
+}
+
+/* Reaction picker */
+.db-comment-react-picker {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  gap: 2px;
+  background: #2a2a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 30;
+}
+
+.db-comment-react-picker button {
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.db-comment-react-picker button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.2);
+}
+
+/* Dropdown menu */
+.db-comment-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 30;
+}
+
+.db-comment-dropdown button {
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.db-comment-dropdown button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.db-comment-dropdown button.delete {
+  color: #FF453A;
+}
+
+.db-comment-dropdown button.delete:hover {
+  background: rgba(255, 69, 58, 0.15);
+}
+
+/* Reaction chips */
+.db-comment-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.db-comment-reaction-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #fff;
+}
+
+.db-comment-reaction-chip:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.db-comment-reaction-chip span {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+/* Replies */
+.db-comment-replies {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.db-comment-reply {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.db-comment-reply-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.db-comment-reply-time {
+  font-size: 10px;
+  color: #86868B;
+  flex-shrink: 0;
+}
+
+.db-comment-reply-area {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Reply arrow indicator */
+.db-comment-reply {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-left: 8px;
+  position: relative;
+}
+
+.db-comment-reply::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 6px;
+  height: 10px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0 0 0 4px;
 }
