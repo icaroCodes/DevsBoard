@@ -86,7 +86,7 @@ export default function Finances() {
           body: JSON.stringify(payload),
         });
       } else if (form.is_recurring) {
-        
+
         await api('/finances/recurring', {
           method: 'POST',
           body: JSON.stringify({
@@ -147,7 +147,7 @@ export default function Finances() {
       confirmText: 'Apagar Tudo',
       cancelText: 'Apenas Próximas (Manter histórico)',
       onConfirm: async () => {
-        
+
         try {
           await api(`/finances/recurring/${id}?deleteAll=true`, { method: 'DELETE' });
           success('Recorrência e histórico removidos');
@@ -157,7 +157,7 @@ export default function Finances() {
         }
       },
       onCancel: async () => {
-        
+
         try {
           await api(`/finances/recurring/${id}`, { method: 'DELETE' });
           success('Apenas as próximas foram canceladas');
@@ -203,15 +203,15 @@ export default function Finances() {
 
   const modalOverlayRef = useRef(null);
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
 
   if (loading) return <LoadingSkeleton variant="finances" />;
 
@@ -224,7 +224,7 @@ export default function Finances() {
   const maxExpense = Math.max(...Object.values(categoryStats).map(c => c.expense), 1);
   const maxIncome = Math.max(...Object.values(categoryStats).map(c => c.income), 1);
 
-  
+
   const expensesData = Object.entries(categoryStats)
     .filter(([, s]) => s.expense > 0)
     .map(([name, value]) => ({ name, value: value.expense }))
@@ -261,7 +261,7 @@ export default function Finances() {
       className="max-w-6xl mx-auto pb-12 font-sans"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
-      {}
+      { }
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">
           <h1 className="text-[32px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meu Dinheiro</h1>
@@ -269,7 +269,7 @@ export default function Finances() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex p-1 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
+          <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
             {['all', 'income', 'expense'].map((f) => (
               <button
                 key={f}
@@ -303,9 +303,9 @@ export default function Finances() {
         </div>
       </motion.div>
 
-      {}
+      { }
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
+        <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <Wallet size={16} />
@@ -315,11 +315,11 @@ export default function Finances() {
           <p className={`text-[36px] font-semibold tracking-tight z-10 ${balance >= 0 ? 'text-[#F5F5F7]' : 'text-[#FF453A]'}`}>
             R$ {balance.toFixed(2).replace('.', ',')}
           </p>
-          {}
+          { }
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.06]"></div>
         </div>
 
-        <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
+        <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowUpRight size={16} className="text-[#30D158]" />
@@ -332,7 +332,7 @@ export default function Finances() {
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#30D158] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.06]"></div>
         </div>
 
-        <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
+        <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-2 text-[#86868B]">
               <ArrowDownRight size={16} className="text-[#FF453A]" />
@@ -347,8 +347,8 @@ export default function Finances() {
       </motion.div>
 
       <div className="flex flex-col gap-5">
-        {}
-        <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
+        { }
+        <motion.div variants={itemVariants} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[500px] shadow-sm">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Últimas anotações</h2>
             <div className="text-[13px] text-[#86868B] bg-[#2C2C2E] px-3 py-1 rounded-full">
@@ -356,7 +356,7 @@ export default function Finances() {
             </div>
           </div>
 
-          {}
+          { }
           {recurringItems.length > 0 && (
             <div className="px-6 py-4 bg-[#0A84FF]/[0.02] border-b border-white/[0.04]">
               <div className="flex items-center gap-2 mb-3">
@@ -424,10 +424,10 @@ export default function Finances() {
           )}
         </motion.div>
 
-        {}
+        { }
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {}
-          <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
+          { }
+          <motion.div variants={itemVariants} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowDownRight size={18} className="text-[#FF453A]" />
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">Onde gastei mais</h2>
@@ -461,8 +461,8 @@ export default function Finances() {
             </div>
           </motion.div>
 
-          {}
-          <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
+          { }
+          <motion.div variants={itemVariants} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] flex flex-col shadow-sm">
             <div className="px-6 py-5 border-b border-white/[0.04] flex items-center gap-2">
               <ArrowUpRight size={18} className="text-[#30D158]" />
               <h2 className="text-[17px] font-semibold text-[#F5F5F7]">De onde veio mais dinheiro</h2>
@@ -492,7 +492,7 @@ export default function Finances() {
         </div>
       </div>
 
-      {}
+      { }
       <AnimatePresence>
         {modalOpen && (
           <div className="fixed inset-0 bg-[#000000]/60 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -500,7 +500,7 @@ export default function Finances() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative my-auto"
+              className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative my-auto"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
@@ -511,180 +511,180 @@ export default function Finances() {
                 </button>
               </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {}
-                  <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
-                    {['income', 'expense'].map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setForm({ ...form, type })}
-                        className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
-                          }`}
-                      >
-                        {form.type === type && (
-                          <motion.div
-                            layoutId="transactionTypeBg"
-                            className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10"
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                          />
-                        )}
-                        {type === 'income' ? (
-                          <>
-                            <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
-                            Dinheiro que entrou
-                          </>
-                        ) : (
-                          <>
-                            <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
-                            Dinheiro que saiu
-                          </>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1">O que é? (Ex: Mercado, Conta de Luz...)</label>
-                      <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Compra de pão" required />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[13px] font-medium text-[#86868B] ml-1">Quanto (Valor)?</label>
-                        <div className="relative">
-                          <span className="absolute left-4 top-3.5 text-[#86868B] text-[15px]">R$</span>
-                          <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full pl-11 pr-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="0,00" required />
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[13px] font-medium text-[#86868B] ml-1">Quando (Data)?</label>
-                        <input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all [color-scheme:dark]" required />
-                      </div>
-                    </div>
-
-                    {!editing && (
-                      <div className="p-4 bg-[#2C2C2E]/50 rounded-[20px] border border-white/[0.04] space-y-4">
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={form.is_recurring}
-                              onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-10 h-6 bg-[#3A3A3C] rounded-full peer peer-checked:bg-[#0A84FF] transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#F5F5F7] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[14px] font-semibold text-[#F5F5F7]">Repetir automaticamente</span>
-                            <span className="text-[12px] text-[#86868B]">Crie uma transação recorrente</span>
-                          </div>
-                        </label>
-
-                        {form.is_recurring && (
-                          <div className="space-y-4 pt-2 border-t border-white/5">
-                            <div className="space-y-1.5">
-                              <label className="text-[13px] font-medium text-[#86868B] ml-1">Frequência</label>
-                              <div className="flex p-1 bg-[#1C1C1E] rounded-[12px] border border-white/[0.04]">
-                                {['weekly', 'biweekly', 'monthly'].map((int) => (
-                                  <button
-                                    key={int}
-                                    type="button"
-                                    onClick={() => setForm({ ...form, recurrence_interval: int })}
-                                    className={`flex-1 py-1.5 rounded-[8px] text-[11px] font-bold uppercase tracking-tight transition-all ${form.recurrence_interval === int
-                                      ? 'bg-[#3A3A3C] text-[#F5F5F7]'
-                                      : 'text-[#86868B] hover:text-[#F5F5F7]'
-                                      }`}
-                                  >
-                                    {int === 'weekly' ? 'Semanal' : int === 'biweekly' ? 'Quinzenal' : 'Mensal'}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            {form.recurrence_interval === 'monthly' && (
-                              <div className="space-y-1.5">
-                                <label className="text-[13px] font-medium text-[#86868B] ml-1">Dia do mês (1-31)</label>
-                                 <input
-                                  type="number"
-                                  min="1"
-                                  max="31"
-                                  value={form.day_of_month}
-                                  onChange={(e) => {
-                                    let val = e.target.value;
-                                    if (val === '') {
-                                      setForm({ ...form, day_of_month: '' });
-                                      return;
-                                    }
-                                    let n = parseInt(val, 10);
-                                    if (n > 31) n = 31;
-                                    if (n < 1) n = 1;
-                                    setForm({ ...form, day_of_month: n });
-                                  }}
-                                  className="w-full px-4 py-3 rounded-[12px] bg-[#1C1C1E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all"
-                                />
-                              </div>
-                            )}
-
-                            {form.recurrence_interval === 'weekly' && (
-                              <div className="space-y-1.5">
-                                <label className="text-[13px] font-medium text-[#86868B] ml-1">Dia da semana</label>
-                                <select
-                                  value={form.day_of_week}
-                                  onChange={(e) => setForm({ ...form, day_of_week: e.target.value })}
-                                  className="w-full px-4 py-3 rounded-[12px] bg-[#1C1C1E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all"
-                                >
-                                  <option value="0">Domingo</option>
-                                  <option value="1">Segunda-feira</option>
-                                  <option value="2">Terça-feira</option>
-                                  <option value="3">Quarta-feira</option>
-                                  <option value="4">Quinta-feira</option>
-                                  <option value="5">Sexta-feira</option>
-                                  <option value="6">Sábado</option>
-                                </select>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Tipo da anotação (Categoria)</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {CATEGORIES.map(c => (
-                          <button
-                            key={c}
-                            type="button"
-                            onClick={() => setForm({ ...form, category: c })}
-                            className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
-                              ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
-                              : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
-                              }`}
-                          >
-                            {c}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 pb-2">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                { }
+                <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.04] relative">
+                  {['income', 'expense'].map((type) => (
                     <button
-                      type="submit"
-                      disabled={form.submitting}
-                      className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
+                      key={type}
+                      type="button"
+                      onClick={() => setForm({ ...form, type })}
+                      className={`relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors z-10 outline-none ${form.type === type ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'
+                        }`}
                     >
-                      {form.submitting ? (
+                      {form.type === type && (
+                        <motion.div
+                          layoutId="transactionTypeBg"
+                          className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      {type === 'income' ? (
                         <>
-                          <Loader2 size={20} className="animate-spin" />
-                          <span>Guardando anotação...</span>
+                          <ArrowUpRight size={16} className={form.type === 'income' ? 'text-[#30D158]' : ''} />
+                          Dinheiro que entrou
                         </>
-                      ) : editing ? 'Salvar mudanças' : 'Pronto, anotar'}
+                      ) : (
+                        <>
+                          <ArrowDownRight size={16} className={form.type === 'expense' ? 'text-[#FF453A]' : ''} />
+                          Dinheiro que saiu
+                        </>
+                      )}
                     </button>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1">O que é? (Ex: Mercado, Conta de Luz...)</label>
+                    <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Compra de pão" required />
                   </div>
-                </form>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Quanto (Valor)?</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-3.5 text-[#86868B] text-[15px]">R$</span>
+                        <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full pl-11 pr-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="0,00" required />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[13px] font-medium text-[#86868B] ml-1">Quando (Data)?</label>
+                      <input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all [color-scheme:dark]" required />
+                    </div>
+                  </div>
+
+                  {!editing && (
+                    <div className="p-4 bg-[#2C2C2E]/50 rounded-[20px] border border-white/[0.04] space-y-4">
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={form.is_recurring}
+                            onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-10 h-6 bg-[#3A3A3C] rounded-full peer peer-checked:bg-[#0A84FF] transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#F5F5F7] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[14px] font-semibold text-[#F5F5F7]">Repetir automaticamente</span>
+                          <span className="text-[12px] text-[#86868B]">Crie uma transação recorrente</span>
+                        </div>
+                      </label>
+
+                      {form.is_recurring && (
+                        <div className="space-y-4 pt-2 border-t border-white/5">
+                          <div className="space-y-1.5">
+                            <label className="text-[13px] font-medium text-[#86868B] ml-1">Frequência</label>
+                            <div className="flex p-1 bg-[#202020] rounded-[12px] border border-white/[0.04]">
+                              {['weekly', 'biweekly', 'monthly'].map((int) => (
+                                <button
+                                  key={int}
+                                  type="button"
+                                  onClick={() => setForm({ ...form, recurrence_interval: int })}
+                                  className={`flex-1 py-1.5 rounded-[8px] text-[11px] font-bold uppercase tracking-tight transition-all ${form.recurrence_interval === int
+                                    ? 'bg-[#3A3A3C] text-[#F5F5F7]'
+                                    : 'text-[#86868B] hover:text-[#F5F5F7]'
+                                    }`}
+                                >
+                                  {int === 'weekly' ? 'Semanal' : int === 'biweekly' ? 'Quinzenal' : 'Mensal'}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {form.recurrence_interval === 'monthly' && (
+                            <div className="space-y-1.5">
+                              <label className="text-[13px] font-medium text-[#86868B] ml-1">Dia do mês (1-31)</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="31"
+                                value={form.day_of_month}
+                                onChange={(e) => {
+                                  let val = e.target.value;
+                                  if (val === '') {
+                                    setForm({ ...form, day_of_month: '' });
+                                    return;
+                                  }
+                                  let n = parseInt(val, 10);
+                                  if (n > 31) n = 31;
+                                  if (n < 1) n = 1;
+                                  setForm({ ...form, day_of_month: n });
+                                }}
+                                className="w-full px-4 py-3 rounded-[12px] bg-[#202020] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all"
+                              />
+                            </div>
+                          )}
+
+                          {form.recurrence_interval === 'weekly' && (
+                            <div className="space-y-1.5">
+                              <label className="text-[13px] font-medium text-[#86868B] ml-1">Dia da semana</label>
+                              <select
+                                value={form.day_of_week}
+                                onChange={(e) => setForm({ ...form, day_of_week: e.target.value })}
+                                className="w-full px-4 py-3 rounded-[12px] bg-[#202020] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all"
+                              >
+                                <option value="0">Domingo</option>
+                                <option value="1">Segunda-feira</option>
+                                <option value="2">Terça-feira</option>
+                                <option value="3">Quarta-feira</option>
+                                <option value="4">Quinta-feira</option>
+                                <option value="5">Sexta-feira</option>
+                                <option value="6">Sábado</option>
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Tipo da anotação (Categoria)</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CATEGORIES.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setForm({ ...form, category: c })}
+                          className={`py-2 px-1 rounded-[12px] text-[11px] font-bold uppercase tracking-tight transition-all duration-200 border ${form.category === c
+                            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
+                            : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
+                            }`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 pb-2">
+                  <button
+                    type="submit"
+                    disabled={form.submitting}
+                    className="w-full py-4 rounded-[20px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[#0A84FF]/20 flex items-center justify-center gap-2"
+                  >
+                    {form.submitting ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Guardando anotação...</span>
+                      </>
+                    ) : editing ? 'Salvar mudanças' : 'Pronto, anotar'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

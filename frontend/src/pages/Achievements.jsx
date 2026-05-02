@@ -438,7 +438,7 @@ export default function Achievements() {
       {}
       <div className="sticky top-0 z-40 -mx-4 px-4 pb-6 pt-2 bg-transparent pointer-events-none mb-4">
         <div className="overflow-x-auto scrollbar-hide pointer-events-auto">
-          <div className="flex p-1.5 bg-[#1C1C1E]/60 backdrop-blur-xl rounded-[24px] border border-white/[0.06] w-fit shadow-2xl">
+          <div className="flex p-1.5 bg-[#202020]/60 backdrop-blur-xl rounded-[24px] border border-white/[0.06] w-fit shadow-2xl">
             {CATEGORIES.map(cat => {
               const Icon = CATEGORY_LABELS[cat]?.icon || LayoutGrid;
               const label = CATEGORY_LABELS[cat]?.label || cat;

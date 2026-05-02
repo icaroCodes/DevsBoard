@@ -81,19 +81,18 @@ function GoalRow({
   const style = isOverlay
     ? undefined
     : {
-        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        opacity: isDragging ? 0 : 1,
-      };
+      transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+      opacity: isDragging ? 0 : 1,
+    };
 
   return (
     <div
       ref={isOverlay ? undefined : setNodeRef}
       style={style}
-      className={`group flex flex-col gap-2 p-3.5 rounded-[16px] transition-all duration-200 ${
-        isOverlay
-          ? 'bg-[#222224] border border-white/20 shadow-2xl rotate-1 scale-[1.02]'
-          : 'glass-card bg-[#1C1C1E]/60 border border-white/[0.04] hover:bg-white/[0.04]'
-      }`}
+      className={`group flex flex-col gap-2 p-3.5 rounded-[16px] transition-all duration-200 ${isOverlay
+          ? 'bg-[#2C2C2E] border border-white/20 shadow-2xl rotate-1 scale-[1.02]'
+          : 'glass-card bg-[#202020]/60 border border-white/[0.04] hover:bg-white/[0.04]'
+        }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 flex-1 min-w-0">
@@ -226,13 +225,12 @@ function FreeGoalsZone({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-[24px] p-4 sm:p-5 transition-all duration-200 ${
-        isOver
+      className={`rounded-[24px] p-4 sm:p-5 transition-all duration-200 ${isOver
           ? 'bg-[#8E9C78]/5 border-2 border-dashed border-[#8E9C78]/40'
           : goals.length === 0
             ? 'border-2 border-dashed border-white/[0.06]'
             : 'border border-transparent'
-      }`}
+        }`}
     >
       {goals.length === 0 ? (
         <div className="flex items-center justify-center py-6 text-center">
@@ -292,11 +290,10 @@ function YearContainer({
   return (
     <div
       ref={setNodeRef}
-      className={`relative rounded-[24px] overflow-hidden transition-all duration-300 glass-card bg-[#1C1C1E] border ${
-        isOver
+      className={`relative rounded-[24px] overflow-hidden transition-all duration-300 glass-card bg-[#202020] border ${isOver
           ? 'border-2 border-[#8E9C78]/50 shadow-[0_0_20px_rgba(142,156,120,0.15)]'
           : 'border-white/[0.04] shadow-sm hover:border-white/10'
-      }`}
+        }`}
     >
       <div
         className="flex justify-between items-center p-4 sm:p-5 lg:px-6 cursor-pointer select-none group gap-2 sm:gap-4"
@@ -341,7 +338,7 @@ function YearContainer({
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden border-t border-white/[0.04]"
           >
-            <div className="p-4 sm:p-6 bg-[#161618] space-y-2 min-h-[80px]">
+            <div className="p-4 sm:p-6 bg-[#202020] space-y-2 min-h-[80px]">
               {goals.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <Target size={28} className="text-[#86868B]/40 mb-2" strokeWidth={1.5} />
@@ -395,7 +392,7 @@ export default function Goals() {
   useEffect(() => {
     try {
       localStorage.setItem('goals_expanded_years', JSON.stringify(expanded));
-    } catch {}
+    } catch { }
   }, [expanded]);
   const [form, setForm] = useState({ name: '', type: 'performance', deadline_type: 'indefinite', target_value: '', submitting: false });
   const [targetYear, setTargetYear] = useState(null);
@@ -654,11 +651,11 @@ export default function Goals() {
                 item={draggedGoal}
                 isOverlay
                 addAmount={{ id: null, value: '' }}
-                setAddAmount={() => {}}
-                handleAddAmount={() => {}}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                onToggleComplete={() => {}}
+                setAddAmount={() => { }}
+                handleAddAmount={() => { }}
+                onEdit={() => { }}
+                onDelete={() => { }}
+                onToggleComplete={() => { }}
               />
             ) : null}
           </DragOverlay>
@@ -681,7 +678,7 @@ export default function Goals() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', duration: 0.5, bounce: 0.3 }}
-              className="solid-modal relative w-full max-w-[440px] bg-[#1C1C1E] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
+              className="solid-modal relative w-full max-w-[440px] bg-[#202020] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
             >
               <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
                 <div>

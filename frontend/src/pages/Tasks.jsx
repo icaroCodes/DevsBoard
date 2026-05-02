@@ -38,7 +38,7 @@ const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Robo
 function ViewToggle({ view, onChange }) {
   const { t } = useTranslation();
   return (
-    <div className="flex p-1 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
+    <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
       {[
         { id: 'list', label: 'Ver em Lista', Icon: LayoutList },
         { id: 'board', label: 'Ver em Blocos', Icon: Kanban },
@@ -67,11 +67,11 @@ function ViewToggle({ view, onChange }) {
 
 function TaskStatusCheck({ completed, priority, onClick }) {
   const getColor = () => {
-    if (completed) return 'text-[#10B981] group-hover:text-[#10B981]/80'; 
-    if (priority === 'high') return 'text-[#EF4444] group-hover:text-[#EF4444]/80'; 
-    if (priority === 'medium') return 'text-[#F59E0B] group-hover:text-[#F59E0B]/80'; 
-    if (priority === 'low') return 'text-[#3B82F6] group-hover:text-[#3B82F6]/80'; 
-    return 'text-[#86868B] group-hover:text-[#A1A1AA]'; 
+    if (completed) return 'text-[#10B981] group-hover:text-[#10B981]/80';
+    if (priority === 'high') return 'text-[#EF4444] group-hover:text-[#EF4444]/80';
+    if (priority === 'medium') return 'text-[#F59E0B] group-hover:text-[#F59E0B]/80';
+    if (priority === 'low') return 'text-[#3B82F6] group-hover:text-[#3B82F6]/80';
+    return 'text-[#86868B] group-hover:text-[#A1A1AA]';
   };
 
   return (
@@ -98,7 +98,7 @@ const itemVariants = {
 
 function ListView() {
   const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState('all'); 
+  const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -107,7 +107,7 @@ function ListView() {
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
-  
+
 
   const load = () => {
     setLoading(true);
@@ -159,7 +159,7 @@ function ListView() {
       setItems(await api('/tasks'));
     } catch (err) {
       showError(err.message);
-      load(); 
+      load();
     }
   };
 
@@ -196,7 +196,7 @@ function ListView() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex p-1 bg-[#1C1C1E]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
+          <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
             {['all', 'pending', 'completed'].map((f) => (
               <button
                 key={f}
@@ -224,7 +224,7 @@ function ListView() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-5 mb-8">
-        <div className="glass-card bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
+        <div className="glass-card bg-[#202020] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
             <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Para fazer</span>
             <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{pendingCount}</p>
@@ -235,7 +235,7 @@ function ListView() {
           </div>
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
         </div>
-        <div className="glass-card bg-[#1C1C1E] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
+        <div className="glass-card bg-[#202020] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
           <div className="z-10">
             <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Terminadas</span>
             <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{items.length - pendingCount}</p>
@@ -248,7 +248,7 @@ function ListView() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[400px] shadow-sm">
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[400px] shadow-sm">
         {filteredItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
             <ListTodo size={48} strokeWidth={1} className="text-[#86868B]" />
@@ -263,7 +263,7 @@ function ListView() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`glass-card flex items-center justify-between p-3 sm:p-4 rounded-[16px] bg-[#1C1C1E]/60 hover:bg-white/[0.04] transition-colors group cursor-default border border-white/[0.04] ${item.completed ? 'opacity-60' : ''}`}
+                className={`glass-card flex items-center justify-between p-3 sm:p-4 rounded-[16px] bg-[#202020]/60 hover:bg-white/[0.04] transition-colors group cursor-default border border-white/[0.04] ${item.completed ? 'opacity-60' : ''}`}
               >
                 <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
                   <div className="mt-0.5 sm:mt-0 shrink-0">
@@ -309,7 +309,7 @@ function ListView() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
+              className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
@@ -324,12 +324,12 @@ function ListView() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1">O que precisa ser feito?</label>
-                    <input type="text" value={formParams.title} onChange={(e) => setFormParams({ ...formParams, title: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Comprar pão, Pagar conta..." required />
+                    <input type="text" value={formParams.title} onChange={(e) => setFormParams({ ...formParams, title: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Comprar pão, Pagar conta..." required />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="text-[13px] font-medium text-[#86868B] ml-1">Mais detalhes (Opcional)</label>
-                    <textarea value={formParams.description} onChange={(e) => setFormParams({ ...formParams, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#1C1C1E] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50 resize-none" rows={3} placeholder="Escreva aqui mais informações..." />
+                    <textarea value={formParams.description} onChange={(e) => setFormParams({ ...formParams, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50 resize-none" rows={3} placeholder="Escreva aqui mais informações..." />
                   </div>
 
                   <div className="space-y-1.5">
@@ -379,7 +379,7 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
-    const date = new Date(dateStr + 'T12:00:00'); 
+    const date = new Date(dateStr + 'T12:00:00');
     return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
   };
 
@@ -392,9 +392,9 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
       <div
         className="flex flex-col relative rounded-[14px] overflow-hidden border border-white/[0.06] hover:border-white/15 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-all duration-200"
         style={{ background: 'linear-gradient(180deg, #1F1F22 0%, #1A1A1D 100%)', boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 2px 6px rgba(0,0,0,0.25)' }}>
-        
+
         {/* Dedicated Drag Handle */}
-        <div 
+        <div
           {...listeners}
           {...attributes}
           className="absolute inset-y-0 left-0 w-8 flex items-center justify-center text-[#86868B] hover:text-[#F5F5F7] opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-30 touch-none pointer-events-auto"
@@ -405,7 +405,7 @@ function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
           </div>
         </div>
         {card.cover_url && (
-          <div className="w-full h-[128px] bg-[#0F0F11] relative shrink-0 pointer-events-none overflow-hidden">
+          <div className="w-full h-[128px] bg-[#202020] relative shrink-0 pointer-events-none overflow-hidden">
             <img src={card.cover_url} alt="" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
           </div>
@@ -469,7 +469,7 @@ function CardPreview({ card, isOverlay = false }) {
 function ListOverlay({ list }) {
   return (
     <div className="w-[280px] flex-shrink-0 rotate-1 opacity-95 shadow-2xl scale-[1.05] cursor-grabbing">
-      <div className="rounded-[16px] flex flex-col pt-3 border border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)]" style={{ background: '#111111', maxHeight: '60vh' }}>
+      <div className="rounded-[16px] flex flex-col pt-3 border border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)]" style={{ background: '#202020', maxHeight: '60vh' }}>
         <div className="flex items-center justify-between px-4 pb-3">
           <h3 className="text-[14px] font-semibold text-[#F5F5F7] truncate">{list.name}</h3>
           <MoreHorizontal size={16} className="text-[#A1A1AA] opacity-70" />
@@ -557,7 +557,7 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
                 onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setTitleVal(list.name); setEditingTitle(false); } }}
                 onBlur={saveTitle} onPointerDown={e => e.stopPropagation()}
                 className="flex-1 rounded-[8px] px-2 py-1 text-[13.5px] font-semibold text-[#F5F5F7] outline-none border border-[#0A84FF]/60 min-w-0"
-                style={{ background: '#222224' }} />
+                style={{ background: '#2C2C2E' }} />
               {saving && <Loader2 size={13} className="animate-spin text-[#86868B] shrink-0" />}
             </div>
           ) : (
@@ -586,7 +586,7 @@ function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDelet
 
           {showAdd ? (
             <div className="mt-1 pb-2 px-1">
-              <div className="p-2 py-2 rounded-[12px] border border-[#0A84FF]/50" style={{ background: '#222224' }}>
+              <div className="p-2 py-2 rounded-[12px] border border-[#0A84FF]/50" style={{ background: '#2C2C2E' }}>
                 <input ref={cardRef} value={cardName} onChange={e => setCardName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') addCard(); if (e.key === 'Escape') { setShowAdd(false); setCardName(''); } }}
                   placeholder={t.boardCardPh}
@@ -652,7 +652,7 @@ function EditCardModal({ card, onSave, onClose }) {
       <motion.div initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
         transition={{ duration: 0.25 }}
         className="solid-modal w-full max-w-sm rounded-[22px] p-6 shadow-2xl border border-white/[0.08]"
-        style={{ background: '#1C1C1E' }}>
+        style={{ background: '#202020' }}>
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-[18px] font-semibold text-[#F5F5F7]">Editar Recado</h2>
           <button type="button" onClick={onClose} className="p-1.5 rounded-[8px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer"><X size={16} /></button>
@@ -832,16 +832,16 @@ function BoardGallery({ onOpenBoard }) {
 
         {/* Add board card */}
         {showAdd ? (
-          <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg flex flex-col gap-3" style={{ background: '#111111' }}>
+          <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg flex flex-col gap-3" style={{ background: '#202020' }}>
             <input ref={inputRef} value={boardName} onChange={e => setBoardName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addBoard(); if (e.key === 'Escape') { setShowAdd(false); setBoardName(''); } }}
               placeholder="Nome do seu mural..."
               className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
-              style={{ background: '#222224' }} />
+              style={{ background: '#2C2C2E' }} />
             <div className="flex flex-wrap gap-2">
               {BOARD_COLORS.map(c => (
                 <button key={c} type="button" onClick={() => setBoardColor(c)}
-                  className={`w-6 h-6 rounded-full transition-all outline-none cursor-pointer ${boardColor === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#111111] scale-110' : 'hover:scale-110'}`}
+                  className={`w-6 h-6 rounded-full transition-all outline-none cursor-pointer ${boardColor === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#202020] scale-110' : 'hover:scale-110'}`}
                   style={{ background: c }} />
               ))}
               <div className="flex items-center gap-2 ml-1">
@@ -856,7 +856,7 @@ function BoardGallery({ onOpenBoard }) {
                     setBoardColor(val.substring(0, 7));
                   }}
                   placeholder="#000000"
-                  className="w-[75px] bg-[#222224] text-[11px] text-[#F5F5F7] px-2 py-1 rounded-[6px] border border-white/10 outline-none focus:border-[#0A84FF]/50 transition-colors uppercase font-mono" />
+                  className="w-[75px] bg-[#2C2C2E] text-[11px] text-[#F5F5F7] px-2 py-1 rounded-[6px] border border-white/10 outline-none focus:border-[#0A84FF]/50 transition-colors uppercase font-mono" />
               </div>
             </div>
             <div className="flex gap-2">
@@ -921,7 +921,7 @@ function EditBoardModal({ board, onSave, onClose }) {
   return (
     <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4" style={{ fontFamily: FONT }}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        className="solid-modal bg-[#1C1C1E] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
+        className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[20px] font-semibold text-[#F5F5F7]">Editar Mural</h2>
           <button onClick={onClose} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] transition-colors outline-none cursor-pointer"><X size={18} /></button>
@@ -937,7 +937,7 @@ function EditBoardModal({ board, onSave, onClose }) {
             <div className="flex flex-wrap gap-2.5 p-1 items-center">
               {BOARD_COLORS.map(c => (
                 <button key={c} type="button" onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full transition-all outline-none cursor-pointer ${color === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#1C1C1E] scale-110' : 'hover:scale-110'}`}
+                  className={`w-8 h-8 rounded-full transition-all outline-none cursor-pointer ${color === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#202020] scale-110' : 'hover:scale-110'}`}
                   style={{ background: c }} />
               ))}
               <div className="flex items-center gap-3 ml-2 bg-[#2C2C2E] px-3 py-1.5 rounded-[12px] border border-white/5">
@@ -1041,7 +1041,7 @@ function BoardKanban({ board, onBack }) {
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: { distance: 3 },
   });
-  
+
   const touchSensor = useSensor(TouchSensor, {
     // Delay of 150ms and 5px tolerance allows for scrolling before drag starts
     activationConstraint: { delay: 150, tolerance: 5 },
@@ -1346,12 +1346,12 @@ function BoardKanban({ board, onBack }) {
 
             {showAddList ? (
               <div className="w-[300px] shrink-0">
-                <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg" style={{ background: '#111111' }}>
+                <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg" style={{ background: '#202020' }}>
                   <input ref={listInputRef} value={listName} onChange={e => setListName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') addList(); if (e.key === 'Escape') { setShowAddList(false); setListName(''); } }}
                     placeholder={t.boardListPh}
                     className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
-                    style={{ background: '#222224' }} />
+                    style={{ background: '#2C2C2E' }} />
                   <div className="flex gap-2 mt-3">
                     <button type="button" onClick={addList} disabled={addingList || !listName.trim()}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
@@ -1439,7 +1439,7 @@ export default function Tasks() {
       className="max-w-5xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: FONT }}
     >
-      {}
+      { }
       <div className="flex justify-end mb-6">
         <ViewToggle view={view} onChange={handleViewChange} />
       </div>

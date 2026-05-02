@@ -6,12 +6,12 @@ const ThemeContext = createContext();
 export const THEMES = {
   obsidian: {
     label: 'Obsidian',
-    preview: ['#0A0A0B', '#1C1C1E', '#0A84FF'],
+    preview: ['#191919', '#202020', '#0A84FF'],
     vars: {
-      '--db-bg': '#0A0A0B',
-      '--db-surface': '#161618',
-      '--db-surface-2': '#1C1C1E',
-      '--db-surface-3': '#2C2C2E',
+      '--db-bg': '#191919',
+      '--db-surface': '#202020',
+      '--db-surface-2': '#202020',
+      '--db-surface-3': '#202020',
       '--db-text': '#F5F5F7',
       '--db-text-2': '#86868B',
       '--db-text-3': '#636366',
@@ -22,7 +22,7 @@ export const THEMES = {
       '--db-border-2': 'rgba(255, 255, 255, 0.1)',
       '--db-blue': '#0A84FF',
       '--db-red': '#FF453A',
-      '--db-sidebar': '#161717'
+      '--db-sidebar': '#202020'
     }
   },
   midnight: {

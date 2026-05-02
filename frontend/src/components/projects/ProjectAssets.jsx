@@ -61,7 +61,7 @@ function AssetModal({ onClose, onSubmit }) {
       <motion.form onSubmit={submit} onClick={e => e.stopPropagation()}
         initial={{ scale: 0.94, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.94, y: 20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 360, damping: 30 }}
-        className="w-full max-w-md bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/[0.08] rounded-[22px] p-6 space-y-4 shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
+        className="w-full max-w-md bg-[#202020]/95 backdrop-blur-xl border border-white/[0.08] rounded-[22px] p-6 space-y-4 shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
         <div className="flex items-center justify-between">
           <h2 className="text-[16px] font-bold text-[#F5F5F7] tracking-tight">Novo asset</h2>
           <button type="button" onClick={onClose} className="text-[#86868B] hover:text-white"><X size={18} /></button>
@@ -176,7 +176,7 @@ export default function ProjectAssets({ projectId }) {
           <h2 className="text-[16px] font-semibold text-[#F5F5F7]">Assets & referências</h2>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 p-1 bg-[#161717] rounded-[10px] border border-white/[0.06] overflow-x-auto">
+          <div className="flex items-center gap-1 p-1 bg-[#191919] rounded-[10px] border border-white/[0.06] overflow-x-auto">
             {[
               { k: 'all',         l: 'Todos' },
               { k: 'logo',        l: 'Logos' },
@@ -218,7 +218,7 @@ export default function ProjectAssets({ projectId }) {
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 320, damping: 28 }}
                   whileHover={{ y: -3 }}
-                  className="group relative rounded-[16px] bg-[#1C1C1E] border border-white/[0.06] hover:border-white/20 hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] overflow-hidden transition-all">
+                  className="group relative rounded-[16px] bg-[#202020] border border-white/[0.06] hover:border-white/20 hover:shadow-[0_12px_32px_rgba(0,0,0,0.4)] overflow-hidden transition-all">
                   <div
                     className={`relative w-full aspect-[4/3] bg-[#0F0F10] overflow-hidden ${a.image_url ? 'cursor-zoom-in' : ''}`}
                     onClick={() => a.image_url && setLightbox(a)}>

@@ -49,7 +49,7 @@ function ProjectModal({ initial, onClose, onSubmit }) {
       <motion.form onSubmit={submit} onClick={e => e.stopPropagation()}
         initial={{ scale: 0.97, y: 12, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.97, y: 8, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-        className="w-full max-w-[440px] bg-[#161618] border border-white/[0.06] rounded-[18px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden">
+        className="w-full max-w-[440px] bg-[#202020] border border-white/[0.06] rounded-[18px] shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden">
         <div className="flex items-center justify-between px-6 pt-5 pb-4">
           <h2 className="text-[15px] font-semibold text-[#F5F5F7] tracking-tight">
             {initial ? 'Editar projeto' : 'Novo projeto'}
@@ -75,7 +75,7 @@ function ProjectModal({ initial, onClose, onSubmit }) {
               <div className="flex gap-1.5">
                 {COLORS.map(c => (
                   <button type="button" key={c} onClick={() => setForm(f => ({ ...f, color: c }))}
-                    className={`w-5 h-5 rounded-full transition-all ${form.color === c ? 'ring-2 ring-white/90 ring-offset-2 ring-offset-[#161618]' : 'hover:scale-110'}`}
+                    className={`w-5 h-5 rounded-full transition-all ${form.color === c ? 'ring-2 ring-white/90 ring-offset-2 ring-offset-[#202020]' : 'hover:scale-110'}`}
                     style={{ background: c }} />
                 ))}
               </div>
@@ -86,18 +86,18 @@ function ProjectModal({ initial, onClose, onSubmit }) {
             <label className="text-[11px] font-medium text-[#86868B]">Nome</label>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               autoFocus placeholder="Nome do projeto"
-              className="w-full px-3 py-2.5 bg-[#0E0E10] border border-white/[0.06] rounded-[10px] text-[14px] text-[#F5F5F7] placeholder-[#48484A] outline-none transition-colors focus:border-white/20" />
+              className="w-full px-3 py-2.5 bg-[#202020] border border-white/[0.06] rounded-[10px] text-[14px] text-[#F5F5F7] placeholder-[#48484A] outline-none transition-colors focus:border-white/20" />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-[11px] font-medium text-[#86868B]">Descrição <span className="text-[#48484A]">(opcional)</span></label>
             <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3}
               placeholder="Sobre o que é este projeto?"
-              className="w-full px-3 py-2.5 bg-[#0E0E10] border border-white/[0.06] rounded-[10px] text-[14px] text-[#F5F5F7] placeholder-[#48484A] outline-none resize-none transition-colors focus:border-white/20" />
+              className="w-full px-3 py-2.5 bg-[#202020] border border-white/[0.06] rounded-[10px] text-[14px] text-[#F5F5F7] placeholder-[#48484A] outline-none resize-none transition-colors focus:border-white/20" />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-3.5 bg-[#0E0E10]/60 border-t border-white/[0.04]">
+        <div className="flex items-center justify-end gap-2 px-6 py-3.5 bg-[#202020]/60 border-t border-white/[0.04]">
           <button type="button" onClick={onClose}
             className="px-3.5 py-1.5 text-[13px] font-medium text-[#A1A1AA] hover:text-white transition-colors rounded-[8px]">
             Cancelar
@@ -122,7 +122,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
       className="group relative">
       <Link to={`/projects/${project.id}`}
-        className="block relative rounded-[14px] bg-[#141416] border border-white/[0.05] hover:border-white/[0.1] hover:bg-[#181819] transition-all duration-200 overflow-hidden">
+        className="block relative rounded-[14px] bg-[#202020] border border-white/[0.05] hover:border-white/[0.1] hover:bg-[#2C2C2E] transition-all duration-200 overflow-hidden">
         {/* Subtle accent line on top */}
         <div className="h-[2px] w-full opacity-70" style={{ background: accent }} />
 
@@ -156,7 +156,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
       {/* Actions menu */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(v => !v); }}
-          className="p-1.5 rounded-[7px] bg-[#1C1C1E]/90 backdrop-blur border border-white/10 text-[#A1A1AA] hover:text-white hover:bg-[#2C2C2E] transition-colors">
+          className="p-1.5 rounded-[7px] bg-[#202020]/90 backdrop-blur border border-white/10 text-[#A1A1AA] hover:text-white hover:bg-[#2C2C2E] transition-colors">
           <MoreHorizontal size={14} />
         </button>
         <AnimatePresence>
@@ -166,7 +166,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }}
                 transition={{ duration: 0.12 }}
-                className="absolute right-0 mt-1.5 z-20 w-36 bg-[#1C1C1E] border border-white/[0.08] rounded-[10px] shadow-[0_12px_32px_rgba(0,0,0,0.5)] py-1 overflow-hidden">
+                className="absolute right-0 mt-1.5 z-20 w-36 bg-[#202020] border border-white/[0.08] rounded-[10px] shadow-[0_12px_32px_rgba(0,0,0,0.5)] py-1 overflow-hidden">
                 <button onClick={(e) => { e.preventDefault(); setMenuOpen(false); onEdit(); }}
                   className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] text-[#F5F5F7] hover:bg-white/5 transition-colors">
                   <Pencil size={12} className="text-[#86868B]" /> Editar
@@ -247,7 +247,7 @@ export default function Projects() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6E6E73]" />
           <input value={query} onChange={e => setQuery(e.target.value)}
             placeholder="Buscar projetos…"
-            className="w-full pl-9 pr-3 h-9 bg-[#141416] border border-white/[0.05] rounded-[9px] text-[13px] text-[#F5F5F7] placeholder-[#48484A] outline-none transition-colors focus:border-white/15 focus:bg-[#181819]" />
+            className="w-full pl-9 pr-3 h-9 bg-[#202020] border border-white/[0.05] rounded-[9px] text-[13px] text-[#F5F5F7] placeholder-[#48484A] outline-none transition-colors focus:border-white/15 focus:bg-[#2C2C2E]" />
         </div>
       )}
 
@@ -255,7 +255,7 @@ export default function Projects() {
       {projects.length === 0 ? (
         <motion.button onClick={() => setModal({ mode: 'create' })}
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="w-full max-w-md mx-auto block mt-16 p-12 rounded-[16px] border border-dashed border-white/[0.08] hover:border-white/15 bg-[#0E0E10]/40 hover:bg-[#141416] transition-all text-center group">
+          className="w-full max-w-md mx-auto block mt-16 p-12 rounded-[16px] border border-dashed border-white/[0.08] hover:border-white/15 bg-[#202020]/40 hover:bg-[#202020] transition-all text-center group">
           <div className="w-12 h-12 mx-auto mb-4 rounded-[12px] bg-white/[0.04] border border-white/[0.06] flex items-center justify-center group-hover:bg-white/[0.06] transition-colors">
             <Plus size={20} className="text-[#86868B] group-hover:text-white transition-colors" strokeWidth={1.8} />
           </div>

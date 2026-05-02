@@ -199,9 +199,9 @@ export default function Layout({ children }) {
         height: isMobile ? 'calc(100dvh - 48px)' : '100dvh',
       }}
       transition={{ type: 'spring', stiffness: 350, damping: 40, mass: 1 }}
-      className={`!fixed z-40 flex flex-col glass-panel ${isMobile ? 'overflow-visible' : (isExpanded ? 'overflow-visible' : 'overflow-x-hidden overflow-y-visible')} ${isMobile
-        ? 'bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.6)]'
-        : 'inset-y-0 left-0 bg-[#161717] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
+      className={`!fixed z-40 flex flex-col ${isMobile ? 'overflow-visible' : (isExpanded ? 'overflow-visible' : 'overflow-x-hidden overflow-y-visible')} ${isMobile
+        ? 'bg-[#202020] border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.6)]'
+        : 'inset-y-0 left-0 bg-[#202020] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
         }`}
     >
       <div className="pt-8 pb-4 px-4 shrink-0 relative">
@@ -213,7 +213,7 @@ export default function Layout({ children }) {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.93 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className="mx-auto w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer shadow-lg border border-white/8 bg-[#1C1C1E]"
+            className="mx-auto w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer shadow-lg border border-white/8 bg-[#202020]"
           >
             <motion.div
               initial={false}
@@ -232,7 +232,7 @@ export default function Layout({ children }) {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.93 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-lg border border-white/8 bg-[#1C1C1E] hover:bg-white/8 transition-colors cursor-pointer"
+              className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-lg border border-white/8 bg-[#202020] hover:bg-white/8 transition-colors cursor-pointer"
             >
               <PanelLeft size={20} className="text-[#A1A1AA]" strokeWidth={1.5} />
             </motion.button>
@@ -281,7 +281,7 @@ export default function Layout({ children }) {
                       onClick={() => { switchTeam(null); setShowWorkspaceSwitcher(false); }}
                       className={`flex items-center gap-2.5 px-2 py-2 w-full text-[13px] font-medium rounded-[8px] transition-colors outline-none ${!activeTeam ? 'bg-white/[0.06] text-[#F5F5F7]' : 'text-[#E5E5EA] hover:bg-white/[0.04]'}`}
                     >
-                      <div className="w-7 h-7 rounded-[6px] bg-[#1C1C1E] border border-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
+                      <div className="w-7 h-7 rounded-[6px] bg-[#202020] border border-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
                         {user?.avatar_url ? (
                           <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -437,7 +437,7 @@ export default function Layout({ children }) {
       { }
       {user && (
         <div className={`mx-3 mb-1 ${(isExpanded || isMobile) ? 'min-w-[200px]' : ''}`}>
-          <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#1C1C1E]/60 border border-white/[0.04] ${isExpanded || isMobile ? '' : 'justify-center'}`}>
+          <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#202020]/60 border border-white/[0.04] ${isExpanded || isMobile ? '' : 'justify-center'}`}>
             <div className="relative shrink-0">
               <Timer size={14} className="text-[#30D158]" />
               <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
@@ -471,7 +471,7 @@ export default function Layout({ children }) {
             {user.avatar_url ? (
               <img src={user.avatar_url} alt={user.name} className="w-9 h-9 aspect-square rounded-[8px] shrink-0 object-cover" />
             ) : (
-              <div className="w-9 h-9 aspect-square rounded-[8px] bg-[#1C1C1E] border border-white/[0.08] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 aspect-square rounded-[8px] bg-[#202020] border border-white/[0.08] flex items-center justify-center shrink-0">
                 <img src="/devsboard.png" alt="DevsBoard" className="w-full h-full object-cover rounded-[8px]" />
               </div>
             )}
@@ -522,7 +522,7 @@ export default function Layout({ children }) {
                   {user.avatar_url ? (
                     <img src={user.avatar_url} className="w-10 h-10 rounded-[8px] object-cover shrink-0" />
                   ) : (
-                    <div className="w-10 h-10 rounded-[8px] bg-[#1C1C1E] border border-white/[0.08] flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#202020] border border-white/[0.08] flex items-center justify-center shrink-0">
                       <img src="/devsboard.png" alt="DevsBoard" className="w-full h-full object-cover rounded-[8px]" />
                     </div>
                   )}
@@ -583,7 +583,7 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden selection:bg-[var(--db-accent-muted)] font-[Poppins,sans-serif]" style={{ backgroundColor: 'var(--db-bg)' }}>
+    <div className="relative w-screen h-screen overflow-hidden selection:bg-[var(--db-accent-muted)] font-[Poppins,sans-serif]" style={{ backgroundColor: '#191919' }}>
 
       { }
       {isGlassTheme && glassFallback && user?.wallpaper_url && (
@@ -750,7 +750,7 @@ export default function Layout({ children }) {
                 exit={{ y: -50, opacity: 0, x: '-50%' }}
                 className="fixed top-6 left-1/2 z-30 pointer-events-none hidden sm:block"
               >
-                <div className="pointer-events-auto bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 pr-2">
+                <div className="pointer-events-auto bg-[#202020]/80 backdrop-blur-xl border border-white/[0.08] px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 pr-2">
                   <div className={`w-2 h-2 rounded-full ${activeTeam.type === 'family' ? 'bg-rose-500' : 'bg-[#0A84FF]'} animate-pulse`} />
                   <span className="text-[12px] font-semibold text-white/90">
                     {t.layoutTeamMode} <span className="text-white font-bold">{activeTeam.name}</span>

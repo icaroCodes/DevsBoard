@@ -30,7 +30,7 @@ function TaskModal({ initial, onClose, onSubmit }) {
       <motion.form onSubmit={submit} onClick={e => e.stopPropagation()}
         initial={{ scale: 0.94, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.94, y: 20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 360, damping: 30 }}
-        className="w-full max-w-md bg-[#1C1C1E]/95 backdrop-blur-xl border border-white/[0.08] rounded-[22px] p-6 space-y-4 shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
+        className="w-full max-w-md bg-[#202020]/95 backdrop-blur-xl border border-white/[0.08] rounded-[22px] p-6 space-y-4 shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
         <div className="flex items-center justify-between">
           <h2 className="text-[16px] font-bold text-[#F5F5F7] tracking-tight">{initial ? 'Editar tarefa' : 'Nova tarefa'}</h2>
           <button type="button" onClick={onClose} className="text-[#86868B] hover:text-white"><X size={18} /></button>
@@ -145,7 +145,7 @@ export default function ProjectBoard({ projectId }) {
                         onDragStart={(e) => onDragStart(e, task)}
                         onDragEnd={onDragEnd}
                         onClick={() => setModal({ mode: 'edit', task })}
-                        className="group relative p-3 rounded-[12px] bg-[#1C1C1E] border border-white/[0.06] hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] cursor-pointer">
+                        className="group relative p-3 rounded-[12px] bg-[#202020] border border-white/[0.06] hover:border-white/15 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)] cursor-pointer">
                         <div className="absolute left-1 top-3 opacity-0 group-hover:opacity-50 transition-opacity">
                           <GripVertical size={12} className="text-white/40" />
                         </div>

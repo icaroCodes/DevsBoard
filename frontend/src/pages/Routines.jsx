@@ -61,7 +61,7 @@ function TaskPreview({ task, isOverlay = false }) {
   };
 
   return (
-    <div className={`flex items-start justify-between p-3.5 rounded-[12px] border shadow-xl ${isOverlay ? 'rotate-2 opacity-95 scale-[1.02] bg-[#222224] border-white/20' : 'bg-[#161618] border-white/[0.08]'}`}>
+    <div className={`flex items-start justify-between p-3.5 rounded-[12px] border shadow-xl ${isOverlay ? 'rotate-2 opacity-95 scale-[1.02] bg-[#2C2C2E] border-white/20' : 'bg-[#202020] border-white/[0.08]'}`}>
       <div className="flex items-start gap-3 flex-1 min-w-0">
         <div className="p-1 mt-0.5 text-[#86868B] shrink-0">
           <GripVertical size={16} />
@@ -122,7 +122,7 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
 
   const formatTime = (time) => {
     if (!time) return null;
-    return time.substring(0, 5); 
+    return time.substring(0, 5);
   };
 
   return (
@@ -130,10 +130,10 @@ function SortableTask({ routineId, task, onToggle, onEdit, onDelete }) {
       ref={setNodeRef}
       style={style}
       className={`group flex items-start justify-between p-3.5 rounded-[16px] transition-all duration-200 ${isDragging
-          ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/20 opacity-40'
-          : isOver
-            ? 'glass-card bg-[#8E9C78]/5 border border-[#8E9C78]/30 scale-[0.98]'
-            : 'glass-card bg-[#1C1C1E]/60 border border-white/[0.04] hover:bg-white/[0.04]'
+        ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/20 opacity-40'
+        : isOver
+          ? 'glass-card bg-[#8E9C78]/5 border border-[#8E9C78]/30 scale-[0.98]'
+          : 'glass-card bg-[#202020]/60 border border-white/[0.04] hover:bg-white/[0.04]'
         }`}
     >
       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -205,7 +205,7 @@ function RoutinePreview({ r, visualLabels, isOverlay = false }) {
   if (!r) return null;
 
   return (
-    <div className={`flex flex-col rounded-[16px] border transition-all overflow-hidden ${isOverlay ? 'rotate-1 scale-[1.05] bg-[#111111] border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)] opacity-95' : 'bg-[#1C1C1E] border-white/[0.08] shadow-2xl'}`}>
+    <div className={`flex flex-col rounded-[16px] border transition-all overflow-hidden ${isOverlay ? 'rotate-1 scale-[1.05] bg-[#202020] border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)] opacity-95' : 'bg-[#202020] border-white/[0.08] shadow-2xl'}`}>
       <div className={`flex justify-between items-center p-4 sm:p-5 lg:px-6 ${isOverlay && r.tasks?.length > 0 ? 'border-b border-white/[0.04]' : ''}`}>
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           <div className="p-1 text-[#86868B] shrink-0">
@@ -226,9 +226,9 @@ function RoutinePreview({ r, visualLabels, isOverlay = false }) {
       </div>
 
       {isOverlay && r.tasks && r.tasks.length > 0 && (
-        <div className="p-2 space-y-2 bg-[#111111] max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="p-2 space-y-2 bg-[#202020] max-h-[300px] overflow-y-auto overflow-x-hidden scrollbar-hide">
           {r.tasks.map(t => (
-            <div key={t.id} className="flex items-center gap-2 px-3 py-2.5 rounded-[12px] bg-[#222224] border border-white/20 shadow-md">
+            <div key={t.id} className="flex items-center gap-2 px-3 py-2.5 rounded-[12px] bg-[#2C2C2E] border border-white/20 shadow-md">
               <CircleDashed size={14} strokeWidth={2} className="text-[#86868B] shrink-0" />
               <span className="text-[13px] text-[#E5E5EA] font-medium truncate flex-1">{t.title}</span>
             </div>
@@ -281,13 +281,13 @@ function SortableRoutine({
       ref={setNodeRef}
       style={style}
       className={`relative rounded-[24px] overflow-hidden transition-all duration-300 ${isDragging
-          ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/40 shadow-none z-0'
-          : isOver
-            ? 'glass-card bg-[#1C1C1E] border-2 border-[#0A84FF]/50 shadow-[0_0_15px_rgba(10,132,255,0.1)] scale-[0.98]'
-            : 'glass-card bg-[#1C1C1E] border border-white/[0.04] shadow-sm hover:border-white/10'
+        ? 'bg-transparent border-2 border-dashed border-[#8E9C78]/40 shadow-none z-0'
+        : isOver
+          ? 'glass-card bg-[#202020] border-2 border-[#0A84FF]/50 shadow-[0_0_15px_rgba(10,132,255,0.1)] scale-[0.98]'
+          : 'glass-card bg-[#202020] border border-white/[0.04] shadow-sm hover:border-white/10'
         }`}
     >
-      {}
+      { }
       {isDragging && (
         <div className="absolute inset-0 bg-[#8E9C78]/5 pointer-events-none animate-pulse" />
       )}
@@ -356,7 +356,7 @@ function SortableRoutine({
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden border-t border-white/[0.04]"
           >
-            <div className="p-4 sm:p-6 bg-[#161618] space-y-2">
+            <div className="p-4 sm:p-6 bg-[#202020] space-y-2">
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
@@ -390,9 +390,9 @@ function SortableRoutine({
                 </SortableContext>
                 <DragOverlay dropAnimation={dropAnimation}>
                   {activeTaskId ? (
-                    <TaskPreview 
-                      task={r.tasks.find(t => `task-${t.id}` === activeTaskId)} 
-                      isOverlay={true} 
+                    <TaskPreview
+                      task={r.tasks.find(t => `task-${t.id}` === activeTaskId)}
+                      isOverlay={true}
                     />
                   ) : null}
                 </DragOverlay>
@@ -443,8 +443,8 @@ function SortableRoutine({
                               type="button"
                               onClick={() => setTaskForm({ ...taskForm, day_of_week: taskForm.day_of_week === idx ? null : idx })}
                               className={`w-9 h-9 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-[12px] sm:text-[13px] font-bold transition-all duration-200 border ${taskForm.day_of_week === idx
-                                  ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-105 sm:scale-110'
-                                  : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
+                                ? 'bg-[#8E9C78] border-[#8E9C78] text-white shadow-lg shadow-[#8E9C78]/20 scale-105 sm:scale-110'
+                                : 'bg-white/5 border-transparent text-[#86868B] hover:bg-white/10'
                                 }`}
                             >
                               {day}
@@ -465,8 +465,8 @@ function SortableRoutine({
                             type="button"
                             onClick={() => setTaskForm({ ...taskForm, priority: p })}
                             className={`flex flex-1 sm:flex-none justify-center px-1 sm:px-3 py-2 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${taskForm.priority === p
-                                ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
-                                : 'bg-white/5 text-[#86868B] hover:bg-white/10'
+                              ? p === 'high' ? 'bg-[#FF453A] text-white shadow-lg shadow-[#FF453A]/20' : p === 'medium' ? 'bg-[#FF9F0A] text-white shadow-lg shadow-[#FF9F0A]/20' : p === 'low' ? 'bg-[#32D74B] text-white shadow-lg shadow-[#32D74B]/20' : 'bg-white/20 text-white'
+                              : 'bg-white/5 text-[#86868B] hover:bg-white/10'
                               }`}
                           >
                             <span className="truncate">{p === 'high' ? 'Urgente' : p === 'medium' ? 'Importante' : p === 'low' ? 'Normal' : 'Tanto faz'}</span>
@@ -634,7 +634,7 @@ export default function Routines() {
 
     const newTasks = arrayMove(routine.tasks, oldIndex, newIndex);
 
-    
+
     const sortedTasks = [...newTasks].sort((a, b) => {
       if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time);
       if (a.start_time) return -1;
@@ -749,7 +749,7 @@ export default function Routines() {
       ) : (
         <div className="space-y-4">
           {items.length === 0 ? (
-            <div className="glass-card flex flex-col items-center justify-center py-20 bg-[#1C1C1E] rounded-[24px] border border-white/[0.04]">
+            <div className="glass-card flex flex-col items-center justify-center py-20 bg-[#202020] rounded-[24px] border border-white/[0.04]">
               <Repeat size={48} className="text-[#86868B] mb-4 opacity-50" strokeWidth={1.5} />
               <p className="text-[17px] font-medium text-[#F5F5F7]">Você ainda não criou nenhuma rotina.</p>
               <p className="text-[14px] text-[#86868B] mt-2 text-center max-w-sm">Coloque aqui as coisas que você faz sempre para não esquecer (como remédios, exercícios ou limpar a casa).</p>
@@ -790,10 +790,10 @@ export default function Routines() {
 
               <DragOverlay dropAnimation={dropAnimation}>
                 {activeId && activeId.toString().startsWith('routine-') ? (
-                  <RoutinePreview 
-                    r={items.find(r => `routine-${r.id}` === activeId)} 
-                    visualLabels={visualLabels} 
-                    isOverlay={true} 
+                  <RoutinePreview
+                    r={items.find(r => `routine-${r.id}` === activeId)}
+                    visualLabels={visualLabels}
+                    isOverlay={true}
                   />
                 ) : null}
               </DragOverlay>
@@ -818,7 +818,7 @@ export default function Routines() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-              className="solid-modal relative w-full max-w-[400px] bg-[#1C1C1E] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
+              className="solid-modal relative w-full max-w-[400px] bg-[#202020] border border-white/[0.08] shadow-2xl rounded-[24px] overflow-hidden"
             >
               <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
                 <h2 className="text-[17px] font-semibold text-[#F5F5F7]">

@@ -50,9 +50,9 @@ function TaskStatusCheck({ completed, priority, colorClass = "bg-[#0A84FF]" }) {
       </div>
     );
   }
-  if (priority === 'high')   return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF453A] shrink-0 transition-all hover:bg-[#FF453A]/20" />;
+  if (priority === 'high') return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF453A] shrink-0 transition-all hover:bg-[#FF453A]/20" />;
   if (priority === 'medium') return <div className="w-6 h-6 rounded-full border-[2px] border-[#FF9F0A] shrink-0 transition-all hover:bg-[#FF9F0A]/20" />;
-  if (priority === 'low')    return <div className="w-6 h-6 rounded-full border-[2px] border-[#32D74B] shrink-0 transition-all hover:bg-[#32D74B]/20" />;
+  if (priority === 'low') return <div className="w-6 h-6 rounded-full border-[2px] border-[#32D74B] shrink-0 transition-all hover:bg-[#32D74B]/20" />;
   return <div className="w-6 h-6 rounded-full border-[2px] border-[#86868B]/50 shrink-0 transition-all hover:bg-white/10" />;
 }
 
@@ -223,7 +223,7 @@ export default function Dashboard() {
   );
 
   if (loading) return <LoadingSkeleton variant="dashboard" />;
-  if (!data) return <div style={{position: 'fixed', top: 100, left: 300, zIndex: 99999, background: 'red', color: 'white', fontSize: 40}}>DATA IS NULL! Dashboard not rendering.</div>;
+  if (!data) return <div style={{ position: 'fixed', top: 100, left: 300, zIndex: 99999, background: 'red', color: 'white', fontSize: 40 }}>DATA IS NULL! Dashboard not rendering.</div>;
 
   const { finance, tasks, goals, routines } = data;
   const displayName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário';
@@ -306,7 +306,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Link to="/finances" className="block outline-none group">
-            <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
+            <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
               <div className="flex items-center gap-2 text-[#86868B] z-10">
                 <span className="text-[14px] font-medium">{t.dashBalance}</span>
               </div>
@@ -318,7 +318,7 @@ export default function Dashboard() {
           </Link>
 
           <Link to="/finances" className="block outline-none group">
-            <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
+            <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
               <div className="flex items-center gap-2 text-[#86868B] z-10">
                 <ArrowUpRight size={16} className="text-[#30D158]" />
                 <span className="text-[14px] font-medium">{t.dashIncome}</span>
@@ -331,7 +331,7 @@ export default function Dashboard() {
           </Link>
 
           <Link to="/finances" className="block outline-none group">
-            <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
+            <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] flex flex-col justify-between h-[150px] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60">
               <div className="flex items-center gap-2 text-[#86868B] z-10">
                 <ArrowDownRight size={16} className="text-[#FF453A]" />
                 <span className="text-[14px] font-medium">{t.dashExpense}</span>
@@ -349,7 +349,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
 
         {/* Tarefas com DnD */}
-        <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] shadow-sm flex flex-col min-h-[420px]">
+        <motion.div variants={itemVariants} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] shadow-sm flex flex-col min-h-[420px]">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckSquare size={18} className="text-[#F5F5F7]" />
@@ -396,7 +396,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Rotinas com DnD */}
-        <motion.div variants={itemVariants} className="glass-card bg-[#1C1C1E] rounded-[24px] border border-white/[0.04] shadow-sm flex flex-col min-h-[420px]">
+        <motion.div variants={itemVariants} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] shadow-sm flex flex-col min-h-[420px]">
           <div className="px-6 py-5 border-b border-white/[0.04] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Repeat size={18} className="text-[#F5F5F7]" />
@@ -498,7 +498,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {goals.items?.length === 0 ? (
-            <div className="glass-card col-span-full bg-[#1C1C1E] border border-white/[0.04] rounded-[24px] flex flex-col items-center justify-center py-12 px-6">
+            <div className="glass-card col-span-full bg-[#202020] border border-white/[0.04] rounded-[24px] flex flex-col items-center justify-center py-12 px-6">
               <Target size={48} strokeWidth={1.5} className="text-[#86868B] mb-4 opacity-60" />
               <p className="text-[15px] text-[#86868B]">{t.dashNoGoals}</p>
               <Link to="/goals" className="mt-4 px-5 py-2 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[14px] font-medium text-[#F5F5F7] transition-colors flex items-center gap-2">
@@ -508,7 +508,7 @@ export default function Dashboard() {
           ) : (
             goals.items?.map(g => (
               <Link to="/goals" key={g.id} className="block group outline-none">
-                <div className="glass-card bg-[#1C1C1E] rounded-[24px] p-6 border border-white/[0.04] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60 h-full flex flex-col justify-between min-h-[160px]">
+                <div className="glass-card bg-[#202020] rounded-[24px] p-6 border border-white/[0.04] shadow-sm relative overflow-hidden transition-all duration-300 group-hover:bg-[#2C2C2E]/60 h-full flex flex-col justify-between min-h-[160px]">
                   <div className="flex-1 z-10">
                     <div className="mb-3 inline-block px-2.5 py-1 rounded-[6px] bg-[#FF9F0A]/10 text-[#FF9F0A] text-[12px] font-semibold tracking-wide uppercase">
                       {t.goalType[g.type] || g.type}

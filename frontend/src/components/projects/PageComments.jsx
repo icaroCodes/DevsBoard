@@ -228,7 +228,7 @@ function CommentItem({ c, currentUserId, onDelete, onOpenImage, onReply, onSubmi
               <button
                 type="button"
                 onClick={() => onOpenImage?.(attachment)}
-                className="mt-2 inline-block rounded-[12px] overflow-hidden border border-white/10 bg-[#1C1C1E] hover:border-white/20 transition-all max-w-[280px] cursor-zoom-in outline-none"
+                className="mt-2 inline-block rounded-[12px] overflow-hidden border border-white/10 bg-[#202020] hover:border-white/20 transition-all max-w-[280px] cursor-zoom-in outline-none"
               >
                 <img src={attachment} alt="Anexo" className="block w-full h-auto max-h-[260px] object-cover" />
               </button>
