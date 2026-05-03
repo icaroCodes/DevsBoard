@@ -30,6 +30,7 @@ export default function ProjectDoc({ projectId }) {
       </div>
 
       <Editor
+        projectId={projectId}
         value={doc.content || ''}
         onChange={setContent}
         autoFocus={!doc.content}

@@ -13,19 +13,44 @@ function CustomImageView({ node, updateAttributes, deleteNode }) {
     updateAttributes({ src: url });
   };
 
+  const handleCaptionChange = (e) => {
+    updateAttributes({ caption: e.target.value });
+  };
+
   return (
     <NodeViewWrapper as="div" className="db-image-block" data-type="custom-image">
-      {node.attrs.src ? (
-        <MediaWrapper onEdit={() => updateAttributes({ src: null })} onDelete={deleteNode}>
-          <img src={node.attrs.src} alt="Imagem do projeto" className="db-image" />
-        </MediaWrapper>
-      ) : (
-        <MediaPlaceholder 
-          type="image" 
-          onUrlSubmit={handleUrlSubmit} 
-          onFileUpload={handleFileUpload} 
+      <div className="db-image-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {node.attrs.src ? (
+          <MediaWrapper onEdit={() => updateAttributes({ src: null })} onDelete={deleteNode}>
+            <img src={node.attrs.src} alt={node.attrs.caption || "Imagem do projeto"} className="db-image" />
+          </MediaWrapper>
+        ) : (
+          <MediaPlaceholder 
+            type="image" 
+            onUrlSubmit={handleUrlSubmit} 
+            onFileUpload={handleFileUpload} 
+          />
+        )}
+        
+        <input
+          type="text"
+          className="db-image-caption-input"
+          placeholder="Nome da imagem (ex: Tela Dashboard)..."
+          value={node.attrs.caption || ''}
+          onChange={handleCaptionChange}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255, 255, 255, 0.5)',
+            fontSize: '12px',
+            fontFamily: 'inherit',
+            outline: 'none',
+            padding: '2px 4px',
+            width: '100%',
+            transition: 'color 0.2s'
+          }}
         />
-      )}
+      </div>
     </NodeViewWrapper>
   );
 }
@@ -42,6 +67,11 @@ export const CustomImage = Node.create({
         default: null,
         parseHTML: el => el.getAttribute('src'),
         renderHTML: attrs => attrs.src ? { src: attrs.src } : {},
+      },
+      caption: {
+        default: '',
+        parseHTML: el => el.getAttribute('data-caption'),
+        renderHTML: attrs => attrs.caption ? { 'data-caption': attrs.caption } : {},
       },
     };
   },

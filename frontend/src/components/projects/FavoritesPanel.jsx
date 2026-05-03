@@ -9,7 +9,7 @@ import { useFavorites } from '../../hooks/useFavorites';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function ProjectSidebar() {
-  const { id: currentId } = useParams();
+  const { slug: currentSlug } = useParams();
   const navigate = useNavigate();
   const { user, activeTeam } = useAuth();
   const [projects, setProjects] = useState([]);
@@ -42,16 +42,16 @@ export default function ProjectSidebar() {
     try {
       const p = await projectsService.create({ name: 'Sem título' });
       setProjects(prev => [p, ...prev]);
-      navigate(`/projects/${p.id}`);
+      navigate(`/projects/${p.slug}`);
     } catch {}
   };
 
   const Item = ({ p }) => {
-    const active = String(p.id) === String(currentId);
+    const active = p.slug === currentSlug;
     return (
       <div className="group relative flex items-center">
         <Link
-          to={`/projects/${p.id}`}
+          to={`/projects/${p.slug}`}
           className={`flex-1 min-w-0 flex items-center gap-1.5 pl-2 pr-1 py-[5px] rounded-[6px] transition-colors text-[14px] ${active ? 'bg-white/[0.07] text-[#F5F5F7]' : 'text-[#9b9a97] hover:text-[#F5F5F7] hover:bg-white/[0.035]'}`}
         >
           <ChevronRight size={12} className="shrink-0 text-[#6f6e6b] opacity-0 group-hover:opacity-100 transition-opacity" />

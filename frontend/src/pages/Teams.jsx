@@ -316,9 +316,7 @@ export default function Teams() {
 
 
 
-
   if (loading) return <LoadingSkeleton variant="teams" />;
-
 
 
 

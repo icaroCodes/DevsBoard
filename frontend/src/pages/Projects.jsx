@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, X, FolderKanban, Upload, Search, MoreHorizontal } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
@@ -121,7 +121,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
       variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
       className="group relative">
-      <Link to={`/projects/${project.id}`}
+      <Link to={`/projects/${project.slug}`}
         className="block relative rounded-[14px] bg-[#202020] border border-white/[0.05] hover:border-white/[0.1] hover:bg-[#2C2C2E] transition-all duration-200 overflow-hidden">
         {/* Subtle accent line on top */}
         <div className="h-[2px] w-full opacity-70" style={{ background: accent }} />
@@ -188,6 +188,7 @@ export default function Projects() {
   const { projects, loading, create, update, remove } = useProjects();
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
+  const navigate = useNavigate();
   const [modal, setModal] = useState(null);
   const [query, setQuery] = useState('');
 
@@ -201,17 +202,19 @@ export default function Projects() {
   }, [projects, query]);
 
   const handleCreate = async (payload) => {
-    try { await create(payload); showSuccess('Projeto criado'); }
-    catch (e) { showError(e.message); throw e; }
+    try {
+      const newProject = await create(payload);
+      navigate(`/projects/${newProject.slug}`);
+    } catch (e) { showError(e.message); throw e; }
   };
   const handleUpdate = async (payload) => {
-    try { await update(modal.project.id, payload); showSuccess('Projeto atualizado'); }
+    try { await update(modal.project.slug, payload); showSuccess('Projeto atualizado'); }
     catch (e) { showError(e.message); throw e; }
   };
   const handleDelete = async (p) => {
     const ok = await confirm({ title: 'Excluir projeto?', message: `"${p.name}" e todos seus dados serão removidos.`, confirmText: 'Excluir', danger: true });
     if (!ok) return;
-    try { await remove(p.id); showSuccess('Projeto excluído'); }
+    try { await remove(p.slug); showSuccess('Projeto excluído'); }
     catch (e) { showError(e.message); }
   };
 

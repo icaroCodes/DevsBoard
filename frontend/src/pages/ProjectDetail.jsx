@@ -24,7 +24,7 @@ function relativeTime(iso) {
 }
 
 export default function ProjectDetail() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { showError } = useToast();
   const [project, setProject] = useState(null);
@@ -34,17 +34,17 @@ export default function ProjectDetail() {
   const coverAnchorRef = useRef(null);
   const commentsRef = useRef(null);
   const { isFav, toggle: toggleFav } = useFavorites();
-  const { doc, setContent, loading: docLoading, savingState } = useProjectDoc(id);
+  const { doc, setContent, loading: docLoading, savingState } = useProjectDoc(slug);
   const [hasComments, setHasComments] = useState(false);
   const [commentInputVisible, setCommentInputVisible] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    projectsService.get(id)
+    projectsService.get(slug)
       .then(setProject)
       .catch(e => { showError(e.message); navigate('/projects'); })
       .finally(() => setLoading(false));
-  }, [id, navigate, showError]);
+  }, [slug, navigate, showError]);
 
   useEffect(() => {
     if (titleRef.current && project && titleRef.current.textContent !== project.name) {
@@ -84,7 +84,7 @@ export default function ProjectDetail() {
     setProject(optimistic);
     window.dispatchEvent(new CustomEvent('project-updated', { detail: optimistic }));
     try {
-      const updated = await projectsService.update(id, payload);
+      const updated = await projectsService.update(slug, payload);
       setProject(updated);
       window.dispatchEvent(new CustomEvent('project-updated', { detail: updated }));
     } catch (e) {
@@ -271,7 +271,7 @@ export default function ProjectDetail() {
           {/* Comentários */}
           <div className={`${(hasComments || commentInputVisible) ? 'mb-6 mt-4' : ''}`}>
             <div className={!(hasComments || commentInputVisible) ? 'hidden' : 'block'}>
-              <PageComments projectId={id} ref={commentsRef} onHasComments={setHasComments} />
+              <PageComments projectId={slug} ref={commentsRef} onHasComments={setHasComments} />
               <div className="border-b border-white/[0.04] mt-4" />
             </div>
           </div>
@@ -281,6 +281,7 @@ export default function ProjectDetail() {
             <div className="text-[#63646B] text-[14px] py-4">Carregando…</div>
           ) : (
             <Editor
+              projectId={slug}
               value={doc.content || ''}
               onChange={setContent}
             />

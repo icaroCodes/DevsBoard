@@ -18,7 +18,7 @@ import { CustomAudio } from './extensions/Audio.jsx';
 import { CustomVideo } from './extensions/Video.jsx';
 import './editor.css';
 
-export default function Editor({ value, onChange, placeholder = 'Barra de espaço ou “/” para acessar os comandos', autoFocus = false }) {
+export default function Editor({ projectId, value, onChange, placeholder = 'Barra de espaço ou “/” para acessar os comandos', autoFocus = false }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -51,7 +51,7 @@ export default function Editor({ value, onChange, placeholder = 'Barra de espaç
       AutoJoiner.configure({ elementsToJoin: ['bulletList', 'orderedList', 'taskList'] }),
       Callout,
       Toggle,
-      CustomCodeBlock,
+      CustomCodeBlock.configure({ projectId }),
       CustomImage,
       CustomAudio,
       CustomVideo,

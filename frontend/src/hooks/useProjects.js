@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { projectsService, tasksService, docService, assetsService, commentsService } from '../services/projects';
+import { projectsService, tasksService, docService, assetsService, commentsService, codeCommentsService } from '../services/projects';
 
 export function useProjects() {
   const [projects, setProjects] = useState([]);
@@ -20,8 +20,8 @@ export function useProjects() {
   return {
     projects, loading, error, reload: load,
     create: async (p) => { const n = await projectsService.create(p); setProjects(prev => [n, ...prev]); return n; },
-    update: async (id, p) => { const u = await projectsService.update(id, p); setProjects(prev => prev.map(x => x.id === id ? u : x)); return u; },
-    remove: async (id) => { await projectsService.remove(id); setProjects(prev => prev.filter(x => x.id !== id)); },
+    update: async (slug, p) => { const u = await projectsService.update(slug, p); setProjects(prev => prev.map(x => x.slug === slug ? u : x)); return u; },
+    remove: async (slug) => { await projectsService.remove(slug); setProjects(prev => prev.filter(x => x.slug !== slug)); },
   };
 }
 
@@ -126,5 +126,61 @@ export function useAssets(projectId) {
     assets, loading,
     create: async (p) => { const a = await assetsService.create(projectId, p); setAssets(prev => [a, ...prev]); return a; },
     remove: async (id) => { await assetsService.remove(projectId, id); setAssets(prev => prev.filter(a => a.id !== id)); },
+  };
+}
+
+export function useCodeComments(projectId) {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!projectId) return;
+    setLoading(true);
+    codeCommentsService.list(projectId).then(setComments).catch(() => {}).finally(() => setLoading(false));
+  }, [projectId]);
+
+  return {
+    comments,
+    loading,
+    create: async (payload) => {
+      const c = await codeCommentsService.create(projectId, payload);
+      setComments(prev => [...prev, c]);
+      return c;
+    },
+    update: async (id, payload) => {
+      const c = await codeCommentsService.update(projectId, id, payload);
+      setComments(prev => prev.map(x => x.id === id ? c : x));
+      return c;
+    },
+    remove: async (id) => {
+      const prev = comments;
+      setComments(p => p.filter(c => c.id !== id));
+      try { await codeCommentsService.remove(projectId, id); }
+      catch (e) { setComments(prev); throw e; }
+    },
+    reply: async (commentId, payload) => {
+      const r = await codeCommentsService.reply(projectId, commentId, payload);
+      setComments(prev => prev.map(c =>
+        c.id === commentId ? { ...c, replies: [...(c.replies || []), r] } : c
+      ));
+      return r;
+    },
+    updateReply: async (commentId, replyId, payload) => {
+      const r = await codeCommentsService.updateReply(projectId, commentId, replyId, payload);
+      setComments(prev => prev.map(c =>
+        c.id === commentId
+          ? { ...c, replies: (c.replies || []).map(x => x.id === replyId ? r : x) }
+          : c
+      ));
+      return r;
+    },
+    removeReply: async (commentId, replyId) => {
+      await codeCommentsService.removeReply(projectId, commentId, replyId);
+      setComments(prev => prev.map(c =>
+        c.id === commentId
+          ? { ...c, replies: (c.replies || []).filter(x => x.id !== replyId) }
+          : c
+      ));
+    },
   };
 }

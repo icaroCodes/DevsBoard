@@ -31,3 +31,15 @@ export const commentsService = {
   create: (projectId, payload) => api(`/projects/${projectId}/comments`, { method: 'POST', body: JSON.stringify(payload) }),
   remove: (projectId, commentId) => api(`/projects/${projectId}/comments/${commentId}`, { method: 'DELETE' }),
 };
+
+export const codeCommentsService = {
+  list: (projectId) => api(`/projects/${projectId}/code-comments`),
+  create: (projectId, payload) => api(`/projects/${projectId}/code-comments`, { method: 'POST', body: JSON.stringify(payload) }),
+  update: (projectId, commentId, payload) => api(`/projects/${projectId}/code-comments/${commentId}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  remove: (projectId, commentId) => api(`/projects/${projectId}/code-comments/${commentId}`, { method: 'DELETE' }),
+  reply: (projectId, commentId, payload) => api(`/projects/${projectId}/code-comments/${commentId}/replies`, { method: 'POST', body: JSON.stringify(payload) }),
+  updateReply: (projectId, commentId, replyId, payload) =>
+    api(`/projects/${projectId}/code-comments/${commentId}/replies/${replyId}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  removeReply: (projectId, commentId, replyId) =>
+    api(`/projects/${projectId}/code-comments/${commentId}/replies/${replyId}`, { method: 'DELETE' }),
+};

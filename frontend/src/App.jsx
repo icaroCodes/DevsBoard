@@ -54,7 +54,7 @@ export default function App() {
                     <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
                     <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
                     <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-                    <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                    <Route path="/projects/:slug" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                     <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />

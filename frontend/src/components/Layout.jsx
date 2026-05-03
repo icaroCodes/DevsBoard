@@ -80,7 +80,7 @@ export default function Layout({ children }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
-  const isProjectFocus = /^\/projects\/\d+/.test(location.pathname);
+  const isProjectFocus = /^\/projects\/[\w-]+/.test(location.pathname);
   const { user, activeTeam, switchAccount, switchTeam, logout } = useAuth();
   const { notifications } = useRealtime();
   const { theme, setTheme } = useTheme();

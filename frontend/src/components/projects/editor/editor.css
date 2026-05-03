@@ -1269,8 +1269,8 @@ body:has(.drag-handle:active) * {
 .db-codeblock-comments-layer {
   position: absolute;
   top: 0;
-  right: -260px;
-  width: 250px;
+  right: -292px;
+  width: 280px;
   height: 100%;
   pointer-events: none;
   z-index: 10;
@@ -1282,69 +1282,427 @@ body:has(.drag-handle:active) * {
   width: 100%;
   background: #191919;
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  padding: 10px 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
   z-index: 10;
-  transition: top 0.2s ease;
+  transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
 }
 
-.db-codeblock-comment-box.is-draft {
-  border-color: #2383E2;
-}
-
-.db-codeblock-comment-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.db-codeblock-comment-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  color: #fff;
+.db-codeblock-comment-box.is-resolved {
+  opacity: 0.6;
 }
 
 .db-codeblock-comment-author {
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #e9e9e7;
 }
 
 .db-codeblock-comment-time {
-  font-size: 11px;
-  color: #86868B;
-  margin-left: auto;
-}
-
-.db-codeblock-comment-line-badge {
-  display: inline-block;
-  padding: 1px 6px;
-  margin-bottom: 4px;
-  border-radius: 4px;
-  background: rgba(218, 165, 32, 0.15);
-  color: #DAA520;
-  font-size: 11px;
-  font-weight: 500;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  letter-spacing: 0.02em;
+  font-size: 11.5px;
+  color: #6f6e6b;
 }
 
 .db-codeblock-comment-text {
+  font-size: 14px;
+  color: #e9e9e7;
+  line-height: 1.5;
+  margin-top: 1px;
+}
+
+/* Thread layout — vertical spine + avatars (reference: VS Code / GitHub-style review) */
+.db-codeblock-comment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.db-codeblock-thread-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.db-codeblock-thread-rail {
+  width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.db-codeblock-thread-rail.is-reply {
+  padding-top: 0;
+}
+
+.db-codeblock-thread-gap-line {
+  width: 2px;
+  height: 8px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 1px;
+}
+
+.db-codeblock-thread-spine {
+  width: 2px;
+  flex: 1;
+  min-height: 10px;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 1px;
+}
+
+.db-codeblock-thread-body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 4px;
+}
+
+.db-codeblock-thread-avatar-img {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.db-codeblock-thread-avatar-letter {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  background: #3a3a3c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+/* Floating toolbar — PageComments-aligned */
+.db-codeblock-floating-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(37, 37, 37, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+}
+
+.db-codeblock-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6f6e6b;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.db-codeblock-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e9e9e7;
+}
+
+.db-codeblock-toolbar-btn.is-active {
+  color: #34c759;
+  background: rgba(52, 199, 89, 0.15);
+}
+
+.db-codeblock-toolbar-btn.is-open {
+  color: #e9e9e7;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.db-codeblock-toolbar-more-wrap {
+  position: relative;
+}
+
+.db-codeblock-toolbar-dropdown.db-comment-dropdown {
+  top: calc(100% + 6px);
+  right: 0;
+}
+
+.db-codeblock-react-picker {
+  right: 0;
+}
+
+/* Inline reply + draft — shared chrome */
+.db-codeblock-inline-reply-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.15s ease;
+}
+
+.db-codeblock-inline-reply-bar:focus-within {
+  border-color: rgba(35, 131, 226, 0.55);
+}
+
+.db-codeblock-inline-reply-bar.is-multiline {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.db-codeblock-inline-reply-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.4;
-  word-wrap: break-word;
+  color: #e9e9e7;
+  outline: none;
+  font-family: inherit;
+}
+
+.db-codeblock-inline-reply-input::placeholder {
+  color: #6f6e6b;
+}
+
+.db-codeblock-draft-textarea {
+  width: 100%;
+  min-height: 44px;
+  max-height: 180px;
+  resize: vertical;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #e9e9e7;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.db-codeblock-draft-textarea::placeholder {
+  color: #6f6e6b;
+}
+
+.db-codeblock-inline-reply-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 2px 6px 6px;
+}
+
+.db-codeblock-inline-reply-bar.is-multiline .db-codeblock-inline-reply-actions {
+  padding-top: 0;
+}
+
+.db-codeblock-inline-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #6f6e6b;
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.db-codeblock-inline-icon-btn:hover {
+  color: #e9e9e7;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.db-codeblock-inline-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  color: #6f6e6b;
+  cursor: not-allowed;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.db-codeblock-inline-send.is-active {
+  background: #2383e2;
+  color: #fff;
+  cursor: pointer;
+}
+
+.db-codeblock-inline-send.is-active:hover {
+  background: #1a6fcb;
+}
+
+.db-codeblock-hidden-file {
+  display: none;
+}
+
+.db-codeblock-draft-dismiss {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: #86868b;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.db-codeblock-draft-dismiss:hover {
+  color: #e9e9e7;
+}
+
+.db-codeblock-reply-image-btn {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: transparent;
+  max-width: 100%;
+}
+
+.db-codeblock-reply-image {
+  display: block;
+  max-width: 220px;
+  max-height: 160px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.db-codeblock-reply-row-host {
+  position: relative;
+  border-radius: 8px;
+  margin: 0 -6px;
+  padding: 4px 6px 6px;
+}
+
+.db-codeblock-reply-floating-toolbar {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.db-codeblock-react-picker.is-on-reply {
+  top: auto;
+  bottom: calc(100% + 6px);
+  right: 0;
+  left: auto;
+}
+
+.db-codeblock-composer-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.db-codeblock-inline-reply-bar:not(.is-multiline) {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+
+.db-codeblock-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+}
+
+.db-codeblock-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.db-codeblock-modal-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  pointer-events: none;
+}
+
+.db-codeblock-apple-menu {
+  pointer-events: auto;
+  min-width: 220px;
+  max-width: 92vw;
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+.db-codeblock-apple-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #e9e9e7;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.db-codeblock-apple-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.db-codeblock-apple-menu-item.is-danger {
+  color: #ff6b6b;
+}
+
+.db-codeblock-apple-menu-item.is-danger:hover {
+  background: rgba(255, 69, 58, 0.12);
+}
+
+.db-codeblock-apple-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .db-codeblock-comment-input {
@@ -1427,21 +1785,7 @@ body:has(.drag-handle:active) * {
   transform: translateY(-20%) scale(1.1);
 }
 
-/* Comment box hover effect — slide left + bg change */
-.db-codeblock-comment-box {
-  transition: 
-    top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    box-shadow 0.3s ease;
-}
-
-.db-codeblock-comment-box.is-hovered {
-  background: #202020;
-  transform: translateX(-8px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  border-color: rgba(255, 255, 255, 0.15);
-}
+/* Hover / fundo animados via framer-motion no componente */
 
 .db-codeblock-comment-box.is-resolved {
   opacity: 0.5;
@@ -1507,6 +1851,12 @@ body:has(.drag-handle:active) * {
   padding: 4px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   z-index: 30;
+}
+
+/* When positioned above the toolbar */
+.db-comment-react-picker.is-above {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 
 .db-comment-react-picker button {
@@ -1596,26 +1946,53 @@ body:has(.drag-handle:active) * {
   font-weight: 500;
 }
 
-/* Replies */
+/* Replies — threaded style matching PageComments */
 .db-comment-replies {
   margin-top: 8px;
   padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.db-comment-reply {
+.db-comment-reply-item {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 6px;
+}
+
+.db-comment-reply-arrow {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 12px;
+  line-height: 1;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.db-comment-reply-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.db-comment-reply-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 1px;
+}
+
+.db-comment-reply-author {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e9e9e7;
 }
 
 .db-comment-reply-text {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .db-comment-reply-time {
@@ -1630,23 +2007,176 @@ body:has(.drag-handle:active) * {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Reply arrow indicator */
-.db-comment-reply {
+.db-comment-reply-input-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
-  padding-left: 8px;
-  position: relative;
 }
 
-.db-comment-reply::before {
-  content: '';
+.db-comment-reply-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s;
+}
+
+.db-comment-reply-input-wrap:focus-within {
+  border-color: rgba(35, 131, 226, 0.6);
+}
+
+.db-comment-reply-inline-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  color: #e9e9e7;
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+  font-family: inherit;
+}
+
+.db-comment-reply-inline-input::placeholder {
+  color: #6f6e6b;
+}
+
+.db-comment-reply-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+  border-radius: 50%;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: #6f6e6b;
+}
+
+.db-comment-reply-send:not(:disabled) {
+  background: #2383E2;
+  color: #fff;
+}
+
+.db-comment-reply-send:not(:disabled):hover {
+  background: #1A6FCB;
+}
+
+/* ============================================================
+   Pill-style input (User Request Parity)
+   ============================================================ */
+.db-codeblock-pill-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(28, 28, 30, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s ease;
+  min-width: 260px;
+  pointer-events: auto;
+}
+
+.db-codeblock-pill-input:focus-within {
+  border-color: rgba(35, 131, 226, 0.5);
+}
+
+.db-codeblock-pill-input input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e9e9e7;
+  font-size: 13.5px;
+  outline: none;
+  padding: 4px 0;
+}
+
+.db-codeblock-pill-input input::placeholder {
+  color: #6f6e6b;
+}
+
+.db-codeblock-pill-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.db-codeblock-pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: #6f6e6b;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.db-codeblock-pill-btn:hover {
+  color: #e9e9e7;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.db-codeblock-pill-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: #6f6e6b;
+  cursor: not-allowed;
+  transition: all 0.2s ease;
+}
+
+.db-codeblock-pill-send.is-active {
+  background: #2383E2;
+  color: #fff;
+  cursor: pointer;
+}
+
+.db-codeblock-pill-send.is-active:hover {
+  background: #1a6fcb;
+  transform: scale(1.05);
+}
+
+.db-codeblock-draft-wrapper {
   position: absolute;
-  left: 0;
-  top: 4px;
-  width: 6px;
-  height: 10px;
-  border-left: 1.5px solid rgba(255, 255, 255, 0.15);
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0 0 0 4px;
+  right: 0;
+  width: 100%;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.db-codeblock-draft-pill-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.db-codeblock-draft-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
 }

@@ -1,11 +1,22 @@
 import supabase from '../database/connection.js';
 
-export async function assertProjectAccess(projectId, { userId, teamId }) {
-  let query = supabase.from('projects').select('id').eq('id', projectId);
+export async function assertProjectAccess(projectIdOrSlug, req) {
+  const { userId, teamId } = req;
+  const isNumeric = /^\d+$/.test(projectIdOrSlug);
+  
+  let query = supabase.from('projects').select('id');
+  if (isNumeric) query = query.eq('id', projectIdOrSlug);
+  else query = query.eq('slug', projectIdOrSlug);
+  
   if (teamId) query = query.eq('team_id', teamId);
   else query = query.eq('user_id', userId).is('team_id', null);
+  
   const { data } = await query.maybeSingle();
-  return !!data;
+  if (data) {
+    req.projectId = data.id;
+    return true;
+  }
+  return false;
 }
 
 export async function uploadBase64Image(base64, userId, projectId, prefix) {
