@@ -1,272 +1,150 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import PasswordStrength from '../components/PasswordStrength';
 
 
-const fadeUp = {
-  initial: { opacity: 0, y: 22 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -14 },
-  transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
-};
-
-const stagger = {
-  animate: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
-};
-
-const itemVariant = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } },
-};
+const ease = [0.25, 0.46, 0.45, 0.94];
 
 
 const IconEmail = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="16" rx="3" />
     <polyline points="2,4 12,13 22,4" />
   </svg>
 );
 
 const IconLock = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <rect x="5" y="11" width="14" height="10" rx="2" />
     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
   </svg>
 );
 
 const IconUser = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="8" r="4" />
     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
   </svg>
 );
 
 const IconGithub = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
   </svg>
 );
 
 const IconEye = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
 const IconEyeOff = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
     <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
-function StarfieldDots() {
-  const canvasRef = useRef(null);
-  const dotsRef = useRef([]);
-  const animFrameRef = useRef(null);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    let w = window.innerWidth;
-    let h = window.innerHeight;
-
-    const setupCanvas = () => {
-      w = window.innerWidth;
-      h = window.innerHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      generateDots();
-    };
-
-    const generateDots = () => {
-
-      const area = w * h;
-      const count = Math.min(Math.floor(area / 4000), 300);
-      const dots = [];
-      for (let i = 0; i < count; i++) {
-        dots.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: Math.random() * 1.2 + 0.4,
-          baseAlpha: Math.random() * 0.35 + 0.08,
-          twinkleSpeed: Math.random() * 0.008 + 0.002,
-          twinkleOffset: Math.random() * Math.PI * 2,
-        });
-      }
-      dotsRef.current = dots;
-    };
-
-    setupCanvas();
-    window.addEventListener('resize', setupCanvas);
-
-    let time = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h);
-      time += 1;
-
-      dotsRef.current.forEach((d) => {
-
-        const twinkle = Math.sin(time * d.twinkleSpeed + d.twinkleOffset);
-        const alpha = d.baseAlpha + twinkle * 0.08;
-        if (alpha <= 0) return;
-
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 200, 210, ${alpha})`;
-        ctx.fill();
-      });
-
-      animFrameRef.current = requestAnimationFrame(draw);
-    };
-
-    draw();
-    return () => {
-      cancelAnimationFrame(animFrameRef.current);
-      window.removeEventListener('resize', setupCanvas);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: 'none',
-      }}
-    />
-  );
-}
-
-function Field({ icon, id, label, rightElement, ...props }) {
+function Field({ icon, id, type = 'text', rightElement, ...props }) {
   const [focused, setFocused] = useState(false);
-  const hasValue = props.value && props.value.length > 0;
 
   return (
-    <motion.div variants={itemVariant} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <div className="auth-field-row" style={{
+    <div
+      style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 10,
         border: '1px solid',
-        borderColor: focused ? 'rgba(142,156,120,0.5)' : 'rgba(255,255,255,0.07)',
-        borderRadius: 14,
-        padding: '0 16px',
-        height: 52,
-        background: focused ? 'rgba(142,156,120,0.04)' : 'rgba(255,255,255,0.025)',
-        boxShadow: focused
-          ? '0 0 0 3px rgba(142,156,120,0.1), 0 4px 20px rgba(142,156,120,0.06)'
-          : '0 2px 8px rgba(0,0,0,0.1)',
-        transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-      }}>
-        <span style={{
-          display: 'flex',
-          alignItems: 'center',
-          flexShrink: 0,
-          color: focused ? '#8E9C78' : hasValue ? '#888' : '#555',
-          transition: 'color 0.3s ease',
-        }}>
-          {icon}
-        </span>
-        <input
-          id={id}
-          style={{
-            flex: 1,
-            border: 'none',
-            background: 'transparent',
-            outline: 'none',
-            fontSize: 14.5,
-            color: '#ececec',
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 450,
-            width: '100%',
-            letterSpacing: '-0.01em',
-          }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          {...props}
-        />
-        {rightElement && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {rightElement}
-          </div>
-        )}
-      </div>
-    </motion.div>
+        borderColor: focused ? 'rgba(142,156,120,0.45)' : 'rgba(255,255,255,0.08)',
+        borderRadius: 12,
+        padding: '0 14px',
+        height: 48,
+        background: 'rgba(255,255,255,0.02)',
+        boxShadow: focused ? '0 0 0 3px rgba(142,156,120,0.08)' : 'none',
+        transition: 'border-color .2s ease, box-shadow .2s ease',
+      }}
+    >
+      <span style={{ display: 'flex', color: focused ? '#8E9C78' : '#666', transition: 'color .2s' }}>
+        {icon}
+      </span>
+      <input
+        id={id}
+        type={type}
+        style={{
+          flex: 1,
+          border: 'none',
+          background: 'transparent',
+          outline: 'none',
+          fontSize: 14,
+          color: '#ececec',
+          fontFamily: 'inherit',
+          fontWeight: 450,
+          letterSpacing: '-0.01em',
+        }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        {...props}
+      />
+      {rightElement}
+    </div>
   );
 }
+
 
 const translations = {
   pt: {
-    backHome: "Voltar para o início",
-    welcomeTitle: "Bem-vindo ao",
-    createTitle: "Crie sua conta no",
-    welcomeDesc: "Por favor, escolha uma das opções abaixo para continuar.",
-    createDesc: "Preencha os campos abaixo para começar sua jornada.",
-    back: "Voltar",
-    loginHead: "Bem-vindo ao",
-    registerHead: "Crie sua conta no",
-    loginSub: "Por favor, escolha uma das opções abaixo para continuar.",
-    registerSub: "Preencha os campos abaixo para começar sua jornada.",
+    loginHead: "Entrar no",
+    registerHead: "Criar conta no",
+    loginSub: "Acesse sua conta para continuar.",
+    registerSub: "É rápido e gratuito.",
     nameLabel: "Nome",
-    namePlaceholder: "Seu nome completo",
-    nameObj: "Por favor, digite seu nome",
+    namePlaceholder: "Seu nome",
+    nameObj: "Digite seu nome",
     emailLabel: "E-mail",
-    emailPlaceholder: "seu@email.com",
+    emailPlaceholder: "voce@email.com",
     passLabel: "Senha",
-    passPlaceholder: "Sua senha secreta",
-    errOAuth: "Não conseguimos entrar com o GitHub. Tente novamente.",
-    errAuth: "E-mail ou senha incorretos",
+    passPlaceholder: "Sua senha",
+    errOAuth: "Não foi possível entrar com o GitHub.",
+    errAuth: "E-mail ou senha incorretos.",
     btnLoading: "Entrando…",
-    btnLogin: "Acessar minha conta",
-    btnRegister: "Criar minha conta",
-    divider: "OU CONTINUE COM",
+    btnLogin: "Entrar",
+    btnRegister: "Criar conta",
+    divider: "ou",
     githubBtn: "Continuar com GitHub",
-    noAccount: "Ainda não tem conta? ",
-    hasAccount: "Já tem uma conta? ",
-    btnSwToReg: "Criar uma agora",
-    btnSwToLog: "Fazer login",
+    noAccount: "Não tem conta?",
+    hasAccount: "Já tem conta?",
+    btnSwToReg: "Criar agora",
+    btnSwToLog: "Entrar",
   },
   en: {
-    backHome: "Back to Home",
-    welcomeTitle: "Welcome to",
-    createTitle: "Create your",
-    welcomeDesc: "Please choose one of the options below to continue.",
-    createDesc: "Fill in the fields below to start your journey.",
-    back: "Back",
-    loginHead: "Welcome to",
+    loginHead: "Sign in to",
     registerHead: "Create your account on",
-    loginSub: "Please choose one of the options below to continue.",
-    registerSub: "Fill in the fields below to start your journey.",
+    loginSub: "Access your account to continue.",
+    registerSub: "Quick and free.",
     nameLabel: "Name",
-    namePlaceholder: "Your full name",
+    namePlaceholder: "Your name",
     nameObj: "Name is required",
     emailLabel: "Email",
-    emailPlaceholder: "your@email.com",
+    emailPlaceholder: "you@email.com",
     passLabel: "Password",
-    passPlaceholder: "••••••••",
-    errOAuth: "GitHub authentication error. Try again.",
-    errAuth: "Authentication error",
+    passPlaceholder: "Your password",
+    errOAuth: "Could not sign in with GitHub.",
+    errAuth: "Wrong email or password.",
     btnLoading: "Loading…",
-    btnLogin: "Sign In",
-    btnRegister: "Create Account",
-    divider: "OR CONTINUE WITH",
+    btnLogin: "Sign in",
+    btnRegister: "Create account",
+    divider: "or",
     githubBtn: "Continue with GitHub",
-    noAccount: "Don't have an account? ",
-    hasAccount: "Already have an account? ",
+    noAccount: "No account?",
+    hasAccount: "Already have an account?",
     btnSwToReg: "Sign up",
-    btnSwToLog: "Log in",
-  }
+    btnSwToLog: "Sign in",
+  },
 };
 
 export default function Auth() {
@@ -280,20 +158,13 @@ export default function Auth() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
 
-  const [lang, setLang] = useState('pt');
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem('lang');
-    if (savedLang) setLang(savedLang);
-  }, []);
-
-  const t = translations[lang] || translations['pt'];
+  const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'pt');
+  const t = translations[lang] || translations.pt;
 
   useEffect(() => {
     if (user) navigate('/dashboard');
     const params = new URLSearchParams(window.location.search);
-    const err = params.get('error');
-    if (err) {
+    if (params.get('error')) {
       setError(t.errOAuth);
       window.history.replaceState({}, '', '/auth');
     }
@@ -322,268 +193,199 @@ export default function Auth() {
 
   return (
     <div style={s.page}>
-      {/* Inline styles for autofill + mobile */}
       <style>{`
-        input::placeholder { color: #555 !important; }
+        @keyframes auth-spin { to { transform: rotate(360deg); } }
+        input::placeholder { color: #4d4d4d; }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
-        input:-webkit-autofill:focus,
-        input:-webkit-autofill:active {
+        input:-webkit-autofill:focus {
           -webkit-box-shadow: 0 0 0 30px #0c0c0e inset !important;
           -webkit-text-fill-color: #ececec !important;
           transition: background-color 5000s ease-in-out 0s;
         }
-        
-        /* Shimmer keyframe for CTA button */
-        @keyframes auth-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        
-        /* Pulse glow for the accent ring */
-        @keyframes auth-glow-pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-
-        /* Media Queries Removed - Same size everywhere */
+        .auth-eye-btn:hover { color: #aaa !important; }
+        .auth-github:hover { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.14) !important; }
+        .auth-switch:hover { color: #b1be9d !important; }
+        .auth-back:hover { color: #ddd !important; background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.12) !important; }
       `}</style>
 
-      {/* Background */}
-      <StarfieldDots />
+      <div style={s.bgGradient} />
 
-      {/* Subtle radial glow behind card */}
-      <div style={s.radialGlow} />
-
-      {/* Noise overlay */}
-      <div style={s.noise} />
-
-      {/* Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease }}
         style={s.card}
-        id="auth-card-new"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={isLogin ? 'login' : 'register'}
-            {...fadeUp}
-            style={s.cardInner}
-          >
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="auth-back"
+          style={s.backBtn}
+          aria-label={lang === 'pt' ? 'Voltar' : 'Back'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          <span>{lang === 'pt' ? 'Voltar' : 'Back'}</span>
+        </button>
 
-            { }
-            <motion.div
-              id="auth-logo-section"
-              style={s.logoSection}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.5 }}
-            >
-              <div style={s.logoGlow}>
-                <img
-                  src="/devsboard2.png"
-                  alt="DevsBoard"
-                  id="auth-logo-img"
-                  style={s.logoImg}
-                />
-              </div>
-              <div style={s.brandText}>
-                <span id="auth-brand-title" style={s.brandTitle}>
-                  {isLogin ? t.loginHead : t.registerHead}{' '}
-                  <span id="auth-brand-name" style={s.brandAccent}>DevsBoard</span>
-                </span>
-              </div>
-              <p style={s.brandSub}>
-                {isLogin ? t.loginSub : t.registerSub}
-              </p>
-            </motion.div>
+        <div style={s.logoSection}>
+          <img src="/devsboard2.png" alt="DevsBoard" style={s.logoImg} />
+          <h1 style={s.brandTitle}>
+            {isLogin ? t.loginHead : t.registerHead}{' '}
+            <span style={s.brandAccent}>DevsBoard</span>
+          </h1>
+          <p style={s.brandSub}>{isLogin ? t.loginSub : t.registerSub}</p>
+        </div>
 
-            { }
-            <motion.form
-              id="auth-form"
-              onSubmit={handleSubmit}
-              noValidate
-              style={s.form}
-              variants={stagger}
-              initial="initial"
-              animate="animate"
-            >
-              { }
-              <AnimatePresence>
-                {!isLogin && (
-                  <motion.div
-                    key="name-field"
-                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginBottom: 0 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    style={{ overflow: 'hidden' }}
-                  >
-                    <Field
-                      icon={<IconUser />}
-                      id="f-name"
-                      label={t.nameLabel}
-                      type="text"
-                      placeholder={t.namePlaceholder}
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <Field
-                icon={<IconEmail />}
-                id="f-email"
-                label={t.emailLabel}
-                type="email"
-                placeholder={t.emailPlaceholder}
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-
-              <Field
-                icon={<IconLock />}
-                id="f-password"
-                label={t.passLabel}
-                type={showPassword ? "text" : "password"}
-                placeholder={t.passPlaceholder}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={s.eyeBtn}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.div
-                        key={showPassword ? 'eye-off' : 'eye'}
-                        initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
-                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, rotate: 15 }}
-                        transition={{ duration: 0.15 }}
-                        style={{ display: 'flex' }}
-                      >
-                        {showPassword ? <IconEyeOff /> : <IconEye />}
-                      </motion.div>
-                    </AnimatePresence>
-                  </button>
-                }
-              />
-
-              { }
-              <AnimatePresence>
-                {!isLogin && <PasswordStrength password={password} />}
-              </AnimatePresence>
-
-              { }
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    key="err"
-                    initial={{ opacity: 0, y: -8, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    style={s.errorWrap}
-                  >
-                    <div style={s.error}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                      </svg>
-                      <span>{error}</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              { }
-              <motion.button
-                variants={itemVariant}
-                type="submit"
-                id="btn-submit"
-                disabled={loading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                style={s.btnPrimary}
+        <form onSubmit={handleSubmit} noValidate style={s.form}>
+          <AnimatePresence initial={false}>
+            {!isLogin && (
+              <motion.div
+                key="name-field"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25, ease }}
+                style={{ overflow: 'hidden' }}
               >
-                <span style={s.btnShimmer} />
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={loading ? 'loading' : isLogin ? 'login' : 'register'}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8 }}
-                  >
-                    {loading && (
-                      <motion.span
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                        style={{ display: 'flex' }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                        </svg>
-                      </motion.span>
-                    )}
-                    {loading ? t.btnLoading : isLogin ? t.btnLogin : t.btnRegister}
-                  </motion.span>
-                </AnimatePresence>
-              </motion.button>
-            </motion.form>
+                <div style={{ paddingBottom: 10 }}>
+                  <Field
+                    icon={<IconUser />}
+                    id="f-name"
+                    type="text"
+                    placeholder={t.namePlaceholder}
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            { }
-            <motion.div
-              id="auth-divider"
-              style={s.divider}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.35 }}
-            >
-              <div style={s.divLine} />
-              <span style={s.divText}>{t.divider}</span>
-              <div style={s.divLine} />
-            </motion.div>
+          <Field
+            icon={<IconEmail />}
+            id="f-email"
+            type="email"
+            placeholder={t.emailPlaceholder}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
 
-            { }
-            <motion.a
-              href={`${import.meta.env.VITE_API_URL}/auth/github`}
-              id="btn-github"
-              style={s.btnGithub}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              whileHover={{ scale: 1.02, borderColor: 'rgba(255,255,255,0.15)' }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <IconGithub />
-              <span>{t.githubBtn}</span>
-            </motion.a>
-
-            { }
-            <motion.p
-              style={s.switchRow}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.45 }}
-            >
-              {isLogin ? t.noAccount : t.hasAccount}
-              <button type="button" id="btn-switch" onClick={switchMode} style={s.switchBtn}>
-                {isLogin ? t.btnSwToReg : t.btnSwToLog}
+          <Field
+            icon={<IconLock />}
+            id="f-password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder={t.passPlaceholder}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            minLength={6}
+            autoComplete={isLogin ? 'current-password' : 'new-password'}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="auth-eye-btn"
+                style={s.eyeBtn}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              >
+                {showPassword ? <IconEyeOff /> : <IconEye />}
               </button>
-            </motion.p>
+            }
+          />
 
-          </motion.div>
-        </AnimatePresence>
+          {!isLogin && <PasswordStrength password={password} />}
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                key="err"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div style={s.error}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ ...s.btnPrimary, opacity: loading ? 0.7 : 1, cursor: loading ? 'wait' : 'pointer' }}
+          >
+            {loading && (
+              <span style={s.spinner} aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              </span>
+            )}
+            {loading ? t.btnLoading : isLogin ? t.btnLogin : t.btnRegister}
+          </button>
+        </form>
+
+        <div style={s.divider}>
+          <div style={s.divLine} />
+          <span style={s.divText}>{t.divider}</span>
+          <div style={s.divLine} />
+        </div>
+
+        <a
+          href={`${import.meta.env.VITE_API_URL}/auth/github`}
+          className="auth-github"
+          style={s.btnGithub}
+        >
+          <IconGithub />
+          <span>{t.githubBtn}</span>
+        </a>
+
+        <p style={s.switchRow}>
+          {isLogin ? t.noAccount : t.hasAccount}{' '}
+          <button type="button" onClick={switchMode} className="auth-switch" style={s.switchBtn}>
+            {isLogin ? t.btnSwToReg : t.btnSwToLog}
+          </button>
+        </p>
+
+        <div style={s.langRow}>
+          <div style={s.langToggle} role="tablist" aria-label="Idioma">
+            {['pt', 'en'].map((code) => (
+              <button
+                key={code}
+                type="button"
+                role="tab"
+                aria-selected={lang === code}
+                onClick={() => { setLang(code); localStorage.setItem('lang', code); }}
+                style={s.langOption}
+              >
+                {lang === code && (
+                  <motion.span
+                    layoutId="auth-lang-pill"
+                    style={s.langPill}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span style={{ ...s.langLabel, color: lang === code ? '#ececec' : '#666' }}>
+                  {code.toUpperCase()}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </motion.div>
     </div>
   );
@@ -592,7 +394,7 @@ export default function Auth() {
 const s = {
   page: {
     minHeight: '100vh',
-    background: '#060608',
+    background: '#070708',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -603,53 +405,30 @@ const s = {
     overflow: 'hidden',
   },
 
-  radialGlow: {
-    position: 'fixed',
-    top: '40%',
+  bgGradient: {
+    position: 'absolute',
+    top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 700,
-    height: 700,
+    width: 600,
+    height: 600,
     borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(142,156,120,0.06) 0%, transparent 70%)',
+    background: 'radial-gradient(circle, rgba(142,156,120,0.07) 0%, transparent 65%)',
     pointerEvents: 'none',
     zIndex: 0,
   },
 
-  noise: {
-    position: 'fixed',
-    inset: 0,
-    pointerEvents: 'none',
-    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-    opacity: 0.04,
-    zIndex: 1,
-    mixBlendMode: 'overlay',
-  },
-
   card: {
     position: 'relative',
-    zIndex: 10,
+    zIndex: 1,
     width: '100%',
-    maxWidth: 440,
-    background: 'rgba(12, 12, 14, 0.85)',
-    backdropFilter: 'blur(40px) saturate(150%)',
-    WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-    borderRadius: 28,
+    maxWidth: 400,
+    background: 'rgba(14, 14, 16, 0.7)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRadius: 20,
     border: '1px solid rgba(255,255,255,0.06)',
-    boxShadow: `
-      0 0 0 1px rgba(255,255,255,0.03),
-      0 24px 80px rgba(0,0,0,0.5),
-      0 4px 20px rgba(0,0,0,0.3),
-      0 0 120px rgba(142,156,120,0.03)
-    `,
-    padding: '40px 36px 36px',
-    overflow: 'hidden',
-  },
-
-  cardInner: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 0,
+    padding: '36px 32px 28px',
   },
 
   logoSection: {
@@ -657,103 +436,79 @@ const s = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    marginBottom: 32,
-    gap: 14,
-  },
-  logoGlow: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 28,
+    gap: 12,
   },
   logoImg: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
     objectFit: 'contain',
-    borderRadius: 14,
-    padding: 6,
-    background: 'rgba(255,255,255,0.95)',
-    boxShadow: '0 8px 32px rgba(142,156,120,0.2), 0 0 0 1px rgba(142,156,120,0.1)',
-  },
-  brandText: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    borderRadius: 11,
+    padding: 5,
+    background: '#fff',
   },
   brandTitle: {
     color: '#f0f0f0',
-    fontSize: 22,
-    fontWeight: 700,
-    letterSpacing: '-0.4px',
+    fontSize: 19,
+    fontWeight: 600,
+    letterSpacing: '-0.02em',
     lineHeight: 1.3,
+    margin: 0,
+    marginTop: 4,
   },
   brandAccent: {
     color: '#8E9C78',
-    fontWeight: 800,
+    fontWeight: 700,
   },
   brandSub: {
     color: '#777',
-    fontSize: 13.5,
+    fontSize: 13,
     margin: 0,
     lineHeight: 1.5,
-    maxWidth: 300,
   },
 
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
-    marginBottom: 24,
+    gap: 10,
+    marginBottom: 20,
   },
 
   eyeBtn: {
     background: 'none',
     border: 'none',
-    padding: 6,
+    padding: 4,
     cursor: 'pointer',
     color: '#666',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
-    transition: 'color 0.2s, background 0.2s',
+    transition: 'color .2s',
   },
 
   btnPrimary: {
     width: '100%',
-    height: 52,
-    background: 'linear-gradient(135deg, #8E9C78 0%, #6B7A5A 100%)',
-    color: '#ffffff',
+    height: 48,
+    background: '#8E9C78',
+    color: '#0a0a0a',
     border: 'none',
-    borderRadius: 14,
-    fontSize: 14.5,
-    fontWeight: 700,
-    cursor: 'pointer',
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 600,
     letterSpacing: '-0.01em',
-    fontFamily: '"Inter", sans-serif',
+    fontFamily: 'inherit',
     marginTop: 4,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-    boxShadow: '0 4px 24px rgba(142,156,120,0.2), 0 1px 3px rgba(0,0,0,0.2)',
-    transition: 'box-shadow 0.3s ease',
+    gap: 8,
+    transition: 'opacity .2s, background .2s',
   },
-  btnShimmer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
-    animation: 'auth-shimmer 3s ease-in-out infinite',
-    zIndex: 1,
+  spinner: {
+    display: 'inline-flex',
+    animation: 'auth-spin 0.8s linear infinite',
   },
 
-  errorWrap: {
-    overflow: 'hidden',
-  },
   error: {
     display: 'flex',
     alignItems: 'center',
@@ -761,17 +516,18 @@ const s = {
     color: '#ef4444',
     fontSize: 12.5,
     fontWeight: 500,
-    background: 'rgba(239,68,68,0.08)',
-    borderRadius: 12,
-    padding: '10px 14px',
+    background: 'rgba(239,68,68,0.07)',
+    borderRadius: 10,
+    padding: '9px 12px',
     border: '1px solid rgba(239,68,68,0.15)',
+    marginTop: 2,
   },
 
   divider: {
     display: 'flex',
     alignItems: 'center',
-    gap: 14,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 14,
   },
   divLine: {
     flex: 1,
@@ -781,35 +537,33 @@ const s = {
   divText: {
     fontSize: 11,
     color: '#555',
-    fontWeight: 600,
-    whiteSpace: 'nowrap',
-    letterSpacing: '0.08em',
+    fontWeight: 500,
+    letterSpacing: '0.06em',
   },
 
   btnGithub: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 9,
     width: '100%',
-    height: 50,
-    background: 'rgba(255,255,255,0.03)',
+    height: 46,
+    background: 'rgba(255,255,255,0.02)',
     color: '#d4d4d4',
     border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 14,
-    fontSize: 14.5,
-    fontWeight: 600,
+    borderRadius: 12,
+    fontSize: 13.5,
+    fontWeight: 500,
     textDecoration: 'none',
-    cursor: 'pointer',
-    fontFamily: '"Inter", sans-serif',
-    marginBottom: 20,
-    transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    fontFamily: 'inherit',
+    marginBottom: 18,
+    transition: 'background .2s, border-color .2s',
   },
 
   switchRow: {
     textAlign: 'center',
-    fontSize: 13.5,
-    color: '#666',
+    fontSize: 13,
+    color: '#777',
     margin: 0,
     lineHeight: 1.5,
   },
@@ -818,13 +572,75 @@ const s = {
     border: 'none',
     padding: 0,
     color: '#8E9C78',
-    fontWeight: 700,
-    fontSize: 13.5,
+    fontWeight: 600,
+    fontSize: 13,
     cursor: 'pointer',
-    fontFamily: '"Inter", sans-serif',
-    transition: 'color 0.2s',
-    textDecoration: 'underline',
-    textDecorationColor: 'rgba(142,156,120,0.3)',
-    textUnderlineOffset: 3,
+    fontFamily: 'inherit',
+    transition: 'color .2s',
+  },
+
+  langRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+    paddingTop: 16,
+    borderTop: '1px solid rgba(255,255,255,0.04)',
+  },
+  langToggle: {
+    display: 'inline-flex',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 999,
+    padding: 3,
+    gap: 2,
+  },
+  langOption: {
+    position: 'relative',
+    background: 'none',
+    border: 'none',
+    padding: '5px 14px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 40,
+  },
+  langPill: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 999,
+    boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+  },
+  langLabel: {
+    position: 'relative',
+    zIndex: 1,
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    transition: 'color .2s',
+  },
+
+  backBtn: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    color: '#999',
+    padding: '6px 11px',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    letterSpacing: '-0.01em',
+    transition: 'color .2s, background .2s, border-color .2s',
   },
 };

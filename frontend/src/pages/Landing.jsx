@@ -1,121 +1,120 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { ReactLenis } from 'lenis/react';
-import { ArrowRight, Code, Zap, Shield, Sparkles, Server, CheckCircle2, Users } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Sparkles, CheckCircle2, Users } from 'lucide-react';
 
 
 const translations = {
   pt: {
-    bannerText: "Organize seu dia a dia e colabore com sua família ou amigos de um jeito simples.",
-    bannerLink: "Entenda melhor",
-    navHow: "Como funciona?",
-    navVision: "Para que serve?",
+    bannerText: "Organize projetos em equipe.",
+    bannerLink: "Saber mais",
+    navHow: "Como funciona",
+    navVision: "Para que serve",
     navStep: "Passo a passo",
-    navDashboard: "Minha Página",
-    navLogin: "Acessar conta",
-    navStart: "Criar conta grátis",
-    mobileFocus: "Simplicidade e Foco",
+    navDashboard: "Minha página",
+    navLogin: "Entrar",
+    navStart: "Criar conta",
+    mobileFocus: "Simples e direto",
     mobileJourney: "Começar agora",
-    heroFree: "Totalmente Gratuito",
-    heroTitle1: "Organize sua rotina",
+    heroFree: "100% Grátis",
+    heroTitle1: "Organize sua vida",
     heroTitle2: "com o",
-    heroDesc: "O lugar mais simples para você cuidar das suas tarefas, do seu dinheiro e dos seus objetivos, sem complicação.",
+    heroDesc: "Cuide das suas tarefas, do seu dinheiro e das suas metas em um só lugar.",
     heroBtnStart: "Criar minha conta",
     heroBtnDash: "Ver meu progresso",
-    heroBtnDiscover: "Conhecer melhor",
+    heroBtnDiscover: "Saber mais",
     heroSocial: "Junte-se a mais de 50 pessoas",
     sponsors: "Parceiros",
     featTitle1: "Tudo no seu",
     featTitle2: "lugar certo",
-    feat1Title: "Controle do Dinheiro",
-    feat1Desc: "Chega de planilhas difíceis. Anote o que ganha e o que gasta para ver seu dinheiro render com gráficos muito fáceis de ler.",
-    feat2Title: "Minhas Atividades",
-    feat2Desc: "Suas tarefas sempre em ordem. Use um quadro de recados onde você só precisa arrastar o que já terminou para o lado.",
-    feat3Title: "Tarefas do Dia",
-    feat3Desc: "Crie bons hábitos todos os dias. Monte sua rotina do seu jeito, sem se perder em anotações soltas.",
+    feat1Title: "Controle do dinheiro",
+    feat1Desc: "Anote o que entra e o que sai. Veja tudo em gráficos simples.",
+    feat2Title: "Minhas atividades",
+    feat2Desc: "Arraste e solte os cartões. Suas tarefas sempre em ordem.",
+    feat3Title: "Tarefas do dia",
+    feat3Desc: "Monte sua rotina do seu jeito e crie bons hábitos.",
     feat4Tag: "Novidade",
-    feat4Title: "Ajudar a família e amigos ficou fácil.",
-    feat4Desc: "Acompanhe as tarefas e as contas da sua casa ou do seu time em tempo real. Trabalhem juntos para ninguém se perder.",
+    feat4Title: "Trabalhar em equipe ficou fácil.",
+    feat4Desc: "Acompanhe tarefas e contas da sua casa ou do seu time em tempo real.",
     feat4L1: "Convites rápidos",
-    feat4L2: "Controle de quem pode ver",
+    feat4L2: "Controle de acesso",
     feat4L3: "Atualizado na hora",
     phil1: "A maioria das pessoas:",
-    phil2: "se perde em muitos papéis e apps.",
-    phil3: "Nosso sistema junta:",
-    phil4: "tudo em uma só tela facilitada.",
-    protTitle: "Por que escolher o DevsBoard?",
-    protDesc: "Um sistema feito para ser fácil e que não trava o seu celular.",
+    phil2: "se perde em vários apps.",
+    phil3: "Aqui você tem:",
+    phil4: "tudo em uma só tela.",
+    protTitle: "Por que o DevsBoard?",
+    protDesc: "Fácil de usar e leve.",
     prot1Tag: "ATIVIDADES",
-    prot1Title: "Mural de Recados",
-    prot1Desc: "Organize o que precisa fazer de um jeito simples. Arraste e solte os cartões quando terminar, igual a um mural de avisos.",
+    prot1Title: "Mural de recados",
+    prot1Desc: "Arraste e solte os cartões. Igual a um mural.",
     prot2Tag: "CLAREZA",
-    prot2Title: "Visual Limpo",
-    prot2Desc: "Um desenho elegante e focado no que é importante, feito para não cansar a sua vista e ser fácil de ler.",
+    prot2Title: "Visual limpo",
+    prot2Desc: "Leve, fácil de ler e que não cansa a vista.",
     prot3Tag: "CONQUISTAS",
-    prot3Title: "Meus Objetivos",
-    prot3Desc: "Diga o que você quer conquistar e o sistema te ajuda a acompanhar seu progresso com desenhos simples de entender.",
-    ctaTitle: "Tome as rédeas da sua rotina.",
-    ctaDesc: "Pare de se perder entre anotações soltas. Deixe suas tarefas e seu dinheiro em ordem agora mesmo.",
-    ctaBtn: "Começar Agora",
+    prot3Title: "Minhas metas",
+    prot3Desc: "Defina o que quer conquistar e veja seu progresso em gráficos.",
+    ctaTitle: "Coloque sua rotina em ordem.",
+    ctaDesc: "Suas tarefas e seu dinheiro organizados agora.",
+    ctaBtn: "Começar agora",
     footerMade: "Criado por",
-    chartBalance: "Meu Saldo"
+    chartBalance: "Meu saldo"
   },
   en: {
-    bannerText: "Accelerate your work with the new teamwork feature.",
+    bannerText: "Organize team projects.",
     bannerLink: "Learn more",
-    navHow: "How it Works",
-    navVision: "Our Vision",
+    navHow: "How it works",
+    navVision: "What it's for",
     navStep: "Step by step",
-    navDashboard: "Go to Dashboard",
+    navDashboard: "Dashboard",
     navLogin: "Sign in",
-    navStart: "Get Started",
-    mobileFocus: "Focus and Simplicity",
-    mobileJourney: "Start Journey",
+    navStart: "Sign up",
+    mobileFocus: "Simple and clear",
+    mobileJourney: "Start now",
     heroFree: "100% Free",
     heroTitle1: "Organize your life",
     heroTitle2: "with",
-    heroDesc: "The complete app that organizes your tasks, routines and your money easily in one place.",
-    heroBtnStart: "Start your journey",
+    heroDesc: "Manage your tasks, money and goals in one place.",
+    heroBtnStart: "Create my account",
     heroBtnDash: "Go to dashboard",
-    heroBtnDiscover: "Discover more",
+    heroBtnDiscover: "Learn more",
     heroSocial: "Join over 50 members",
     sponsors: "Sponsors",
     featTitle1: "Everything in its",
-    featTitle2: "proper place",
-    feat1Title: "Financial Health",
-    feat1Desc: "Say goodbye to hard spreadsheets. Record your income, track where you spent, and see your money grow through easy-to-understand charts.",
-    feat2Title: "Task Management",
-    feat2Desc: "Your activities always in order. Create tasks on visual boards and simply drag the cards aside when you finish what needs to be done.",
-    feat3Title: "Routines & Habits",
-    feat3Desc: "Create good habits every day. Build your step-by-step and organize your activities just the way you like, without complications.",
-    feat4Tag: "New Feature",
-    feat4Title: "Teamwork has never been easier.",
-    feat4Desc: "Track your team's or family's tasks and finances in real time. Collaborate simultaneously on different projects without losing track of what's been done.",
-    feat4L1: "Instant invites",
-    feat4L2: "Custom permissions",
+    featTitle2: "right place",
+    feat1Title: "Money control",
+    feat1Desc: "Track income and spending. See it all in simple charts.",
+    feat2Title: "My tasks",
+    feat2Desc: "Drag and drop cards. Always in order.",
+    feat3Title: "Daily routine",
+    feat3Desc: "Build your routine your way and create good habits.",
+    feat4Tag: "New",
+    feat4Title: "Teamwork made easy.",
+    feat4Desc: "Track your team's or family's tasks and bills in real time.",
+    feat4L1: "Quick invites",
+    feat4L2: "Access control",
     feat4L3: "Real-time updates",
     phil1: "Most people:",
-    phil2: "use dozens of confusing apps.",
-    phil3: "Our system groups:",
+    phil2: "get lost across many apps.",
+    phil3: "Here you have:",
     phil4: "everything on one screen.",
-    protTitle: "Why are we different?",
-    protDesc: "A very intuitive system that doesn't slow down your phone or computer.",
+    protTitle: "Why DevsBoard?",
+    protDesc: "Easy to use and lightweight.",
     prot1Tag: "TASKS",
-    prot1Title: "Activity Board",
-    prot1Desc: "Divide what you have to do into simple columns. Just drag and drop cards when you finish something, just like an easy sticky notes board.",
+    prot1Title: "Task board",
+    prot1Desc: "Drag and drop cards. Just like a sticky-note board.",
     prot2Tag: "CLARITY",
-    prot2Title: "Clean Look",
-    prot2Desc: "A very elegant design, focused on what's most essential and designed never to cause stress or tire your eyes during daily use.",
+    prot2Title: "Clean look",
+    prot2Desc: "Light, easy to read, and easy on the eyes.",
     prot3Tag: "PROGRESS",
-    prot3Title: "Automatic Goals",
-    prot3Desc: "Set your major life goals and let our system track your progress automatically, displaying simple charts for you to celebrate your achievements.",
-    ctaTitle: "Take control of your time.",
-    ctaDesc: "Stop wasting time getting lost amidst loose notes and papers. Organize money, tasks, routines, and goals right now.",
-    ctaBtn: "Sign up",
+    prot3Title: "My goals",
+    prot3Desc: "Set what you want to achieve and see your progress in charts.",
+    ctaTitle: "Get your routine in order.",
+    ctaDesc: "Your tasks and money organized now.",
+    ctaBtn: "Start now",
     footerMade: "Made by",
-    chartBalance: "Current Balance"
+    chartBalance: "Balance"
   }
 };
 
@@ -145,7 +144,7 @@ const FinancialChartAnimation = ({ lang = 'pt' }) => {
   const t = translations[lang];
   return (
     <div className="h-48 relative flex flex-col items-center justify-end p-5 bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden shadow-inner">
-      {}
+      { }
       <div className="absolute top-5 left-5 w-full flex justify-between pr-10 items-start">
         <div>
           <div className="text-[10px] text-zinc-500 font-mono mb-1 uppercase tracking-widest">{t.chartBalance}</div>
@@ -165,7 +164,7 @@ const FinancialChartAnimation = ({ lang = 'pt' }) => {
         </div>
       </div>
 
-      {}
+      { }
       <div className="flex items-end gap-1.5 w-full h-20 opacity-80 z-10 relative left-1/2 -translate-x-1/2 pr-3 pl-3">
         {[30, 50, 40, 70, 55, 90, 65, 100].map((height, i) => (
           <div
@@ -176,7 +175,7 @@ const FinancialChartAnimation = ({ lang = 'pt' }) => {
         ))}
       </div>
 
-      {}
+      { }
       <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#0A0A0A] to-transparent z-20 pointer-events-none" />
     </div>
   );
@@ -186,20 +185,20 @@ const TrelloDragAndDropAnimation = () => {
   return (
     <div className="h-48 relative flex items-center justify-center p-4">
       <div className="flex gap-6 w-full max-w-[220px] h-36">
-        {}
+        { }
         <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl p-2.5 flex flex-col gap-2.5">
           <div className="w-12 h-2 bg-white/10 rounded-full mb-1"></div>
-          {}
+          { }
           <div className="w-full h-10 rounded-lg border-2 border-dashed border-[#8E9C78]/20 bg-[#8E9C78]/5"></div>
-          {}
+          { }
           <div className="w-full h-10 bg-[#111] border border-white/5 rounded-lg shadow-sm opacity-30"></div>
         </div>
 
-        {}
+        { }
         <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl p-2.5 flex flex-col gap-2.5 relative">
           <div className="w-12 h-2 bg-[#8E9C78]/30 rounded-full mb-1"></div>
 
-          {}
+          { }
           <motion.div
             animate={{
               x: [0, -110, -110, 0, 0],
@@ -213,7 +212,7 @@ const TrelloDragAndDropAnimation = () => {
             <div className="w-8 h-1 bg-[#8E9C78]/80 rounded-full"></div>
             <div className="w-12 h-1 bg-white/20 rounded-full"></div>
 
-            {}
+            { }
             <motion.div
               animate={{ scale: [1, 0.9, 0.9, 1, 1] }}
               transition={{ duration: 4, ease: "easeInOut" }}
@@ -233,10 +232,10 @@ const TrelloDragAndDropAnimation = () => {
 const RoutineDragAndDropAnimation = () => {
   return (
     <div className="h-48 relative flex flex-col items-center justify-center p-4">
-      {}
+      { }
       <div className="w-full max-w-[200px] bg-white/[0.02] border border-white/5 rounded-xl p-3 flex flex-col gap-2 shadow-lg relative h-[164px]">
 
-        {}
+        { }
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#8E9C78]"></div>
@@ -245,19 +244,19 @@ const RoutineDragAndDropAnimation = () => {
           <div className="w-4 h-1 bg-white/10 rounded-full"></div>
         </div>
 
-        {}
+        { }
         <div className="w-full h-8 bg-white/[0.03] border border-white/5 rounded-lg flex items-center px-3 gap-2">
           <div className="w-3 h-3 rounded-sm border border-white/20"></div>
           <div className="w-16 h-1 bg-white/10 rounded-full"></div>
         </div>
 
-        {}
+        { }
         <div className="w-full h-8 rounded-lg border-2 border-dashed border-[#8E9C78]/20 bg-[#8E9C78]/5"></div>
 
-        {}
+        { }
         <div className="w-full h-8"></div>
 
-        {}
+        { }
         <motion.div
           className="absolute w-[calc(100%-24px)] left-3 h-8 bg-[#1a1a1a] border border-[#8E9C78]/40 shadow-[0_5px_15px_rgba(0,0,0,0.5)] rounded-lg flex items-center px-3 gap-2 z-20"
           animate={{
@@ -270,7 +269,7 @@ const RoutineDragAndDropAnimation = () => {
           <div className="w-3 h-3 rounded-sm border border-[#8E9C78]/60 bg-[#8E9C78]/10"></div>
           <div className="w-20 h-1 bg-white/20 rounded-full"></div>
 
-          {}
+          { }
           <motion.div
             animate={{ scale: [1, 0.9, 0.9, 1, 1] }}
             transition={{ duration: 4, ease: "easeInOut" }}
@@ -292,14 +291,14 @@ const InfiniteSponsors = () => {
       <div className="absolute left-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-r from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
       <div className="absolute right-0 top-0 bottom-0 w-24 md:w-32 bg-gradient-to-l from-[#0A0A0A] to-transparent z-20 pointer-events-none"></div>
 
-      {}
+      { }
       <div className="flex flex-row items-center w-[200%] animate-marquee will-change-transform gap-16 sm:gap-24 md:gap-40">
-        {[1, 2, 3, 4, 5, 6].map((group) => (
+        {[1, 2, 3].map((group) => (
           <div key={group} className="flex items-center shrink-0 gap-16 sm:gap-24 md:gap-40">
-            <img draggable="false" className="h-20 sm:h-24 md:h-32 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Denna.png" alt="Denna" />
-            <img draggable="false" className="h-32 sm:h-40 md:h-52 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Robson.png" alt="Robson" />
-            <img draggable="false" className="h-16 sm:h-20 md:h-28 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/cleansite.png" alt="Cleansite" />
-            <img draggable="false" className="h-32 sm:h-44 md:h-56 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/im_transparente.png" alt="IM" />
+            <img draggable="false" loading="lazy" decoding="async" className="h-20 sm:h-24 md:h-32 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Denna.png" alt="Denna" />
+            <img draggable="false" loading="lazy" decoding="async" className="h-32 sm:h-40 md:h-52 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/Robson.png" alt="Robson" />
+            <img draggable="false" loading="lazy" decoding="async" className="h-16 sm:h-20 md:h-28 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/cleansite.png" alt="Cleansite" />
+            <img draggable="false" loading="lazy" decoding="async" className="h-32 sm:h-44 md:h-56 w-auto opacity-50 grayscale hover:grayscale-0 hover:opacity-100 hover:scale-[1.03] transition-all duration-500 object-contain cursor-pointer shrink-0" src="/im_transparente.png" alt="IM" />
           </div>
         ))}
       </div>
@@ -313,7 +312,7 @@ const TeamCollaborationAnimation = () => {
       <div className="absolute inset-0 bg-[#8E9C78]/[0.02]" />
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      {}
+      { }
       <div className="w-full max-w-[280px] h-36 bg-[#111] border border-white/10 rounded-xl relative z-10 shadow-2xl flex flex-col p-4 gap-2.5">
         <div className="w-1/3 h-2 bg-white/20 rounded-full mb-2"></div>
         <div className="w-full h-9 bg-white/5 border border-white/10 rounded-lg flex items-center px-3">
@@ -324,7 +323,7 @@ const TeamCollaborationAnimation = () => {
         </div>
       </div>
 
-      {}
+      { }
       <motion.div
         animate={{
           x: [-90, -30, -30, -90],
@@ -339,7 +338,7 @@ const TeamCollaborationAnimation = () => {
         <div className="bg-[#0A84FF] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg absolute top-4 left-4 z-10">Admin</div>
       </motion.div>
 
-      {}
+      { }
       <motion.div
         animate={{
           x: [90, 30, 30, 90],
@@ -354,7 +353,7 @@ const TeamCollaborationAnimation = () => {
         <div className="bg-[#30D158] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg absolute top-4 left-4 z-10">Membro</div>
       </motion.div>
 
-      {}
+      { }
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[radial-gradient(circle,_rgba(142,156,120,0.15)_0%,_transparent_60%)] -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none z-0" />
     </div>
   );
@@ -372,49 +371,24 @@ export default function Landing() {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const lenisRef = useRef(null);
   const { user } = useAuth();
 
   const scrollToSection = (e, id) => {
     e.preventDefault();
     setIsMobileMenuOpen(false);
-    if (lenisRef.current && lenisRef.current.lenis) {
-      lenisRef.current.lenis.scrollTo(id, {
-        duration: 1.1,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        offset: -40
-      });
-    } else {
-      document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    const updateScroll = () => {
-      
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', updateScroll);
+    const updateScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', updateScroll, { passive: true });
     return () => window.removeEventListener('scroll', updateScroll);
   }, []);
 
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
   }, [isMobileMenuOpen]);
 
-  // Disabling native smooth scrolling when Lenis is active to avoid conflicts
-  useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'auto';
-    return () => {
-      document.documentElement.style.scrollBehavior = 'smooth';
-    };
-  }, []);
-
-  const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -424,15 +398,11 @@ export default function Landing() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const rotateX = useTransform(scrollY, [0, 500], isMobile ? [0, 0] : [10, 0]);
-  const scale = useTransform(scrollY, [0, 500], isMobile ? [1, 1] : [0.95, 1]);
-
 
   return (
-    <ReactLenis root ref={lenisRef} options={{ lerp: 0.1, duration: 1.5, smoothTouch: true }}>
       <div className="min-h-screen bg-[#0A0A0A] text-zinc-300 font-sans selection:bg-[#8E9C78]/30 selection:text-white">
 
-        {}
+        { }
         <motion.nav
           initial={{ y: -100 }}
           animate={{ y: 0 }}
@@ -444,7 +414,7 @@ export default function Landing() {
         >
           <div className={`max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between relative transition-all duration-500 ${isScrolled ? "py-3" : "py-6"}`}>
 
-            {}
+            { }
             <Link to="/" className="relative z-10">
               <motion.div
                 whileHover={{ opacity: 0.7 }}
@@ -458,7 +428,7 @@ export default function Landing() {
               </motion.div>
             </Link>
 
-            {}
+            { }
             <div className="hidden min-[824px]:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8">
               {[
                 { name: t.navHow, id: '#features' },
@@ -476,9 +446,9 @@ export default function Landing() {
               ))}
             </div>
 
-            {}
+            { }
             <div className="flex items-center gap-2 sm:gap-3">
-              {}
+              { }
               <div className="hidden sm:flex relative items-center bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.05] rounded-full p-[2px] transition-colors mr-1 sm:mr-3">
                 <motion.div
                   className="absolute h-6 bg-white/[0.12] rounded-full shadow-sm"
@@ -537,7 +507,7 @@ export default function Landing() {
                 </>
               )}
 
-              {}
+              { }
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="min-[824px]:hidden w-10 h-10 flex flex-col justify-center items-center gap-1.5 relative z-[60] group"
@@ -548,7 +518,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {}
+          { }
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -577,7 +547,7 @@ export default function Landing() {
           </motion.div>
         </motion.nav>
 
-        {}
+        { }
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -587,7 +557,7 @@ export default function Landing() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="fixed inset-0 z-[100] bg-[#050505] flex flex-col min-[824px]:hidden overflow-hidden p-6 sm:p-8"
             >
-              {}
+              { }
               <div className="flex justify-between items-start w-full relative z-10 mb-12">
                 <div className="flex flex-col">
                   <span className="text-white font-bold text-[18px] sm:text-[20px] tracking-tight leading-none font-sans uppercase">
@@ -609,7 +579,7 @@ export default function Landing() {
                 </button>
               </div>
 
-              {}
+              { }
               <div className="flex-1 flex flex-col justify-center gap-8 sm:gap-10 w-full relative z-10 max-w-sm mx-auto pl-2">
                 {[
                   { name: t.navHow, id: '#features' },
@@ -638,7 +608,7 @@ export default function Landing() {
                 ))}
               </div>
 
-              {}
+              { }
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -696,9 +666,9 @@ export default function Landing() {
           )}
         </AnimatePresence>
 
-        {}
+        { }
         <section className="pt-32 md:pt-40 pb-16 md:pb-20 px-4 sm:px-6 min-h-[90vh] md:min-h-[95vh] flex flex-col items-center justify-center relative overflow-hidden">
-          {}
+          { }
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[radial-gradient(circle,_rgba(142,156,120,0.1)_0%,_transparent_70%)] rounded-full pointer-events-none" />
 
           <motion.div
@@ -737,7 +707,7 @@ export default function Landing() {
               </a>
             </motion.div>
 
-            {}
+            { }
             <motion.div variants={fadeIn} className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 opacity-80">
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="flex -space-x-2">
@@ -765,19 +735,14 @@ export default function Landing() {
             </motion.div>
           </motion.div>
 
-          {}
-          <div className="mt-20 w-full max-w-5xl mx-auto relative z-10" style={{ perspective: '1200px' }}>
+          { }
+          <div className="mt-20 w-full max-w-5xl mx-auto relative z-10">
             <motion.div
-              style={isMobile ? {} : {
-                rotateX,
-                scale,
-                transformOrigin: 'top center',
-              }}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.01 }}
-              transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative md:preserve-3d motion-gpu will-change-transform will-change-opacity"
+              transition={{ duration: 0.8, delay: 0.1, ease: 'easeOut' }}
+              className="rounded-xl border border-white/10 bg-[#111] p-2 md:p-3 shadow-[0_0_80px_rgba(142,156,120,0.15)] relative motion-gpu"
             >
               <div className="rounded-lg bg-[#0A0A0A] border border-white/5 overflow-hidden flex flex-col">
                 <img
@@ -792,7 +757,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {}
+        { }
         <section className="py-16 md:py-20 border-t border-white/5 bg-[#0A0A0A] flex flex-col justify-center items-center overflow-hidden">
           <motion.p
             initial={{ opacity: 0 }}
@@ -805,7 +770,7 @@ export default function Landing() {
           <InfiniteSponsors />
         </section>
 
-        {}
+        { }
         <section id="features" className="py-20 md:py-32 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <motion.div
@@ -822,7 +787,7 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-              {}
+              { }
               <motion.div
                 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
                 className="bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:border-white/10 transition-colors"
@@ -836,7 +801,7 @@ export default function Landing() {
                 </p>
               </motion.div>
 
-              {}
+              { }
               <motion.div
                 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
                 className="bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:border-white/10 transition-colors"
@@ -850,7 +815,7 @@ export default function Landing() {
                 </p>
               </motion.div>
 
-              {}
+              { }
               <motion.div
                 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
                 className="bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:border-white/10 transition-colors"
@@ -864,7 +829,7 @@ export default function Landing() {
                 </p>
               </motion.div>
 
-              {}
+              { }
               <motion.div
                 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
                 className="lg:col-span-3 bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 md:p-12 shadow-[0_4px_30px_rgba(0,0,0,0.5)] hover:border-white/10 transition-colors flex flex-col md:flex-row items-center gap-8 md:gap-16"
@@ -898,7 +863,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {}
+        { }
         <section id="philosophy" className="py-24 md:py-40 px-4 sm:px-6 bg-[#000000] relative overflow-hidden border-y border-white/5">
           <div className="absolute inset-0 z-0 pointer-events-none opacity-15" style={{ backgroundImage: 'url("/banner.png")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', filter: 'contrast(1.2)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#000000]/60 to-[#000000] z-0 pointer-events-none" />
@@ -919,7 +884,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {}
+        { }
         <section id="protocol" className="py-20 md:py-32 px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16 md:mb-24 px-2">
@@ -984,7 +949,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {}
+        { }
         <section className="py-20 md:py-32 px-4 sm:px-6">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
@@ -1011,7 +976,7 @@ export default function Landing() {
         </section>
 
         <footer className="relative bg-black pt-20 pb-10 px-6 overflow-hidden">
-          {}
+          { }
           <div className="absolute top-0 left-0 w-full rotate-180 line-height-0">
             <svg
               viewBox="0 0 1200 120"
@@ -1027,7 +992,7 @@ export default function Landing() {
           <div className="max-w-5xl mx-auto relative z-10">
             <div className="flex flex-col items-center gap-12">
 
-              {}
+              { }
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -1038,10 +1003,10 @@ export default function Landing() {
                 <span className="text-white text-sm font-medium tracking-widest uppercase">DevsBoard</span>
               </motion.div>
 
-              {}
+              { }
               <div className="w-full h-[1px] bg-white/[0.03]" />
 
-              {}
+              { }
               <motion.div
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
@@ -1063,6 +1028,5 @@ export default function Landing() {
         </footer>
 
       </div>
-    </ReactLenis>
   );
 }

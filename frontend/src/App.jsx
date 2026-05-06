@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
@@ -31,12 +32,41 @@ function ProtectedRoute({ children }) {
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
+  // Verificação rápida e síncrona: se há token/user no localStorage, redireciona imediatamente
+  // sem esperar o fetch async do AuthContext. Evita flash da tela de login ao pressionar Voltar.
+  const hasStoredSession = !!localStorage.getItem('token') || !!localStorage.getItem('user');
+  if (hasStoredSession || user) return <Navigate to="/dashboard" replace />;
   if (loading) return <LoadingSkeleton />;
-  if (user) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
+
 export default function App() {
+  useEffect(() => {
+    let originalTitle = document.title;
+    let titleInterval;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        originalTitle = document.title;
+        let msg = '🚨 Já vai procrastinar? Volta aqui!! 🚨 ';
+        titleInterval = setInterval(() => {
+          msg = msg.substring(1) + msg.substring(0, 1);
+          document.title = msg;
+        }, 15);
+      } else {
+        if (titleInterval) clearInterval(titleInterval);
+        document.title = originalTitle;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (titleInterval) clearInterval(titleInterval);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <ThemeProvider>
