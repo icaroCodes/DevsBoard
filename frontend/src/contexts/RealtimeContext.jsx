@@ -30,6 +30,7 @@ const DATA_TABLES = [
   'routines',
   'routine_tasks',
   'projects',
+  'change_requests',
 ];
 
 
@@ -160,7 +161,11 @@ export function RealtimeProvider({ children }) {
         table: table,
       }, (payload) => {
         const record = payload.new || payload.old;
-        if (record && record.user_id !== userRef.current?.id) return;
+        const expected = userRef.current?.id;
+        if (record && record.user_id != null && expected != null
+            && String(record.user_id) !== String(expected)) {
+          return;
+        }
 
         console.log(`📡 [PESSOAL] Mudança em ${table}:`, payload.eventType, record?.id);
 
@@ -196,7 +201,14 @@ export function RealtimeProvider({ children }) {
         table: table,
       }, (payload) => {
         const record = payload.new || payload.old;
-        if (record && record.team_id !== activeTeamRef.current?.id) return;
+        // Loose compare via String() — handles bigint/number/string mismatches
+        // between the activeTeam.id (often a number) and record.team_id
+        // (whatever the WAL emits, sometimes serialized as string).
+        const expected = activeTeamRef.current?.id;
+        if (record && record.team_id != null && expected != null
+            && String(record.team_id) !== String(expected)) {
+          return;
+        }
 
         console.log(`📡 [TIME:${activeTeamRef.current?.name}] Mudança em ${table}:`, payload.eventType, record?.id);
 

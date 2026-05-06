@@ -92,27 +92,30 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    
-    const { data: lists } = await supabase
+    const scope = (q) => req.teamId
+      ? q.eq('team_id', req.teamId)
+      : q.eq('user_id', req.userId).is('team_id', null);
+
+    let listsQuery = supabase
       .from('task_lists')
       .select('id')
-      .eq('board_id', req.params.id)
-      .eq('user_id', req.userId);
+      .eq('board_id', req.params.id);
+    listsQuery = scope(listsQuery);
+    const { data: lists } = await listsQuery;
 
     if (lists && lists.length > 0) {
       const listIds = lists.map(l => l.id);
-      
-      await supabase.from('task_cards').delete().in('list_id', listIds).eq('user_id', req.userId);
-      
-      await supabase.from('task_lists').delete().in('id', listIds).eq('user_id', req.userId);
+      let cardsDel = supabase.from('task_cards').delete().in('list_id', listIds);
+      cardsDel = scope(cardsDel);
+      await cardsDel;
+      let listsDel = supabase.from('task_lists').delete().in('id', listIds);
+      listsDel = scope(listsDel);
+      await listsDel;
     }
 
-    const { data, error } = await supabase
-      .from('task_boards')
-      .delete()
-      .eq('id', req.params.id)
-      .eq('user_id', req.userId)
-      .select();
+    let boardDel = supabase.from('task_boards').delete().eq('id', req.params.id);
+    boardDel = scope(boardDel);
+    const { data, error } = await boardDel.select();
 
     if (error) throw error;
     if (!data || data.length === 0) return res.status(404).json({ error: 'Quadro não encontrado' });

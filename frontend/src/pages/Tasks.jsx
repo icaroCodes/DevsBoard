@@ -31,6 +31,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import LiveCursors from '../components/LiveCursors';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -986,6 +987,9 @@ function BoardKanban({ board, onBack }) {
   const { t } = useTranslation();
 
   const scrollRef = useRef(null);
+  const contentRef = useRef(null);
+  const pageRef = useRef(null);
+  const liveCursorsRef = useRef(null);
   const animationFrameId = useRef(null);
   const mousePos = useRef({ x: 0, y: 0 });
 
@@ -1153,8 +1157,20 @@ function BoardKanban({ board, onBack }) {
     if (d?.type === 'card') {
       setActiveCard(d.card);
       dragOriginListId.current = d.listId;
+      liveCursorsRef.current?.broadcastDragStart({
+        type: 'card',
+        id: active.id,
+        title: d.card?.name,
+      });
     }
-    if (d?.type === 'list') setActiveList(d.list);
+    if (d?.type === 'list') {
+      setActiveList(d.list);
+      liveCursorsRef.current?.broadcastDragStart({
+        type: 'list',
+        id: active.id,
+        title: d.list?.name,
+      });
+    }
   }
 
   function onDragOver({ active, over }) {
@@ -1226,6 +1242,7 @@ function BoardKanban({ board, onBack }) {
     setActiveCard(null);
     setActiveList(null);
     document.body.classList.remove('grabbing-active');
+    liveCursorsRef.current?.broadcastDragEnd();
 
     const aData = active.data.current;
     const oData = over?.data.current;
@@ -1298,7 +1315,25 @@ function BoardKanban({ board, onBack }) {
   if (loading) return <LoadingSkeleton variant="tasks" />;
 
   return (
-    <>
+    <div ref={pageRef} className="relative">
+      <LiveCursors
+        ref={liveCursorsRef}
+        roomId={`board:${board.id}`}
+        contentRef={pageRef}
+        renderDragGhost={(drag) => {
+          if (!drag) return null;
+          if (drag.type === 'card') {
+            const card = lists.flatMap(l => l.cards || [])
+              .find(c => String(c.id) === String(drag.id));
+            return card ? <CardOverlay card={card} /> : null;
+          }
+          if (drag.type === 'list') {
+            const list = lists.find(l => String(l.id) === String(drag.id));
+            return list ? <ListOverlay list={list} /> : null;
+          }
+          return null;
+        }}
+      />
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
         <div className="flex items-start gap-3">
           <button type="button" onClick={onBack}
@@ -1331,7 +1366,7 @@ function BoardKanban({ board, onBack }) {
           onMouseMove={handleMouseMove}
           className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-4 sm:gap-6 pb-20 scrollbar-board cursor-default snap-x snap-mandatory sm:snap-none px-4 sm:px-0"
         >
-          <div className="flex gap-6 items-start min-w-full">
+          <div ref={contentRef} className="flex gap-6 items-start min-w-full">
             <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
               {lists.map(list => (
                 <KanbanList key={list.id} list={list}
@@ -1395,7 +1430,7 @@ function BoardKanban({ board, onBack }) {
           <EditCardModal key={editingCard.id} card={editingCard} onSave={handleCardSaved} onClose={() => setEditingCard(null)} />
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
 

@@ -7,13 +7,23 @@ const router = Router();
 router.use(authenticate);
 
 
+// In team context, scope by team_id (so all members share the same data
+// and Supabase Realtime team channel filters match). In personal context,
+// scope by user_id with team_id IS NULL.
+function scopeQuery(query, req) {
+  if (req.teamId) return query.eq('team_id', req.teamId);
+  return query.eq('user_id', req.userId).is('team_id', null);
+}
+
+
 router.get('/', async (req, res) => {
   try {
     let query = supabase
       .from('task_lists')
       .select('*')
-      .eq('user_id', req.userId)
       .order('position', { ascending: true });
+
+    query = scopeQuery(query, req);
 
     if (req.query.board_id) {
       query = query.eq('board_id', req.query.board_id);
@@ -22,16 +32,16 @@ router.get('/', async (req, res) => {
     const { data: lists, error: listErr } = await query;
     if (listErr) throw listErr;
 
-    
     const listIds = lists.map(l => l.id);
     let cards = [];
     if (listIds.length > 0) {
-      const { data: cardData, error: cardErr } = await supabase
+      let cardsQuery = supabase
         .from('task_cards')
         .select('*')
         .in('list_id', listIds)
-        .eq('user_id', req.userId)
         .order('position', { ascending: true });
+      cardsQuery = scopeQuery(cardsQuery, req);
+      const { data: cardData, error: cardErr } = await cardsQuery;
       if (cardErr) throw cardErr;
       cards = cardData || [];
     }
@@ -56,20 +66,28 @@ router.post('/', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    
-    const { data: existing } = await supabase
+    let posQuery = supabase
       .from('task_lists')
       .select('position')
-      .eq('user_id', req.userId)
       .eq('board_id', req.body.board_id)
       .order('position', { ascending: false })
       .limit(1);
+    posQuery = scopeQuery(posQuery, req);
+    const { data: existing } = await posQuery;
 
     const nextPos = existing && existing.length > 0 ? existing[0].position + 1 : 0;
 
+    const insertData = {
+      user_id: req.userId,
+      name: req.body.name,
+      position: nextPos,
+      board_id: req.body.board_id,
+    };
+    if (req.teamId) insertData.team_id = req.teamId;
+
     const { data, error } = await supabase
       .from('task_lists')
-      .insert({ user_id: req.userId, name: req.body.name, position: nextPos, board_id: req.body.board_id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -86,12 +104,12 @@ router.put('/:id', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
   try {
-    const { data: existing } = await supabase
+    let existsQuery = supabase
       .from('task_lists')
       .select('id')
-      .eq('id', req.params.id)
-      .eq('user_id', req.userId)
-      .single();
+      .eq('id', req.params.id);
+    existsQuery = scopeQuery(existsQuery, req);
+    const { data: existing } = await existsQuery.single();
 
     if (!existing) return res.status(404).json({ error: 'Lista não encontrada' });
 
@@ -113,23 +131,22 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
-    const { data: existing } = await supabase
+    let existsQuery = supabase
       .from('task_lists')
       .select('id')
-      .eq('id', req.params.id)
-      .eq('user_id', req.userId)
-      .single();
+      .eq('id', req.params.id);
+    existsQuery = scopeQuery(existsQuery, req);
+    const { data: existing } = await existsQuery.single();
 
     if (!existing) return res.status(404).json({ error: 'Lista não encontrada' });
 
-    
-    await supabase.from('task_cards').delete().eq('list_id', req.params.id).eq('user_id', req.userId);
+    let cardsDel = supabase.from('task_cards').delete().eq('list_id', req.params.id);
+    cardsDel = scopeQuery(cardsDel, req);
+    await cardsDel;
 
-    const { error } = await supabase
-      .from('task_lists')
-      .delete()
-      .eq('id', req.params.id)
-      .eq('user_id', req.userId);
+    let listDel = supabase.from('task_lists').delete().eq('id', req.params.id);
+    listDel = scopeQuery(listDel, req);
+    const { error } = await listDel;
 
     if (error) throw error;
     res.status(204).send();
@@ -138,7 +155,6 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Erro ao excluir lista' });
   }
 });
-
 
 
 router.post('/reorder', [
@@ -150,15 +166,12 @@ router.post('/reorder', [
 
     const { items } = req.body;
 
-    
     const updates = await Promise.all(
-      items.map(({ id, position }) =>
-        supabase
-          .from('task_lists')
-          .update({ position })
-          .eq('id', id)
-          .eq('user_id', req.userId)
-      )
+      items.map(({ id, position }) => {
+        let q = supabase.from('task_lists').update({ position }).eq('id', id);
+        q = scopeQuery(q, req);
+        return q;
+      })
     );
 
     const failed = updates.find(({ error }) => error);

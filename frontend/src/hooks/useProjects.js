@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { projectsService, tasksService, docService, assetsService, commentsService, codeCommentsService } from '../services/projects';
+import { useAuth } from '../contexts/AuthContext';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 
 export function useProjects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { activeTeam } = useAuth();
 
   const load = useCallback(async () => {
     try {
@@ -15,7 +18,11 @@ export function useProjects() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Reload whenever the active team changes (switching team context)
+  useEffect(() => { load(); }, [load, activeTeam]);
+
+  // Live sync — refetch on any projects table change pushed by Supabase Realtime
+  useRealtimeSubscription(['projects'], () => { load(); }, [load]);
 
   return {
     projects, loading, error, reload: load,

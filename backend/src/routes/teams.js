@@ -209,7 +209,10 @@ router.post('/:id/invite', [
       return res.status(403).json({ error: 'Você não é membro deste time' });
     }
 
-    
+    if (!['owner', 'admin'].includes(membership.role)) {
+      return res.status(403).json({ error: 'Apenas administradores podem convidar membros' });
+    }
+
     const { data: selfUser } = await supabase
       .from('users')
       .select('email')
@@ -620,22 +623,57 @@ router.post('/change-requests/:id/approve', async (req, res) => {
     if (request.status !== 'pending') return res.status(400).json({ error: 'Já processada' });
 
     let finalPayload = { ...(request.payload || {}) };
-    
-    
+
     if (request.action_type === 'create') {
       const entity = request.entity_type;
-      
-      
-      if (['finances', 'routines', 'goals'].includes(entity)) {
-        finalPayload.team_id = request.team_id;
+
+      // Entities scoped to a team must always carry both user_id (creator)
+      // and team_id (visibility scope used by NOT NULL constraints and the
+      // Supabase Realtime team channel filter).
+      const TEAM_SCOPED_ENTITIES = [
+        'finances', 'routines', 'goals', 'projects',
+        'tasks', 'task_boards', 'task_lists', 'task_cards',
+      ];
+
+      if (TEAM_SCOPED_ENTITIES.includes(entity)) {
         finalPayload.user_id = request.user_id;
+        finalPayload.team_id = request.team_id;
       }
-      
-      if (entity === 'projects') {
-        finalPayload.user_id = request.user_id; 
+
+      // Validate referenced parent rows still exist before attempting the
+      // INSERT. A change_request may sit in the inbox for a while; the
+      // referenced board/list could have been deleted in the meantime,
+      // which would surface as a confusing FK error.
+      if (entity === 'task_lists' && finalPayload.board_id) {
+        const { data: board } = await supabase
+          .from('task_boards')
+          .select('id')
+          .eq('id', finalPayload.board_id)
+          .maybeSingle();
+        if (!board) {
+          await supabase.from('change_requests')
+            .update({ status: 'rejected' })
+            .eq('id', id);
+          return res.status(409).json({
+            error: 'O quadro referenciado não existe mais. Solicitação descartada.',
+          });
+        }
       }
-      
-      
+      if (entity === 'task_cards' && finalPayload.list_id) {
+        const { data: list } = await supabase
+          .from('task_lists')
+          .select('id')
+          .eq('id', finalPayload.list_id)
+          .maybeSingle();
+        if (!list) {
+          await supabase.from('change_requests')
+            .update({ status: 'rejected' })
+            .eq('id', id);
+          return res.status(409).json({
+            error: 'A coluna referenciada não existe mais. Solicitação descartada.',
+          });
+        }
+      }
     }
 
     let updateErr = null;
