@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -36,6 +36,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import TeamLiveCursors from '../components/TeamLiveCursors';
 
 /* ─────────────────────────────────────────────────────────
    TaskStatusCheck — checkbox visual, mantém comportamento original.
@@ -136,6 +137,7 @@ function readOrder(key) {
 }
 
 export default function Dashboard() {
+  const pageRef = useRef(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [routineTab, setRoutineTab] = useState('daily');
@@ -279,12 +281,14 @@ export default function Dashboard() {
 
   return (
     <motion.div
+      ref={pageRef}
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="max-w-6xl mx-auto pb-12 font-sans"
+      className="max-w-6xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
+      <TeamLiveCursors roomId="dashboard" contentRef={pageRef} />
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col gap-1 mb-8">
         <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight text-center">

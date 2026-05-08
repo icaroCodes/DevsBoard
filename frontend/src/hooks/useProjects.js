@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { projectsService, tasksService, docService, assetsService, commentsService, codeCommentsService } from '../services/projects';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
@@ -9,9 +9,9 @@ export function useProjects() {
   const [error, setError] = useState(null);
   const { activeTeam } = useAuth();
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ silent = false } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setProjects(await projectsService.list());
       setError(null);
     } catch (e) { setError(e.message); }
@@ -22,7 +22,7 @@ export function useProjects() {
   useEffect(() => { load(); }, [load, activeTeam]);
 
   // Live sync — refetch on any projects table change pushed by Supabase Realtime
-  useRealtimeSubscription(['projects'], () => { load(); }, [load]);
+  useRealtimeSubscription(['projects'], () => { load({ silent: true }); }, [load]);
 
   return {
     projects, loading, error, reload: load,
@@ -36,11 +36,18 @@ export function useTasks(projectId) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const refetch = useCallback(() => {
+    if (!projectId) return;
+    tasksService.list(projectId).then(setTasks).catch(() => {});
+  }, [projectId]);
+
   useEffect(() => {
     if (!projectId) return;
     setLoading(true);
     tasksService.list(projectId).then(setTasks).finally(() => setLoading(false));
   }, [projectId]);
+
+  useRealtimeSubscription(['project_tasks'], refetch, [projectId]);
 
   const create = async (payload) => {
     const t = await tasksService.create(projectId, payload);
@@ -68,6 +75,7 @@ export function useProjectDoc(projectId) {
   const [doc, setDoc] = useState({ content: '' });
   const [loading, setLoading] = useState(true);
   const [savingState, setSavingState] = useState('idle'); // idle | saving | saved
+  const localEditRef = useRef(0);
 
   useEffect(() => {
     if (!projectId) return;
@@ -90,7 +98,21 @@ export function useProjectDoc(projectId) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc.content]);
 
-  return { doc, setContent: (c) => setDoc(d => ({ ...d, content: c })), loading, savingState };
+  // Live sync — só puxa do servidor se a edição não veio do próprio usuário
+  // recentemente (evita conflito com o autosave em andamento).
+  useRealtimeSubscription(['project_docs'], () => {
+    if (Date.now() - localEditRef.current < 1500) return;
+    docService.get(projectId).then(d => {
+      if (d?.content != null) setDoc(prev => prev.content === d.content ? prev : d);
+    }).catch(() => {});
+  }, [projectId]);
+
+  return {
+    doc,
+    setContent: (c) => { localEditRef.current = Date.now(); setDoc(d => ({ ...d, content: c })); },
+    loading,
+    savingState,
+  };
 }
 
 export function useComments(projectId) {
@@ -101,6 +123,11 @@ export function useComments(projectId) {
     if (!projectId) return;
     setLoading(true);
     commentsService.list(projectId).then(setComments).catch(() => {}).finally(() => setLoading(false));
+  }, [projectId]);
+
+  useRealtimeSubscription(['project_comments'], () => {
+    if (!projectId) return;
+    commentsService.list(projectId).then(setComments).catch(() => {});
   }, [projectId]);
 
   return {
@@ -129,6 +156,11 @@ export function useAssets(projectId) {
     assetsService.list(projectId).then(setAssets).finally(() => setLoading(false));
   }, [projectId]);
 
+  useRealtimeSubscription(['assets'], () => {
+    if (!projectId) return;
+    assetsService.list(projectId).then(setAssets).catch(() => {});
+  }, [projectId]);
+
   return {
     assets, loading,
     create: async (p) => { const a = await assetsService.create(projectId, p); setAssets(prev => [a, ...prev]); return a; },
@@ -144,6 +176,11 @@ export function useCodeComments(projectId) {
     if (!projectId) return;
     setLoading(true);
     codeCommentsService.list(projectId).then(setComments).catch(() => {}).finally(() => setLoading(false));
+  }, [projectId]);
+
+  useRealtimeSubscription(['code_comments', 'code_comment_replies'], () => {
+    if (!projectId) return;
+    codeCommentsService.list(projectId).then(setComments).catch(() => {});
   }, [projectId]);
 
   return {

@@ -6,6 +6,7 @@ import { useProjects } from '../hooks/useProjects';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import TeamLiveCursors from '../components/TeamLiveCursors';
 
 const COLORS = ['#0A84FF', '#FF9F0A', '#30D158', '#BF5AF2', '#FF375F', '#5E5CE6', '#64D2FF', '#FFD60A'];
 
@@ -185,6 +186,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
 }
 
 export default function Projects() {
+  const pageRef = useRef(null);
   const { projects, loading, create, update, remove } = useProjects();
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
@@ -221,7 +223,8 @@ export default function Projects() {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <div className="max-w-6xl mx-auto px-1">
+    <div ref={pageRef} className="max-w-6xl mx-auto px-1 relative">
+      <TeamLiveCursors roomId="projects" contentRef={pageRef} />
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-end justify-between gap-6 mb-1">

@@ -1,12 +1,48 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { z } from 'zod';
 import supabase from '../database/connection.js';
 import config from '../config/index.js';
 import { authRateLimiter } from '../middleware/security.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
+
+// Mints a JWT signed with the Supabase project's JWT secret so the frontend
+// Realtime client can authenticate against RLS policies that use auth.uid().
+// `sub` must equal public.users.auth_id (uuid).
+const generateSupabaseJwt = (authUuid) => {
+  if (!config.supabase.jwtSecret) {
+    throw new Error('SUPABASE_JWT_SECRET não configurado');
+  }
+  return jwt.sign(
+    { sub: authUuid, role: 'authenticated', aud: 'authenticated' },
+    config.supabase.jwtSecret,
+    { expiresIn: '7d' }
+  );
+};
+
+// Garante que o usuário tem auth_id (uuid). Cria sob demanda pra usuários
+// antigos. Retorna o uuid.
+const ensureAuthId = async (userId) => {
+  const { data: u, error } = await supabase
+    .from('users')
+    .select('auth_id')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+  if (u?.auth_id) return u.auth_id;
+
+  const newAuthId = crypto.randomUUID();
+  const { error: updErr } = await supabase
+    .from('users')
+    .update({ auth_id: newAuthId })
+    .eq('id', userId);
+  if (updErr) throw updErr;
+  return newAuthId;
+};
 
 
 const registerSchema = z.object({
@@ -46,11 +82,12 @@ router.post('/register', authRateLimiter, async (req, res) => {
     const { data: existing } = await supabase.from('users').select('id').eq('email', email).single();
     if (existing) return res.status(400).json({ error: 'Email já cadastrado' });
 
-    const password_hash = await bcrypt.hash(password, 12); 
+    const password_hash = await bcrypt.hash(password, 12);
+    const auth_id = crypto.randomUUID();
     const { data: newUser, error } = await supabase
       .from('users')
-      .insert({ name, email, password_hash })
-      .select('id, name, email, avatar_url')
+      .insert({ name, email, password_hash, auth_id })
+      .select('id, name, email, avatar_url, auth_id')
       .single();
 
     if (error) throw error;
@@ -58,10 +95,14 @@ router.post('/register', authRateLimiter, async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(newUser.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    res.status(201).json({ 
-      user: newUser,
+    let supabaseToken = null;
+    try { supabaseToken = generateSupabaseJwt(newUser.auth_id); } catch (e) { console.warn('[Realtime JWT skip]', e.message); }
+
+    res.status(201).json({
+      user: { id: newUser.id, name: newUser.name, email: newUser.email, avatar_url: newUser.avatar_url },
       token: accessToken,
-      refreshToken: refreshToken
+      refreshToken: refreshToken,
+      supabaseToken,
     });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -86,10 +127,15 @@ router.post('/login', authRateLimiter, async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    res.json({ 
+    const authUuid = await ensureAuthId(user.id);
+    let supabaseToken = null;
+    try { supabaseToken = generateSupabaseJwt(authUuid); } catch (e) { console.warn('[Realtime JWT skip]', e.message); }
+
+    res.json({
       user: { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url },
       token: accessToken,
-      refreshToken: refreshToken
+      refreshToken: refreshToken,
+      supabaseToken,
     });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -117,6 +163,17 @@ router.post('/refresh', async (req, res) => {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     res.status(401).json({ error: 'Sessão expirada' });
+  }
+});
+
+router.get('/realtime-token', authenticate, async (req, res) => {
+  try {
+    const authUuid = await ensureAuthId(req.userId);
+    const supabaseToken = generateSupabaseJwt(authUuid);
+    res.json({ supabaseToken });
+  } catch (err) {
+    console.error('[realtime-token]', err);
+    res.status(500).json({ error: 'Erro ao gerar token de realtime' });
   }
 });
 

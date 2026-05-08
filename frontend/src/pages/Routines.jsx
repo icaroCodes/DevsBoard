@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Pencil, ChevronDown, CheckSquare, GripVertical, Repeat, X, Clock, Loader2, CircleDashed } from 'lucide-react';
 import { api } from '../lib/api';
@@ -28,6 +28,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import TeamLiveCursors from '../components/TeamLiveCursors';
 
 const dropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -515,6 +516,7 @@ function SortableRoutine({
 }
 
 export default function Routines() {
+  const pageRef = useRef(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -722,12 +724,14 @@ export default function Routines() {
 
   return (
     <motion.div
+      ref={pageRef}
       initial="hidden"
       animate="show"
       variants={containerVariants}
-      className="max-w-4xl mx-auto pb-12 font-sans"
+      className="max-w-4xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
+      <TeamLiveCursors roomId="routines" contentRef={pageRef} />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8 lg:mb-10 px-1 sm:px-0">
         <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">

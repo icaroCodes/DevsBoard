@@ -32,6 +32,7 @@ import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import LiveCursors from '../components/LiveCursors';
+import TeamLiveCursors from '../components/TeamLiveCursors';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -110,8 +111,8 @@ function ListView() {
   const { t } = useTranslation();
 
 
-  const load = () => {
-    setLoading(true);
+  const load = ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     api('/tasks').then(data => { setItems(data); setLoading(false); }).catch(err => { showError(err.message); setLoading(false); });
   };
 
@@ -119,7 +120,7 @@ function ListView() {
     load();
   }, [activeTeam]);
 
-  useRealtimeSubscription(['tasks'], () => { load(); });
+  useRealtimeSubscription(['tasks'], () => { load({ silent: true }); });
 
   const filteredItems = items.filter(i => {
     if (filter === 'completed') return i.completed;
@@ -1053,8 +1054,8 @@ function BoardKanban({ board, onBack }) {
 
   const sensors = useSensors(mouseSensor, touchSensor);
 
-  function load() {
-    setLoading(true);
+  function load({ silent = false } = {}) {
+    if (!silent) setLoading(true);
     api(`/task-lists?board_id=${board.id}`)
       .then(data => { setLists(data); setLoading(false); })
       .catch(err => { showError(err.message); setLoading(false); });
@@ -1067,7 +1068,7 @@ function BoardKanban({ board, onBack }) {
     (detail) => {
       const { table, payload } = detail;
       if (['task_lists', 'task_cards'].includes(table)) {
-        load();
+        load({ silent: true });
       }
       if (table === 'task_boards' && payload?.eventType === 'DELETE' && payload?.old?.id === board.id) {
         success('Este mural foi apagado.');
@@ -1463,6 +1464,7 @@ function BoardView() {
 
 export default function Tasks() {
   const [view, setView] = useState(() => localStorage.getItem('tasks_view') || 'list');
+  const tasksPageRef = useRef(null);
 
   const handleViewChange = (v) => {
     localStorage.setItem('tasks_view', v);
@@ -1471,9 +1473,11 @@ export default function Tasks() {
 
   return (
     <div
+      ref={tasksPageRef}
       className="max-w-5xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: FONT }}
     >
+      {view === 'list' && <TeamLiveCursors roomId="tasks-list" contentRef={tasksPageRef} />}
       { }
       <div className="flex justify-end mb-6">
         <ViewToggle view={view} onChange={handleViewChange} />

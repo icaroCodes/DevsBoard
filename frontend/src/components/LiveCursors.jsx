@@ -79,6 +79,7 @@ const LiveCursors = forwardRef(function LiveCursors(
             x={c.x}
             y={c.y}
             name={c.name}
+            avatar={c.avatar}
             color={c.color || colorFromId(userId)}
             drag={dragStates[userId]}
             renderDragGhost={renderDragGhost}
@@ -89,10 +90,8 @@ const LiveCursors = forwardRef(function LiveCursors(
   );
 });
 
-const RemoteCursor = memo(function RemoteCursor({ x, y, name, color, drag, renderDragGhost }) {
-  // SVG path is shifted so the arrow tip is at exactly (0,0) — that way the
-  // remote cursor's tip lands at the precise coordinate sent by the peer,
-  // matching where their pointer actually is.
+const RemoteCursor = memo(function RemoteCursor({ x, y, name, avatar, color, drag, renderDragGhost }) {
+  const initial = (name || '?').trim().charAt(0).toUpperCase();
   return (
     <div
       className="absolute top-0 left-0 will-change-transform"
@@ -116,15 +115,41 @@ const RemoteCursor = memo(function RemoteCursor({ x, y, name, color, drag, rende
           strokeLinejoin="round"
         />
       </svg>
+
       <div
-        className="absolute left-3 top-[15px] inline-flex items-center px-2 py-[3px] rounded-md text-[11px] font-semibold text-white whitespace-nowrap select-none"
-        style={{
-          background: color,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
-          letterSpacing: '-0.01em',
-        }}
+        className="absolute flex flex-col items-center gap-1 select-none"
+        style={{ left: 14, top: 14 }}
       >
-        {name || 'Anônimo'}
+        <div
+          className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-[11px] font-semibold text-white"
+          style={{
+            background: color,
+            border: `2px solid ${color}`,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
+          }}
+        >
+          {avatar ? (
+            <img
+              src={avatar}
+              alt=""
+              className="w-full h-full object-cover"
+              draggable={false}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <span>{initial}</span>
+          )}
+        </div>
+        <div
+          className="inline-flex items-center px-2 py-[3px] rounded-md text-[11px] font-semibold text-white whitespace-nowrap"
+          style={{
+            background: color,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {name || 'Anônimo'}
+        </div>
       </div>
 
       {drag && (

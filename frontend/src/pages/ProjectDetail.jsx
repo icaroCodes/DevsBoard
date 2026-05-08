@@ -5,6 +5,8 @@ import { ChevronRight, ChevronDown, Star, Share2, MoreHorizontal, Lock, Loader2,
 import { projectsService } from '../services/projects';
 import { useToast } from '../contexts/ToastContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import TeamLiveCursors from '../components/TeamLiveCursors';
+import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import EmojiPicker from '../components/projects/EmojiPicker';
 import CoverPicker, { CoverImage } from '../components/projects/CoverPicker';
 import ProjectSidebar from '../components/projects/FavoritesPanel';
@@ -29,6 +31,7 @@ export default function ProjectDetail() {
   const { showError } = useToast();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const pageRef = useRef(null);
   const titleRef = useRef(null);
   const emojiAnchorRef = useRef(null);
   const coverAnchorRef = useRef(null);
@@ -45,6 +48,10 @@ export default function ProjectDetail() {
       .catch(e => { showError(e.message); navigate('/projects'); })
       .finally(() => setLoading(false));
   }, [slug, navigate, showError]);
+
+  useRealtimeSubscription(['projects'], () => {
+    projectsService.get(slug).then(setProject).catch(() => {});
+  }, [slug]);
 
   useEffect(() => {
     if (titleRef.current && project && titleRef.current.textContent !== project.name) {
@@ -105,7 +112,8 @@ export default function ProjectDetail() {
   return (
     <>
       <ProjectSidebar />
-      <div className="ml-[260px] min-h-screen flex flex-col pb-24" style={{ background: '#191919' }}>
+      <div ref={pageRef} className="ml-[260px] min-h-screen flex flex-col pb-24 relative" style={{ background: '#191919' }}>
+        <TeamLiveCursors roomId={`project:${slug}`} contentRef={pageRef} />
         {/* TOP BAR */}
         <div className="flex items-center gap-2 px-8 pt-4 pb-2 mb-2 select-none h-10 w-full">
           <nav className="flex-1 min-w-0 flex items-center gap-1.5 text-[13px] font-medium text-[#A1A1AA]">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Pencil, Target, Check, X, ChevronDown,
@@ -25,6 +25,7 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import TeamLiveCursors from '../components/TeamLiveCursors';
 
 const dropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -376,6 +377,7 @@ function YearContainer({
 }
 
 export default function Goals() {
+  const pageRef = useRef(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -410,8 +412,8 @@ export default function Goals() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const load = () => {
-    setLoading(true);
+  const load = ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     const timeoutId = setTimeout(() => setLoading(false), 8000);
 
     api('/goals')
@@ -431,7 +433,7 @@ export default function Goals() {
   };
 
   useEffect(() => { load(); }, [activeTeam]);
-  useRealtimeSubscription(['goals'], () => { load(); });
+  useRealtimeSubscription(['goals'], () => { load({ silent: true }); });
 
   const { freeGoals, groupedByYear } = useMemo(() => {
     const free = [];
@@ -583,12 +585,14 @@ export default function Goals() {
 
   return (
     <motion.div
+      ref={pageRef}
       initial="hidden"
       animate="show"
       variants={containerVariants}
-      className="max-w-4xl mx-auto pb-12 font-sans"
+      className="max-w-4xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
+      <TeamLiveCursors roomId="goals" contentRef={pageRef} />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8 lg:mb-10 px-1 sm:px-0">
         <div className="space-y-1">
           <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">

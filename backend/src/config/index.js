@@ -42,6 +42,7 @@ const config = {
   supabase: {
     url: process.env.SUPABASE_URL || fileEnv.SUPABASE_URL,
     serviceKey: process.env.SUPABASE_SERVICE_KEY || fileEnv.SUPABASE_SERVICE_KEY,
+    jwtSecret: process.env.SUPABASE_JWT_SECRET || fileEnv.SUPABASE_JWT_SECRET,
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || fileEnv.JWT_ACCESS_SECRET || process.env.JWT_SECRET || fileEnv.JWT_SECRET || 'strong-access-secret-mandatory',

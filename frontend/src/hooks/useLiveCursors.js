@@ -85,6 +85,7 @@ export function useLiveCursors(roomId, user) {
             y: payload.y,
             name: payload.name,
             color: payload.color,
+            avatar: payload.avatar || null,
             visible: payload.visible !== false,
             ts: Date.now(),
           },
@@ -125,7 +126,7 @@ export function useLiveCursors(roomId, user) {
           await channel.track({
             id: userId,
             name: user.name || 'Anônimo',
-            avatar: user.avatar || null,
+            avatar: user.avatar_url || user.avatar || null,
             color,
             joinedAt: Date.now(),
           });
@@ -165,11 +166,12 @@ export function useLiveCursors(roomId, user) {
         userId: String(user.id),
         name: user.name || 'Anônimo',
         color: colorFromId(user.id),
+        avatar: user.avatar_url || user.avatar || null,
         x, y,
         visible,
       },
     });
-  }, [user?.id, user?.name]);
+  }, [user?.id, user?.name, user?.avatar_url]);
 
   const sendCursor = useCallback((x, y, visible = true) => {
     const ch = channelRef.current;

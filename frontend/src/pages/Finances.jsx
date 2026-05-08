@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import TeamLiveCursors from '../components/TeamLiveCursors';
 
 const CATEGORIES = ['Salário', 'Ganhos Extras', 'Mercado/Comida', 'Ônibus/Carro', 'Luz/Água/Casa', 'Saúde/Médico', 'Lazer/Diversão', 'Presentes', 'Outros'];
 
@@ -25,6 +26,7 @@ const CAT_KEY_MAP = {
 };
 
 export default function Finances() {
+  const pageRef = useRef(null);
   const [items, setItems] = useState([]);
   const [recurringItems, setRecurringItems] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -50,8 +52,8 @@ export default function Finances() {
 
   const getCatLabel = (raw) => t[CAT_KEY_MAP[raw]] || raw;
 
-  const load = () => {
-    setLoading(true);
+  const load = ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     Promise.all([
       api('/finances'),
       api('/finances/recurring/list')
@@ -65,7 +67,7 @@ export default function Finances() {
     load();
   }, [activeTeam]);
 
-  useRealtimeSubscription(['finances'], () => { load(); });
+  useRealtimeSubscription(['finances'], () => { load({ silent: true }); });
 
   const filtered = items.filter((i) => {
     if (filter === 'all') return true;
@@ -255,12 +257,14 @@ export default function Finances() {
 
   return (
     <motion.div
+      ref={pageRef}
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="max-w-6xl mx-auto pb-12 font-sans"
+      className="max-w-6xl mx-auto pb-12 font-sans relative"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
     >
+      <TeamLiveCursors roomId="finances" contentRef={pageRef} />
       { }
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10">
         <div className="space-y-1">

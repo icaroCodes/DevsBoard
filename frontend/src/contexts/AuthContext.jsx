@@ -1,7 +1,21 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import supabase from '../lib/supabase';
 
 const AuthContext = createContext(null);
+
+// Conecta o cliente Supabase Realtime com um JWT assinado pelo backend.
+// Sem isso, auth.uid() é NULL nas RLS policies e nenhum evento é entregue.
+const applyRealtimeAuth = (token) => {
+  if (!supabase) return;
+  if (token) {
+    localStorage.setItem('supabaseToken', token);
+    try { supabase.realtime.setAuth(token); } catch (e) { console.warn('[Realtime setAuth]', e); }
+  } else {
+    localStorage.removeItem('supabaseToken');
+    try { supabase.realtime.setAuth(null); } catch {}
+  }
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')));
@@ -18,6 +32,17 @@ export function AuthProvider({ children }) {
   }, [activeTeam]);
 
   useEffect(() => {
+    // Restaura o token Realtime salvo (cobre o gap até o /auth/realtime-token responder).
+    const cachedRt = localStorage.getItem('supabaseToken');
+    if (cachedRt) applyRealtimeAuth(cachedRt);
+
+    // Renova o token Realtime assim que a app sobe (se houver sessão).
+    if (localStorage.getItem('token')) {
+      api('/auth/realtime-token')
+        .then((d) => { if (d?.supabaseToken) applyRealtimeAuth(d.supabaseToken); })
+        .catch((e) => console.warn('[realtime-token boot]', e.message));
+    }
+
     api('/settings')
       .then((data) => {
         setUser(data);
@@ -48,6 +73,7 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('activeTeam');
+          applyRealtimeAuth(null);
         } else {
           console.warn('[Settings fetch failed — keeping session]', msg);
           
@@ -74,6 +100,7 @@ export function AuthProvider({ children }) {
     });
     if (data.token) localStorage.setItem('token', data.token);
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    if (data.supabaseToken) applyRealtimeAuth(data.supabaseToken);
     localStorage.setItem('user', JSON.stringify(data.user));
     if (data.user?.name) localStorage.setItem('_userName', data.user.name);
     if (data.user?.language) {
@@ -92,6 +119,7 @@ export function AuthProvider({ children }) {
     });
     if (data.token) localStorage.setItem('token', data.token);
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    if (data.supabaseToken) applyRealtimeAuth(data.supabaseToken);
     localStorage.setItem('user', JSON.stringify(data.user));
     if (data.user?.name) localStorage.setItem('_userName', data.user.name);
     if (data.user?.language) {
@@ -140,6 +168,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('activeTeam');
     sessionStorage.removeItem('devsboard_session');
+    applyRealtimeAuth(null);
     setUser(null);
     setActiveTeam(null);
   };

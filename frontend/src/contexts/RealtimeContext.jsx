@@ -30,6 +30,12 @@ const DATA_TABLES = [
   'routines',
   'routine_tasks',
   'projects',
+  'project_tasks',
+  'project_docs',
+  'project_comments',
+  'assets',
+  'code_comments',
+  'code_comment_replies',
   'change_requests',
 ];
 
