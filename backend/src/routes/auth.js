@@ -166,6 +166,34 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
+router.get('/session', authenticate, async (req, res) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, name, email, avatar_url, auth_id')
+      .eq('id', req.userId)
+      .single();
+    if (error || !user) return res.status(401).json({ error: 'Sessão inválida' });
+
+    const { accessToken, refreshToken } = generateTokens(user.id);
+    setAuthCookies(res, { accessToken, refreshToken });
+
+    const authUuid = user.auth_id || (await ensureAuthId(user.id));
+    let supabaseToken = null;
+    try { supabaseToken = generateSupabaseJwt(authUuid); } catch (e) { console.warn('[Realtime JWT skip]', e.message); }
+
+    res.json({
+      user: { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url },
+      token: accessToken,
+      refreshToken,
+      supabaseToken,
+    });
+  } catch (err) {
+    console.error('[/auth/session]', err);
+    res.status(500).json({ error: 'Erro ao restaurar sessão' });
+  }
+});
+
 router.get('/realtime-token', authenticate, async (req, res) => {
   try {
     const authUuid = await ensureAuthId(req.userId);

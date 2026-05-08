@@ -143,6 +143,18 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const bootstrapSession = async () => {
+    const data = await api('/auth/session');
+    if (data.token) localStorage.setItem('token', data.token);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    if (data.supabaseToken) applyRealtimeAuth(data.supabaseToken);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    if (data.user?.name) localStorage.setItem('_userName', data.user.name);
+    setUser(data.user);
+    setActiveTeam(null);
+    return data;
+  };
+
   const switchAccount = () => {
     logout();
     window.location.href = '/auth';
@@ -192,6 +204,7 @@ export function AuthProvider({ children }) {
       loading,
       login,
       register,
+      bootstrapSession,
       switchAccount,
       switchTeam,
       logout,

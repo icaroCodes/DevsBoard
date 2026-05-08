@@ -169,20 +169,41 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(null);
-  const { user, login, register } = useAuth();
+  const { user, login, register, bootstrapSession } = useAuth();
   const navigate = useNavigate();
 
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'pt');
   const t = translations[lang] || translations.pt;
 
   useEffect(() => {
-    if (user) navigate('/dashboard');
     const params = new URLSearchParams(window.location.search);
+
+    if (params.get('success') === 'true') {
+      setOauthLoading('finalizing');
+      bootstrapSession()
+        .then(() => {
+          window.history.replaceState({}, '', '/auth');
+          navigate('/dashboard');
+        })
+        .catch((err) => {
+          console.error('[OAuth bootstrap]', err);
+          setError(t.errOAuth);
+          window.history.replaceState({}, '', '/auth');
+          setOauthLoading(null);
+        });
+      return;
+    }
+
     if (params.get('error')) {
       setError(t.errOAuth);
       window.history.replaceState({}, '', '/auth');
     }
-  }, [user, navigate, t]);
+
+  }, []);
+
+  useEffect(() => {
+    if (user) navigate('/dashboard');
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
