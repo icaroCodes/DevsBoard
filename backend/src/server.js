@@ -5,6 +5,7 @@ import config from './config/index.js';
 
 import authRoutes from './routes/auth.js';
 import githubRoutes from './routes/github.js';
+import googleRoutes from './routes/google.js';
 import dashboardRoutes from './routes/dashboard.js';
 import financesRoutes from './routes/finances.js';
 import tasksRoutes from './routes/tasks.js';
@@ -43,6 +44,7 @@ app.use(apiRateLimiter);
 
 app.use('/auth', authRoutes);
 app.use('/auth/github', githubRoutes);
+app.use('/auth/google', googleRoutes);
 
 
 app.use(authenticate);

@@ -32,16 +32,25 @@ export function AuthProvider({ children }) {
   }, [activeTeam]);
 
   useEffect(() => {
+    // Sem token = sem sessão. Não dispara nenhuma request — evita travar
+    // Landing/Auth em loading se o backend estiver lento/offline.
+    if (!localStorage.getItem('token')) {
+      setLoading(false);
+      return;
+    }
+
     // Restaura o token Realtime salvo (cobre o gap até o /auth/realtime-token responder).
     const cachedRt = localStorage.getItem('supabaseToken');
     if (cachedRt) applyRealtimeAuth(cachedRt);
 
-    // Renova o token Realtime assim que a app sobe (se houver sessão).
-    if (localStorage.getItem('token')) {
-      api('/auth/realtime-token')
-        .then((d) => { if (d?.supabaseToken) applyRealtimeAuth(d.supabaseToken); })
-        .catch((e) => console.warn('[realtime-token boot]', e.message));
-    }
+    // Renova o token Realtime assim que a app sobe.
+    api('/auth/realtime-token')
+      .then((d) => { if (d?.supabaseToken) applyRealtimeAuth(d.supabaseToken); })
+      .catch((e) => console.warn('[realtime-token boot]', e.message));
+
+    // Failsafe: se /settings travar, libera o loading em 8s para não prender
+    // a UI no skeleton indefinidamente. O user cache já foi hidratado do localStorage.
+    const failsafe = setTimeout(() => setLoading(false), 8000);
 
     api('/settings')
       .then((data) => {
@@ -79,7 +88,10 @@ export function AuthProvider({ children }) {
           
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        clearTimeout(failsafe);
+        setLoading(false);
+      });
   }, []);
 
   const refreshUser = async () => {

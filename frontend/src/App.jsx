@@ -25,18 +25,19 @@ import { ThemeProvider } from './contexts/ThemeContext';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
+  // Render otimisticamente se já temos user hidratado do localStorage —
+  // evita ficar travado no skeleton se o /settings estiver lento.
+  if (user) return <Layout>{children}</Layout>;
   if (loading) return <LoadingSkeleton />;
-  if (!user) return <Navigate to="/auth" replace />;
-  return <Layout>{children}</Layout>;
+  return <Navigate to="/auth" replace />;
 }
 
 function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-  // Verificação rápida e síncrona: se há token/user no localStorage, redireciona imediatamente
-  // sem esperar o fetch async do AuthContext. Evita flash da tela de login ao pressionar Voltar.
-  const hasStoredSession = !!localStorage.getItem('token') || !!localStorage.getItem('user');
-  if (hasStoredSession || user) return <Navigate to="/dashboard" replace />;
-  if (loading) return <LoadingSkeleton />;
+  const { user } = useAuth();
+  // Só redireciona se há token válido (não apenas user cached).
+  // Sem token, sempre renderiza Landing/Auth imediatamente — nunca skeleton.
+  const hasToken = !!localStorage.getItem('token');
+  if (hasToken || user) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
