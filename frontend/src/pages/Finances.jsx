@@ -8,8 +8,10 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import { useIsMobile } from '../hooks/useIsMobile';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import TeamLiveCursors from '../components/TeamLiveCursors';
+import MobileFinances from './finances/MobileFinances';
 
 const CATEGORIES = ['Salário', 'Ganhos Extras', 'Mercado/Comida', 'Ônibus/Carro', 'Luz/Água/Casa', 'Saúde/Médico', 'Lazer/Diversão', 'Presentes', 'Outros'];
 
@@ -49,6 +51,7 @@ export default function Finances() {
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const getCatLabel = (raw) => t[CAT_KEY_MAP[raw]] || raw;
 
@@ -254,6 +257,34 @@ export default function Finances() {
     }
     return null;
   };
+
+  if (isMobile) {
+    return (
+      <MobileFinances
+        items={items}
+        recurringItems={recurringItems}
+        filter={filter}
+        setFilter={setFilter}
+        income={income}
+        expense={expense}
+        balance={balance}
+        filtered={filtered}
+        expensesData={expensesData}
+        incomesData={incomesData}
+        formatDate={formatDate}
+        openEdit={openEdit}
+        handleDelete={handleDelete}
+        handleDeleteRecurring={handleDeleteRecurring}
+        modalOpen={modalOpen}
+        setModalOpen={setModalOpen}
+        editing={editing}
+        setEditing={setEditing}
+        form={form}
+        setForm={setForm}
+        handleSubmit={handleSubmit}
+      />
+    );
+  }
 
   return (
     <motion.div

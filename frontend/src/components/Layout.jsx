@@ -40,9 +40,11 @@ import { useRealtime } from '../contexts/RealtimeContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSessionTracker } from '../hooks/useSessionTracker';
 import { useLiquidGlass } from '../hooks/useLiquidGlass';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { api } from '../lib/api';
 import { useTranslation } from '../utils/translations';
 import AudioPlayer from './AudioPlayer';
+import MobileLayout from './mobile/MobileLayout';
 
 const navSections = [
   {
@@ -75,7 +77,7 @@ const navSections = [
   }
 ];
 
-export default function Layout({ children }) {
+function DesktopLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -774,4 +776,10 @@ export default function Layout({ children }) {
       <AudioPlayer />
     </div>
   );
+}
+
+export default function Layout({ children }) {
+  const isPhone = useIsMobile();
+  if (isPhone) return <MobileLayout>{children}</MobileLayout>;
+  return <DesktopLayout>{children}</DesktopLayout>;
 }

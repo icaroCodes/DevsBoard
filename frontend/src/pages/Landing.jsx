@@ -523,7 +523,7 @@ export default function Landing() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="w-full bg-[#8E9C78]/10 border-t border-white/[0.05] overflow-hidden"
+            className="hidden md:block w-full bg-[#8E9C78]/10 border-t border-white/[0.05] overflow-hidden"
           >
             <div className="max-w-6xl mx-auto px-2 sm:px-6 py-2 md:py-2.5 flex flex-row flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">
               <div className="flex items-center gap-1.5 md:gap-2">
@@ -667,7 +667,7 @@ export default function Landing() {
         </AnimatePresence>
 
         { }
-        <section className="pt-32 md:pt-40 pb-16 md:pb-20 px-4 sm:px-6 min-h-[90vh] md:min-h-[95vh] flex flex-col items-center justify-center relative overflow-hidden">
+        <section className="pt-24 md:pt-40 pb-16 md:pb-20 px-4 sm:px-6 min-h-[90vh] md:min-h-[95vh] flex flex-col items-center justify-center relative overflow-hidden">
           { }
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[radial-gradient(circle,_rgba(142,156,120,0.1)_0%,_transparent_70%)] rounded-full pointer-events-none" />
 
@@ -677,7 +677,7 @@ export default function Landing() {
             variants={staggerContainer}
             className="max-w-4xl mx-auto text-center relative z-10 motion-gpu"
           >
-            <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-xs font-medium text-[#8E9C78] mb-6 md:mb-8">
+            <motion.div variants={fadeIn} className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-1.5 sm:py-1 rounded-full bg-white/5 border border-white/10 text-[11px] md:text-xs font-medium text-[#8E9C78] mb-5 md:mb-8 shadow-[0_0_20px_rgba(142,156,120,0.15)] md:shadow-none">
               <Sparkles size={12} />
               <span>{t.heroFree}</span>
             </motion.div>

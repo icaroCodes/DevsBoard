@@ -113,6 +113,21 @@ body[data-theme="arctic"] {
   animation: pulse-soft 3s ease-in-out infinite;
 }
 
+/* Mobile shell utilities — safe-area envs + scrollbar suppression */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pl-safe { padding-left: env(safe-area-inset-left, 0px); }
+.pr-safe { padding-right: env(safe-area-inset-right, 0px); }
+
+/* Disable text size adjust on iOS rotate, kill tap highlight */
+@media (max-width: 767px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body, button, a { -webkit-tap-highlight-color: transparent; }
+}
+
 /* Hardware Acceleration & Fluidness */
 @media (max-width: 768px) {
   .motion-gpu {

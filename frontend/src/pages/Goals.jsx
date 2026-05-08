@@ -24,8 +24,10 @@ import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import TeamLiveCursors from '../components/TeamLiveCursors';
+import MobileGoals from './goals/MobileGoals';
 
 const dropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -403,6 +405,7 @@ export default function Goals() {
   const { success, error } = useToast();
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
+  const isMobile = useIsMobile();
 
   const currentYear = new Date().getFullYear();
 
@@ -582,6 +585,41 @@ export default function Goals() {
   const draggedGoal = activeGoalId
     ? items.find(g => `goal-${g.id}` === activeGoalId)
     : null;
+
+  if (isMobile) {
+    return (
+      <MobileGoals
+        loading={loading}
+        items={items}
+        freeGoals={freeGoals}
+        groupedByYear={groupedByYear}
+        currentYear={currentYear}
+        expanded={expanded}
+        setExpanded={setExpanded}
+        sensors={sensors}
+        handleDragEnd={handleDragEnd}
+        activeGoalId={activeGoalId}
+        setActiveGoalId={setActiveGoalId}
+        draggedGoal={draggedGoal}
+        modalOpen={modalOpen}
+        setModalOpen={setModalOpen}
+        editing={editing}
+        setEditing={setEditing}
+        targetYear={targetYear}
+        setTargetYear={setTargetYear}
+        form={form}
+        setForm={setForm}
+        handleSubmit={handleSubmit}
+        toggleComplete={toggleComplete}
+        handleDelete={handleDelete}
+        openNewGoal={openNewGoal}
+        openEdit={openEdit}
+        addAmount={addAmount}
+        setAddAmount={setAddAmount}
+        handleAddAmount={handleAddAmount}
+      />
+    );
+  }
 
   return (
     <motion.div

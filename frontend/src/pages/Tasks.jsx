@@ -30,9 +30,12 @@ import { useConfirm } from '../contexts/ConfirmModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import { useIsMobile } from '../hooks/useIsMobile';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import LiveCursors from '../components/LiveCursors';
 import TeamLiveCursors from '../components/TeamLiveCursors';
+import MobileListView from './tasks/MobileListView';
+import MobileBoardGallery from './tasks/MobileBoardGallery';
 
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -109,6 +112,7 @@ function ListView() {
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
 
   const load = ({ silent = false } = {}) => {
@@ -188,6 +192,28 @@ function ListView() {
   };
 
   if (loading) return <LoadingSkeleton variant="tasks" />;
+
+  if (isMobile) {
+    return (
+      <MobileListView
+        items={items}
+        pendingCount={pendingCount}
+        filter={filter}
+        setFilter={setFilter}
+        toggleComplete={toggleComplete}
+        openEdit={openEdit}
+        handleDelete={handleDelete}
+        formParams={formParams}
+        setFormParams={setFormParams}
+        handleSubmit={handleSubmit}
+        modalOpen={modalOpen}
+        setModalOpen={setModalOpen}
+        editing={editing}
+        setEditing={setEditing}
+        t={t}
+      />
+    );
+  }
 
   return (
     <>
@@ -743,6 +769,7 @@ function BoardGallery({ onOpenBoard }) {
 
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     api('/task-boards')
@@ -793,6 +820,32 @@ function BoardGallery({ onOpenBoard }) {
   }
 
   if (loading) return <LoadingSkeleton variant="tasks" />;
+
+  if (isMobile) {
+    return (
+      <>
+        <MobileBoardGallery
+          boards={boards}
+          showAdd={showAdd}
+          setShowAdd={setShowAdd}
+          boardName={boardName}
+          setBoardName={setBoardName}
+          boardColor={boardColor}
+          setBoardColor={setBoardColor}
+          adding={adding}
+          addBoard={addBoard}
+          deleteBoard={deleteBoard}
+          setEditingBoard={setEditingBoard}
+          onOpenBoard={onOpenBoard}
+        />
+        <AnimatePresence>
+          {editingBoard && (
+            <EditBoardModal board={editingBoard} onSave={handleUpdateBoard} onClose={() => setEditingBoard(null)} />
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <>

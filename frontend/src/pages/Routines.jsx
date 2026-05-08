@@ -27,8 +27,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from '../utils/translations';
+import { useIsMobile } from '../hooks/useIsMobile';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import TeamLiveCursors from '../components/TeamLiveCursors';
+import MobileRoutines from './routines/MobileRoutines';
 
 const dropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -529,6 +531,7 @@ export default function Routines() {
   const { confirm } = useConfirm();
   const { activeTeam } = useAuth();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -721,6 +724,33 @@ export default function Routines() {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.05 } }
   };
+
+  if (isMobile) {
+    return (
+      <MobileRoutines
+        items={items}
+        loading={loading}
+        expanded={expanded}
+        setExpanded={setExpanded}
+        modalOpen={modalOpen}
+        setModalOpen={setModalOpen}
+        editing={editing}
+        setEditing={setEditing}
+        form={form}
+        setForm={setForm}
+        handleSubmit={handleSubmit}
+        handleDelete={handleDelete}
+        taskForm={taskForm}
+        setTaskForm={setTaskForm}
+        handleTaskSubmit={handleTaskSubmit}
+        toggleTask={toggleTask}
+        deleteTask={deleteTask}
+        handleTaskDragEnd={handleTaskDragEnd}
+        handleRoutineDragEnd={handleRoutineDragEnd}
+        sensors={sensors}
+      />
+    );
+  }
 
   return (
     <motion.div

@@ -14,6 +14,8 @@ import PageComments from '../components/projects/PageComments';
 import { useFavorites } from '../hooks/useFavorites';
 import Editor from '../components/projects/editor/Editor';
 import { useProjectDoc } from '../hooks/useProjects';
+import { useIsMobile } from '../hooks/useIsMobile';
+import MobileProjectDetail from './projects/MobileProjectDetail';
 
 function relativeTime(iso) {
   if (!iso) return 'agora';
@@ -40,6 +42,7 @@ export default function ProjectDetail() {
   const { doc, setContent, loading: docLoading, savingState } = useProjectDoc(slug);
   const [hasComments, setHasComments] = useState(false);
   const [commentInputVisible, setCommentInputVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setLoading(true);
@@ -108,6 +111,22 @@ export default function ProjectDetail() {
   };
 
   const fav = isFav(project.id);
+
+  if (isMobile) {
+    return (
+      <MobileProjectDetail
+        project={project}
+        patch={patch}
+        doc={doc}
+        setContent={setContent}
+        docLoading={docLoading}
+        savingState={savingState}
+        fav={fav}
+        toggleFav={toggleFav}
+        slug={slug}
+      />
+    );
+  }
 
   return (
     <>

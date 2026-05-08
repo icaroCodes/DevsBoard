@@ -5,8 +5,10 @@ import { Plus, Pencil, Trash2, X, FolderKanban, Upload, Search, MoreHorizontal }
 import { useProjects } from '../hooks/useProjects';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmModalContext';
+import { useIsMobile } from '../hooks/useIsMobile';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import TeamLiveCursors from '../components/TeamLiveCursors';
+import MobileProjects from './projects/MobileProjects';
 
 const COLORS = ['#0A84FF', '#FF9F0A', '#30D158', '#BF5AF2', '#FF375F', '#5E5CE6', '#64D2FF', '#FFD60A'];
 
@@ -193,6 +195,7 @@ export default function Projects() {
   const navigate = useNavigate();
   const [modal, setModal] = useState(null);
   const [query, setQuery] = useState('');
+  const isMobile = useIsMobile();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -221,6 +224,22 @@ export default function Projects() {
   };
 
   if (loading) return <LoadingSkeleton />;
+
+  if (isMobile) {
+    return (
+      <MobileProjects
+        projects={projects}
+        filtered={filtered}
+        query={query}
+        setQuery={setQuery}
+        modal={modal}
+        setModal={setModal}
+        handleCreate={handleCreate}
+        handleUpdate={handleUpdate}
+        handleDelete={handleDelete}
+      />
+    );
+  }
 
   return (
     <div ref={pageRef} className="max-w-6xl mx-auto px-1 relative">

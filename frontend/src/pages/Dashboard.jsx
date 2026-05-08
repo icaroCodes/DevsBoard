@@ -35,8 +35,10 @@ import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtimeSubscription } from '../contexts/RealtimeContext';
 import { useTranslation } from '../utils/translations';
+import { useIsMobile } from '../hooks/useIsMobile';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import TeamLiveCursors from '../components/TeamLiveCursors';
+import MobileDashboard from './dashboard/MobileDashboard';
 
 /* ─────────────────────────────────────────────────────────
    TaskStatusCheck — checkbox visual, mantém comportamento original.
@@ -149,6 +151,7 @@ export default function Dashboard() {
   const { error: showError } = useToast();
   const { user, activeTeam } = useAuth();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const load = () => {
     api('/dashboard')
@@ -269,6 +272,27 @@ export default function Dashboard() {
     const next = arrayMove(currentKeys, from, to);
     setRoutineOrderByTab(prev => ({ ...prev, [routineTab]: next }));
   };
+
+  if (isMobile) {
+    return (
+      <MobileDashboard
+        data={data}
+        displayName={displayName}
+        t={t}
+        routineTab={routineTab}
+        setRoutineTab={setRoutineTab}
+        sortedTasks={sortedTasks}
+        sortedRoutineTasks={sortedRoutineTasks}
+        sensors={sensors}
+        handleTaskDragEnd={handleTaskDragEnd}
+        handleRoutineDragEnd={handleRoutineDragEnd}
+        toggleTaskComplete={toggleTaskComplete}
+        toggleRoutineTaskComplete={toggleRoutineTaskComplete}
+        useSortable={useSortable}
+        CSS={CSS}
+      />
+    );
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
