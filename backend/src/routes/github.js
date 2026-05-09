@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import supabase from '../database/connection.js';
 import config from '../config/index.js';
 
@@ -73,29 +74,49 @@ router.get('/callback', async (req, res) => {
     const name = githubUser.name || githubUser.login;
     const avatar_url = githubUser.avatar_url || null;
 
-    let { data: user } = await supabase.from('users').select('id, name, email, avatar_url').eq('email', email).single();
+    let { data: user } = await supabase
+      .from('users')
+      .select('id, name, email, avatar_url')
+      .eq('email', email)
+      .eq('provider', 'github')
+      .maybeSingle();
 
     if (!user) {
+      const auth_id = crypto.randomUUID();
       const { data: newUser, error } = await supabase
         .from('users')
-        .insert({ name, email, password_hash: `github:${githubUser.id}`, avatar_url })
+        .insert({
+          name,
+          email,
+          password_hash: `github:${githubUser.id}`,
+          avatar_url,
+          provider: 'github',
+          provider_id: String(githubUser.id),
+          auth_id,
+        })
         .select('id, name, email, avatar_url')
         .single();
-      if (error) return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
-      user = newUser;
-    } else {
-      if (!user.avatar_url) {
-        await supabase.from('users').update({ avatar_url }).eq('id', user.id);
-        user.avatar_url = avatar_url;
+      if (error) {
+        console.error('[GitHub Auth] Erro ao criar usuário:', error);
+        return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
       }
+      user = newUser;
+    } else if (!user.avatar_url && avatar_url) {
+      await supabase.from('users').update({ avatar_url }).eq('id', user.id);
+      user.avatar_url = avatar_url;
     }
 
-    
+
     const { accessToken, refreshToken } = generateTokens(user.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    
-    res.redirect(`${FRONTEND_URL}/auth?success=true`);
+    const exchangeCode = jwt.sign(
+      { userId: user.id, purpose: 'oauth_exchange' },
+      config.jwt.accessSecret,
+      { expiresIn: '60s' }
+    );
+
+    res.redirect(`${FRONTEND_URL}/auth?code=${encodeURIComponent(exchangeCode)}`);
   } catch (err) {
     console.error('[GitHub Auth Error]', err);
     res.redirect(`${FRONTEND_URL}/auth?error=erro_interno`);

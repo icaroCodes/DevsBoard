@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, Inbox, Plus, Heart, Briefcase, 
+import {
+  Users, Inbox, Plus, Heart, Briefcase,
   ChevronRight, Crown, Shield, User,
-  MailPlus, Check, X, Clock
+  MailPlus, Check, X, Clock, UserPlus, Mail, Send, LogOut, Trash2
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,6 +26,11 @@ export default function TeamsMobile() {
   const [activeTab, setActiveTab] = useState('teams');
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedTeamData, setSelectedTeamData] = useState(null);
+  const [newTeam, setNewTeam] = useState({ name: '', type: 'team' });
+  const [creating, setCreating] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -112,6 +117,79 @@ export default function TeamsMobile() {
     }
   };
 
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    if (!newTeam.name.trim() || creating) return;
+    setCreating(true);
+    try {
+      await api('/teams', { method: 'POST', body: JSON.stringify(newTeam) });
+      success(`${newTeam.type === 'family' ? 'Família' : 'Time'} "${newTeam.name}" criado!`);
+      setNewTeam({ name: '', type: 'team' });
+      setActiveTab('teams');
+      fetchTeams();
+    } catch (err) {
+      toastError(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim() || !showInviteModal || inviting) return;
+    setInviting(true);
+    try {
+      await api(`/teams/${showInviteModal}/invite`, {
+        method: 'POST',
+        body: JSON.stringify({ email: inviteEmail }),
+      });
+      success(`Convite enviado para ${inviteEmail}!`);
+      setInviteEmail('');
+      setShowInviteModal(null);
+      fetchSentInvites();
+    } catch (err) {
+      toastError(err.message);
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleLeaveTeam = (teamId, teamName) => {
+    confirm({
+      title: `Sair de "${teamName}"?`,
+      message: 'Você não terá mais acesso a este time.',
+      onConfirm: async () => {
+        try {
+          await api(`/teams/${teamId}/members/${user.id}`, { method: 'DELETE' });
+          success('Você saiu do time.');
+          setSelectedTeamId(null);
+          setSelectedTeamData(null);
+          fetchTeams();
+        } catch (err) {
+          toastError(err.message);
+        }
+      }
+    });
+  };
+
+  const handleDeleteTeam = (teamId, teamName) => {
+    confirm({
+      title: `Excluir "${teamName}"?`,
+      message: 'Todos os membros serão removidos e os dados do time serão perdidos.',
+      onConfirm: async () => {
+        try {
+          await api(`/teams/${teamId}`, { method: 'DELETE' });
+          success('Time excluído.');
+          setSelectedTeamId(null);
+          setSelectedTeamData(null);
+          fetchTeams();
+        } catch (err) {
+          toastError(err.message);
+        }
+      }
+    });
+  };
+
   const handleRejectInvite = async (invitationId) => {
     confirm({
       title: 'Rejeitar convite?',
@@ -130,6 +208,71 @@ export default function TeamsMobile() {
 
   if (loading) return <LoadingSkeleton variant="teams" />;
 
+  const inviteModal = (
+    <AnimatePresence>
+      {showInviteModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowInviteModal(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            className="bg-[#202020] border border-white/10 rounded-[28px] p-6 w-full max-w-md shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-11 h-11 rounded-2xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF]">
+                <UserPlus size={22} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="text-[18px] font-bold text-white tracking-tight">Convidar Membro</h3>
+                <p className="text-[13px] text-[#86868B] font-medium">
+                  {teams.find(t => t.id === showInviteModal)?.name}
+                </p>
+              </div>
+            </div>
+            <form onSubmit={handleInvite} className="space-y-4">
+              <div className="relative">
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868B]" />
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="usuario@email.com"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-white/5 text-[15px] font-bold text-white focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/60"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowInviteModal(null); setInviteEmail(''); }}
+                  className="flex-1 h-12 rounded-[16px] bg-white/5 text-[#86868B] text-[13px] font-bold active:scale-95 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviting || !inviteEmail.trim()}
+                  className="flex-1 h-12 rounded-[16px] bg-white text-black text-[13px] font-black active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {inviting ? 'Enviando...' : (<><Send size={14} strokeWidth={3} /> Enviar</>)}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   if (selectedTeamId) {
     const team = selectedTeamData || teams.find(t => t.id === selectedTeamId);
     if (!team) {
@@ -137,53 +280,87 @@ export default function TeamsMobile() {
       return null;
     }
 
+    const canInvite = ['owner', 'admin'].includes(team.my_role);
     return (
-      <div className="px-5 py-6">
-        <button 
-          onClick={() => setSelectedTeamId(null)}
-          className="flex items-center gap-2 text-[#86868B] mb-8"
-        >
-          <ChevronRight size={20} className="rotate-180" />
-          <span className="text-[14px] font-bold">Voltar</span>
-        </button>
+      <>
+        {inviteModal}
+        <div className="px-5 py-6 pb-32">
+          <button
+            onClick={() => setSelectedTeamId(null)}
+            className="flex items-center gap-2 text-[#86868B] mb-8"
+          >
+            <ChevronRight size={20} className="rotate-180" />
+            <span className="text-[14px] font-bold">Voltar</span>
+          </button>
 
-        <div className="flex items-center gap-5 mb-10">
-          <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center ${
-            team.type === 'family' ? 'bg-pink-500/10 text-pink-400' : 'bg-[#0A84FF]/10 text-[#0A84FF]'
-          }`}>
-            {team.type === 'family' ? <Heart size={28} /> : <Briefcase size={28} />}
+          <div className="flex items-center gap-5 mb-8">
+            <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center ${
+              team.type === 'family' ? 'bg-pink-500/10 text-pink-400' : 'bg-[#0A84FF]/10 text-[#0A84FF]'
+            }`}>
+              {team.type === 'family' ? <Heart size={28} /> : <Briefcase size={28} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-[24px] font-bold text-white leading-tight truncate">{team.name}</h1>
+              <p className="text-[14px] text-[#86868B]">{team.member_count} membros</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-[24px] font-bold text-white leading-tight">{team.name}</h1>
-            <p className="text-[14px] text-[#86868B]">{team.member_count} membros</p>
-          </div>
-        </div>
 
-        <div className="space-y-3">
-          <h2 className="text-[14px] font-bold text-[#86868B] uppercase tracking-wider">Membros</h2>
-          {team.members?.map(member => (
-            <div key={member.user_id} className="flex items-center justify-between p-4 bg-[#202020] rounded-[24px]">
-              <div className="flex items-center gap-3">
-                {member.user?.avatar_url ? (
-                  <img src={member.user.avatar_url} className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-white/40 text-[12px] font-bold">
-                    {member.user?.name?.[0]}
+          {canInvite && (
+            <button
+              onClick={() => setShowInviteModal(team.id)}
+              className="w-full mb-6 flex items-center justify-center gap-2 py-4 bg-white text-black rounded-[20px] text-[14px] font-bold active:scale-95 transition-all shadow-lg"
+            >
+              <UserPlus size={16} strokeWidth={3} />
+              Convidar membro
+            </button>
+          )}
+
+          <div className="space-y-3">
+            <h2 className="text-[12px] font-bold text-[#86868B] uppercase tracking-wider">Membros</h2>
+            {team.members?.map(member => (
+              <div key={member.user_id} className="flex items-center justify-between p-4 bg-[#202020] rounded-[24px]">
+                <div className="flex items-center gap-3 min-w-0">
+                  {member.user?.avatar_url ? (
+                    <img src={member.user.avatar_url} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#2C2C2E] flex items-center justify-center text-white/40 text-[12px] font-bold shrink-0">
+                      {member.user?.name?.[0]}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-bold text-white truncate">{member.user?.name}</p>
+                    <p className="text-[12px] text-[#86868B]">{member.role === 'owner' ? 'Dono' : member.role === 'admin' ? 'Admin' : 'Membro'}</p>
                   </div>
-                )}
-                <div>
-                  <p className="text-[15px] font-bold text-white">{member.user?.name}</p>
-                  <p className="text-[12px] text-[#86868B]">{member.role === 'owner' ? 'Dono' : member.role === 'admin' ? 'Admin' : 'Membro'}</p>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {team.my_role === 'owner' ? (
+            <button
+              onClick={() => handleDeleteTeam(team.id, team.name)}
+              className="mt-8 w-full flex items-center justify-center gap-2 py-4 bg-[#FF453A]/10 text-[#FF453A] border border-[#FF453A]/20 rounded-[20px] text-[14px] font-bold active:scale-95 transition-all"
+            >
+              <Trash2 size={16} />
+              Excluir {team.type === 'family' ? 'família' : 'time'}
+            </button>
+          ) : (
+            <button
+              onClick={() => handleLeaveTeam(team.id, team.name)}
+              className="mt-8 w-full flex items-center justify-center gap-2 py-4 bg-[#2C2C2E] text-[#86868B] rounded-[20px] text-[14px] font-bold active:scale-95 transition-all"
+            >
+              <LogOut size={16} />
+              Sair do time
+            </button>
+          )}
         </div>
-      </div>
+      </>
     );
   }
 
   return (
+    <>
+    {inviteModal}
     <div className="px-5 py-8">
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -351,17 +528,74 @@ export default function TeamsMobile() {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            <div className="p-6 bg-[#202020] rounded-[32px] border border-white/[0.03]">
-              <div className="w-16 h-16 rounded-[22px] bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] mb-6">
-                <Plus size={32} />
+            <form onSubmit={handleCreateTeam} className="p-6 bg-[#202020] rounded-[32px] border border-white/[0.03] space-y-6">
+              <div>
+                <h2 className="text-[20px] font-bold text-white mb-1">Novo Grupo</h2>
+                <p className="text-[13px] text-[#86868B]">Crie um espaço para colaborar.</p>
               </div>
-              <h2 className="text-[20px] font-bold text-white mb-2">Novo Grupo</h2>
-              <p className="text-[14px] text-[#86868B] mb-8">Crie um espaço para sua equipe ou família colaborar.</p>
-              
-              <button className="w-full py-4 bg-[#0A84FF] text-white rounded-[20px] text-[15px] font-bold shadow-lg shadow-[#0A84FF]/20 active:scale-95 transition-all">
-                Começar agora
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-[#86868B] uppercase tracking-[0.18em]">Tipo</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'team', label: 'Time', icon: Briefcase, color: 'blue' },
+                    { value: 'family', label: 'Família', icon: Heart, color: 'pink' },
+                  ].map(opt => {
+                    const selected = newTeam.type === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setNewTeam({ ...newTeam, type: opt.value })}
+                        className={`relative p-4 rounded-[22px] border-2 text-left transition-all ${
+                          selected
+                            ? opt.color === 'blue'
+                              ? 'border-[#0A84FF] bg-[#0A84FF]/5'
+                              : 'border-pink-500 bg-pink-500/5'
+                            : 'border-white/5 bg-[#1A1A1C]'
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-2 ${
+                          selected
+                            ? opt.color === 'blue' ? 'bg-[#0A84FF] text-white' : 'bg-pink-500 text-white'
+                            : 'bg-white/5 text-[#86868B]'
+                        }`}>
+                          <opt.icon size={18} strokeWidth={2.5} />
+                        </div>
+                        <p className={`text-[14px] font-bold ${selected ? 'text-white' : 'text-[#86868B]'}`}>
+                          {opt.label}
+                        </p>
+                        {selected && (
+                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white flex items-center justify-center">
+                            <Check size={12} strokeWidth={4} className="text-black" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-[#86868B] uppercase tracking-[0.18em]">Nome</label>
+                <input
+                  type="text"
+                  value={newTeam.name}
+                  onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
+                  placeholder={newTeam.type === 'family' ? 'Ex: Família Silva' : 'Ex: Squad Frontend'}
+                  className="w-full px-4 py-4 rounded-[18px] bg-[#1A1A1C] border border-white/5 text-[15px] font-bold text-white focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-white/20"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={creating || !newTeam.name.trim()}
+                className="w-full py-4 bg-white text-black rounded-[20px] text-[15px] font-black active:scale-95 transition-all disabled:opacity-50"
+              >
+                {creating ? 'Criando...' : `Criar ${newTeam.type === 'family' ? 'família' : 'time'}`}
               </button>
-            </div>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>
@@ -377,5 +611,6 @@ export default function TeamsMobile() {
         </motion.button>
       )}
     </div>
+    </>
   );
 }

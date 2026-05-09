@@ -87,7 +87,8 @@ router.get('/callback', async (req, res) => {
       .from('users')
       .select('id, name, email, avatar_url')
       .eq('email', email)
-      .single();
+      .eq('provider', 'google')
+      .maybeSingle();
 
     if (!user) {
       const auth_id = crypto.randomUUID();
@@ -99,6 +100,8 @@ router.get('/callback', async (req, res) => {
           password_hash: `google:${profile.sub}`,
           avatar_url,
           auth_id,
+          provider: 'google',
+          provider_id: String(profile.sub),
         })
         .select('id, name, email, avatar_url')
         .single();
@@ -115,7 +118,13 @@ router.get('/callback', async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
-    res.redirect(`${FRONTEND_URL}/auth?success=true`);
+    const exchangeCode = jwt.sign(
+      { userId: user.id, purpose: 'oauth_exchange' },
+      config.jwt.accessSecret,
+      { expiresIn: '60s' }
+    );
+
+    res.redirect(`${FRONTEND_URL}/auth?code=${encodeURIComponent(exchangeCode)}`);
   } catch (err) {
     console.error('[Google Auth Error]', err);
     res.redirect(`${FRONTEND_URL}/auth?error=erro_interno`);

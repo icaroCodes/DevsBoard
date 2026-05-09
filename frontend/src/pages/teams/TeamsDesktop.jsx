@@ -318,7 +318,74 @@ export default function Teams() {
 
   if (loading) return <LoadingSkeleton variant="teams" />;
 
-
+  const inviteModal = (
+    <AnimatePresence>
+      {showInviteModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowInviteModal(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="bg-[#202020] border border-white/10 rounded-[32px] p-8 w-full max-w-md shadow-2xl overflow-hidden relative isolate"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#0A84FF] opacity-[0.05] blur-[60px] -z-10" />
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-2xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] border border-[#0A84FF]/20">
+                <UserPlus size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="text-[20px] font-bold text-white tracking-tight">Convidar Membro</h3>
+                <p className="text-[14px] text-[#86868B] font-medium">
+                  {teams.find(t => t.id === showInviteModal)?.name}
+                </p>
+              </div>
+            </div>
+            <form onSubmit={handleInvite} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Endereço de E-mail</label>
+                <div className="relative">
+                  <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B]" />
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="usuario@email.com"
+                    className="w-full pl-14 pr-6 py-4 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(null)}
+                  className="flex-1 h-14 rounded-[20px] bg-white/5 text-[#86868B] text-[14px] font-bold hover:text-white transition-all active:scale-95"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviting || !inviteEmail.trim()}
+                  className="flex-1 h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
+                >
+                  {inviting ? 'Enviando...' : (<><Send size={16} strokeWidth={3} /> Enviar</>)}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   if (selectedTeam) {
     const team = selectedTeamData || teams.find(t => t.id === selectedTeam);
@@ -329,6 +396,8 @@ export default function Teams() {
     }
 
     return (
+      <>
+      {inviteModal}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
         { }
         <div className="mb-8 px-1">
@@ -470,6 +539,7 @@ export default function Teams() {
           </section>
         )}
       </motion.div>
+      </>
     );
   }
 
@@ -923,83 +993,7 @@ export default function Teams() {
         )}
       </AnimatePresence>
 
-      { }
-      { }
-      { }
-      <AnimatePresence>
-        {showInviteModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowInviteModal(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-[#202020] border border-white/10 rounded-[32px] p-8 w-full max-w-md shadow-2xl overflow-hidden relative isolate"
-              onClick={e => e.stopPropagation()}
-            >
-              { }
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#0A84FF] opacity-[0.05] blur-[60px] -z-10" />
-
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] border border-[#0A84FF]/20">
-                  <UserPlus size={24} strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h3 className="text-[20px] font-bold text-white tracking-tight">Convidar Membro</h3>
-                  <p className="text-[14px] text-[#86868B] font-medium">
-                    {teams.find(t => t.id === showInviteModal)?.name}
-                  </p>
-                </div>
-              </div>
-
-              <form onSubmit={handleInvite} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Endereço de E-mail</label>
-                  <div className="relative">
-                    <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B] group-focus-within:text-white transition-colors" />
-                    <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="usuario@email.com"
-                      className="w-full pl-14 pr-6 py-4.5 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
-                      required
-                      autoFocus
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowInviteModal(null)}
-                    className="flex-1 h-14 rounded-[20px] bg-white/5 text-[#86868B] text-[14px] font-bold hover:text-white transition-all active:scale-95"
-                  >
-                    Voltar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={inviting || !inviteEmail.trim()}
-                    className="flex-1 h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
-                  >
-                    {inviting ? 'Enviando...' : (
-                      <>
-                        <Send size={16} strokeWidth={3} /> Enviar
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {inviteModal}
       { }
       <div className="fixed bottom-24 right-6 z-50 sm:hidden">
         <button

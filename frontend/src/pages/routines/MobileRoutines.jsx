@@ -70,16 +70,28 @@ function MobileTaskRow({ id, task, onTap }) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+    position: 'relative',
   };
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      onClick={() => onTap(task)}
-      className="touch-none flex items-start gap-3 px-3.5 py-3 rounded-[12px] active:bg-white/[0.04] transition-colors"
+      className="flex items-start gap-2 px-2 py-3 rounded-[12px] active:bg-white/[0.04] transition-colors"
     >
+      <div
+        {...attributes}
+        {...listeners}
+        aria-label="Arrastar tarefa"
+        className="mt-[2px] p-1 -ml-1 rounded-md text-[#5A5A5F] active:bg-white/[0.05] active:text-[#A1A1AA] cursor-grab touch-none shrink-0 outline-none"
+      >
+        <GripVertical size={14} strokeWidth={2} />
+      </div>
+      <button
+        type="button"
+        onClick={() => onTap(task)}
+        className="flex-1 flex items-start gap-3 min-w-0 text-left outline-none"
+      >
       <div className="mt-[2px] shrink-0">
         <CircleDashed
           size={18}
@@ -135,6 +147,7 @@ function MobileTaskRow({ id, task, onTap }) {
           </p>
         )}
       </div>
+      </button>
     </div>
   );
 }

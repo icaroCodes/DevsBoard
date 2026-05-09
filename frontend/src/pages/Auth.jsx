@@ -178,9 +178,10 @@ export default function Auth() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    if (params.get('success') === 'true') {
+    const oauthCode = params.get('code');
+    if (oauthCode || params.get('success') === 'true') {
       setOauthLoading('finalizing');
-      bootstrapSession()
+      bootstrapSession(oauthCode || undefined)
         .then(() => {
           window.history.replaceState({}, '', '/auth');
           navigate('/dashboard');

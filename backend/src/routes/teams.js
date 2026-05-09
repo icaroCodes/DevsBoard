@@ -223,12 +223,17 @@ router.post('/:id/invite', [
       return res.status(400).json({ error: 'Você não pode convidar a si mesmo' });
     }
 
-    
-    const { data: invitedUser } = await supabase
+    const { data: invitedCandidates } = await supabase
       .from('users')
-      .select('id, name, email')
+      .select('id, name, email, provider, created_at')
       .eq('email', email)
-      .single();
+      .order('provider', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    const invitedUser = (invitedCandidates || []).sort((a, b) => {
+      const score = (p) => (p === 'local' ? 0 : p === 'google' ? 1 : 2);
+      return score(a.provider) - score(b.provider);
+    })[0];
 
     if (!invitedUser) {
       return res.status(404).json({ error: 'Nenhum usuário encontrado com este email' });
@@ -371,11 +376,12 @@ router.get('/invitations/sent', async (req, res) => {
         .eq('id', inv.team_id)
         .single();
 
-      const { data: invitedUser } = await supabase
+      const { data: invitedUserList } = await supabase
         .from('users')
         .select('name, email, avatar_url')
         .eq('email', inv.invited_email)
-        .single();
+        .limit(1);
+      const invitedUser = invitedUserList?.[0] || null;
 
       return {
         ...inv,

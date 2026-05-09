@@ -143,8 +143,10 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const bootstrapSession = async () => {
-    const data = await api('/auth/session');
+  const bootstrapSession = async (code) => {
+    const data = code
+      ? await api('/auth/exchange', { method: 'POST', body: JSON.stringify({ code }) })
+      : await api('/auth/session');
     if (data.token) localStorage.setItem('token', data.token);
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     if (data.supabaseToken) applyRealtimeAuth(data.supabaseToken);

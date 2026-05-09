@@ -79,14 +79,19 @@ router.post('/register', authRateLimiter, async (req, res) => {
     const validated = registerSchema.parse(req.body);
     const { name, email, password } = validated;
 
-    const { data: existing } = await supabase.from('users').select('id').eq('email', email).single();
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .eq('provider', 'local')
+      .maybeSingle();
     if (existing) return res.status(400).json({ error: 'Email já cadastrado' });
 
     const password_hash = await bcrypt.hash(password, 12);
     const auth_id = crypto.randomUUID();
     const { data: newUser, error } = await supabase
       .from('users')
-      .insert({ name, email, password_hash, auth_id })
+      .insert({ name, email, password_hash, auth_id, provider: 'local' })
       .select('id, name, email, avatar_url, auth_id')
       .single();
 
@@ -118,8 +123,13 @@ router.post('/login', authRateLimiter, async (req, res) => {
     const validated = loginSchema.parse(req.body);
     const { email, password } = validated;
 
-    const { data: user } = await supabase.from('users').select('*').eq('email', email).single();
-    if (!user) return res.status(401).json({ error: 'Credenciais inválidas' });
+    const { data: user } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('provider', 'local')
+      .maybeSingle();
+    if (!user || !user.password_hash) return res.status(401).json({ error: 'Credenciais inválidas' });
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Credenciais inválidas' });
@@ -163,6 +173,45 @@ router.post('/refresh', async (req, res) => {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
     res.status(401).json({ error: 'Sessão expirada' });
+  }
+});
+
+router.post('/exchange', async (req, res) => {
+  const { code } = req.body || {};
+  if (!code) return res.status(400).json({ error: 'Código ausente' });
+
+  try {
+    const decoded = jwt.verify(code, config.jwt.accessSecret);
+    if (decoded.purpose !== 'oauth_exchange') {
+      return res.status(400).json({ error: 'Código inválido' });
+    }
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, name, email, avatar_url, auth_id')
+      .eq('id', decoded.userId)
+      .single();
+    if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado' });
+
+    const { accessToken, refreshToken } = generateTokens(user.id);
+    setAuthCookies(res, { accessToken, refreshToken });
+
+    const authUuid = user.auth_id || (await ensureAuthId(user.id));
+    let supabaseToken = null;
+    try { supabaseToken = generateSupabaseJwt(authUuid); } catch (e) { console.warn('[Realtime JWT skip]', e.message); }
+
+    res.json({
+      user: { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url },
+      token: accessToken,
+      refreshToken,
+      supabaseToken,
+    });
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Código expirado' });
+    }
+    console.error('[/auth/exchange]', err);
+    res.status(401).json({ error: 'Código inválido' });
   }
 });
 
