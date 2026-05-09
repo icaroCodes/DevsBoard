@@ -421,7 +421,7 @@ export default function Landing() {
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2.5"
               >
-                <img src="/devsboard.png" alt="Logo" className="w-5 h-5 object-contain" />
+                <img src="/devsboard.png" alt="Logo" className="w-8 h-8 object-contain" />
                 <span className="text-white font-semibold text-[15px] tracking-tight">
                   DevsBoard
                 </span>
@@ -711,7 +711,7 @@ export default function Landing() {
             <motion.div variants={fadeIn} className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 opacity-80">
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="flex -space-x-2">
-                  {['/icaro.png', '/lidia.jfif', '/nobre.png', '/emanuel.png'].map((src, i) => (
+                  {['/icaro.png', '/nobre.png', '/emanuel.png'].map((src, i) => (
                     <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-[#0A0A0A] overflow-hidden bg-zinc-800">
                       <img src={src} alt="Membro" className="w-full h-full object-cover" />
                     </div>

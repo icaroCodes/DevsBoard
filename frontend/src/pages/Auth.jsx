@@ -115,8 +115,8 @@ const translations = {
     namePlaceholder: "Seu nome",
     nameObj: "Digite seu nome",
     emailLabel: "E-mail",
-    emailPlaceholder: "voce@email.com",
-    passLabel: "Senha",
+    emailPlaceholder: "Coloque seu e-mail aqui",
+    passLabel: "Coloque sua senha aqui",
     passPlaceholder: "Sua senha",
     errOAuth: "Não foi possível concluir o login social.",
     errAuth: "E-mail ou senha incorretos.",
@@ -141,9 +141,9 @@ const translations = {
     namePlaceholder: "Your name",
     nameObj: "Name is required",
     emailLabel: "Email",
-    emailPlaceholder: "you@email.com",
+    emailPlaceholder: "Your email here",
     passLabel: "Password",
-    passPlaceholder: "Your password",
+    passPlaceholder: "Your password here",
     errOAuth: "Could not complete social sign-in.",
     errAuth: "Wrong email or password.",
     btnLoading: "Loading…",
@@ -268,7 +268,7 @@ export default function Auth() {
         </button>
 
         <div style={s.logoSection}>
-          <img src="/devsboard2.png" alt="DevsBoard" style={s.logoImg} />
+          <img src="/devsboard.png" alt="DevsBoard" style={s.logoImg} />
           <h1 style={s.brandTitle}>
             {isLogin ? t.loginHead : t.registerHead}{' '}
             <span style={s.brandAccent}>DevsBoard</span>
@@ -499,12 +499,10 @@ const s = {
     gap: 12,
   },
   logoImg: {
-    width: 44,
-    height: 44,
+    width: 62,
+    height: 62,
     objectFit: 'contain',
-    borderRadius: 11,
-    padding: 5,
-    background: '#fff',
+    borderRadius: 14,
   },
   brandTitle: {
     color: '#f0f0f0',
