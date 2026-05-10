@@ -4,7 +4,7 @@ import {
   Users, UserPlus, Mail, Inbox, Check, X, Plus,
   Crown, Shield, User, Trash2, LogOut, Send,
   ChevronDown, Bell, Wifi, WifiOff, Clock,
-  Heart, Briefcase, MailPlus, ArrowLeft
+  Heart, Briefcase, MailPlus, ArrowLeft, AtSign, Link2, Copy
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,6 +29,11 @@ export default function Teams() {
   const [activeTab, setActiveTab] = useState('teams');
   const [showInviteModal, setShowInviteModal] = useState(null);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteUsername, setInviteUsername] = useState('');
+  // Phase 4: three invite modes — username (preferred), link (shareable), email (legacy).
+  const [inviteMode, setInviteMode] = useState('username');
+  const [generatedInvite, setGeneratedInvite] = useState(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newTeam, setNewTeam] = useState({ name: '', type: 'team' });
@@ -151,23 +156,73 @@ export default function Teams() {
     }
   };
 
+  const closeInviteModal = () => {
+    setShowInviteModal(null);
+    setInviteEmail('');
+    setInviteUsername('');
+    setGeneratedInvite(null);
+    setLinkCopied(false);
+    setInviteMode('username');
+  };
+
   const handleInvite = async (e) => {
     e.preventDefault();
-    if (!inviteEmail.trim() || !showInviteModal) return;
+    if (!showInviteModal) return;
     setInviting(true);
     try {
-      await api(`/teams/${showInviteModal}/invite`, {
-        method: 'POST',
-        body: JSON.stringify({ email: inviteEmail }),
-      });
-      success(`Convite enviado para ${inviteEmail}!`);
-      setInviteEmail('');
-      setShowInviteModal(null);
+      if (inviteMode === 'username') {
+        const cleaned = inviteUsername.trim().replace(/^@/, '');
+        if (!cleaned) return;
+        await api(`/teams/${showInviteModal}/invite`, {
+          method: 'POST',
+          body: JSON.stringify({ username: cleaned }),
+        });
+        success(`Convite enviado para @${cleaned}!`);
+      } else {
+        if (!inviteEmail.trim()) return;
+        await api(`/teams/${showInviteModal}/invite`, {
+          method: 'POST',
+          body: JSON.stringify({ email: inviteEmail.trim() }),
+        });
+        success(`Convite enviado para ${inviteEmail}!`);
+      }
+      closeInviteModal();
       fetchSentInvites();
+    } catch (err) {
+      const msg = err.message === 'username_not_found'
+        ? 'Nenhum usuário encontrado com esse @username.'
+        : err.message;
+      toastError(msg);
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleGenerateLink = async () => {
+    if (!showInviteModal || inviting) return;
+    setInviting(true);
+    try {
+      const result = await api(`/teams/${showInviteModal}/invitations/links`, {
+        method: 'POST',
+        body: JSON.stringify({ role: 'member' }),
+      });
+      setGeneratedInvite(result);
+      setLinkCopied(false);
     } catch (err) {
       toastError(err.message);
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!generatedInvite?.url) return;
+    try {
+      await navigator.clipboard.writeText(generatedInvite.url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toastError('Não foi possível copiar. Selecione e copie manualmente.');
     }
   };
 
@@ -326,7 +381,7 @@ export default function Teams() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowInviteModal(null)}
+          onClick={closeInviteModal}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -337,7 +392,7 @@ export default function Teams() {
             onClick={e => e.stopPropagation()}
           >
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#0A84FF] opacity-[0.05] blur-[60px] -z-10" />
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] border border-[#0A84FF]/20">
                 <UserPlus size={24} strokeWidth={2.5} />
               </div>
@@ -348,39 +403,141 @@ export default function Teams() {
                 </p>
               </div>
             </div>
-            <form onSubmit={handleInvite} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Endereço de E-mail</label>
-                <div className="relative">
-                  <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B]" />
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="usuario@email.com"
-                    className="w-full pl-14 pr-6 py-4 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
-                    required
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <div className="flex gap-4">
+
+            <div className="flex gap-1 p-1 mb-5 bg-[#1a1a1a] rounded-[14px] border border-white/5">
+              {[
+                { id: 'username', label: 'Username', icon: AtSign },
+                { id: 'link', label: 'Link', icon: Link2 },
+                { id: 'email', label: 'E-mail', icon: Mail },
+              ].map(({ id, label, icon: Icon }) => (
                 <button
+                  key={id}
                   type="button"
-                  onClick={() => setShowInviteModal(null)}
-                  className="flex-1 h-14 rounded-[20px] bg-white/5 text-[#86868B] text-[14px] font-bold hover:text-white transition-all active:scale-95"
+                  onClick={() => { setInviteMode(id); setGeneratedInvite(null); }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 h-10 rounded-[10px] text-[12px] font-bold transition-all ${
+                    inviteMode === id
+                      ? 'bg-white text-black'
+                      : 'text-[#86868B] hover:text-white'
+                  }`}
                 >
-                  Voltar
+                  <Icon size={14} strokeWidth={2.5} />
+                  {label}
                 </button>
-                <button
-                  type="submit"
-                  disabled={inviting || !inviteEmail.trim()}
-                  className="flex-1 h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
-                >
-                  {inviting ? 'Enviando...' : (<><Send size={16} strokeWidth={3} /> Enviar</>)}
-                </button>
+              ))}
+            </div>
+
+            {inviteMode === 'link' ? (
+              <div className="space-y-5">
+                {!generatedInvite ? (
+                  <>
+                    <p className="text-[13px] text-[#86868B] leading-relaxed">
+                      Gera um link compartilhável que dura 7 dias. Quem entrar
+                      pelo link vira <span className="text-white font-semibold">membro</span> automaticamente.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleGenerateLink}
+                      disabled={inviting}
+                      className="w-full h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
+                    >
+                      {inviting ? 'Gerando...' : (<><Link2 size={16} strokeWidth={3} /> Gerar link</>)}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Link gerado</label>
+                      <div className="relative">
+                        <input
+                          readOnly
+                          value={generatedInvite.url}
+                          onClick={(e) => e.target.select()}
+                          className="w-full pl-5 pr-14 py-4 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[13px] font-mono text-white focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCopyLink}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-[12px] bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all"
+                          aria-label="Copiar link"
+                        >
+                          {linkCopied ? <Check size={15} strokeWidth={3} /> : <Copy size={15} />}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-[#86868B] ml-1">
+                        Expira em {generatedInvite.expires_in_days} dias.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={closeInviteModal}
+                      className="w-full h-14 rounded-[20px] bg-white/5 text-white text-[14px] font-bold hover:bg-white/10 transition-all"
+                    >
+                      Pronto
+                    </button>
+                  </>
+                )}
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleInvite} className="space-y-5">
+                {inviteMode === 'username' ? (
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">@Username</label>
+                    <div className="relative">
+                      <AtSign size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B]" />
+                      <input
+                        type="text"
+                        value={inviteUsername}
+                        onChange={(e) => setInviteUsername(e.target.value.replace(/^@/, '').toLowerCase())}
+                        placeholder="icarocodes"
+                        autoComplete="off"
+                        spellCheck={false}
+                        className="w-full pl-14 pr-6 py-4 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    <p className="text-[11px] text-[#86868B] ml-1">
+                      Forma preferida — não depende de e-mail e funciona mesmo se a pessoa trocar de provider.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Endereço de E-mail</label>
+                    <div className="relative">
+                      <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B]" />
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="usuario@email.com"
+                        className="w-full pl-14 pr-6 py-4 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    <p className="text-[11px] text-[#86868B] ml-1">
+                      Só funciona se a pessoa já tiver conta com esse e-mail.
+                    </p>
+                  </div>
+                )}
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={closeInviteModal}
+                    className="flex-1 h-14 rounded-[20px] bg-white/5 text-[#86868B] text-[14px] font-bold hover:text-white transition-all active:scale-95"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={inviting || (inviteMode === 'username' ? !inviteUsername.trim() : !inviteEmail.trim())}
+                    className="flex-1 h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
+                  >
+                    {inviting ? 'Enviando...' : (<><Send size={16} strokeWidth={3} /> Enviar</>)}
+                  </button>
+                </div>
+              </form>
+            )}
           </motion.div>
         </motion.div>
       )}

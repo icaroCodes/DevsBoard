@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
 import supabase from '../database/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import config from '../config/index.js';
 
 const router = Router();
 
@@ -187,17 +189,18 @@ router.delete('/:id', async (req, res) => {
 
 
 
-router.post('/:id/invite', [
-  body('email').trim().isEmail().withMessage('Email inválido').normalizeEmail(),
-], async (req, res) => {
+// Phase 4: invite by username, user_id or email. Username is the
+// preferred form because it's stable and unique; email is kept as a
+// fallback for users who haven't picked a username yet (legacy accounts
+// pre-Phase 2).
+router.post('/:id/invite', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
     const { id } = req.params;
-    const { email } = req.body;
+    const { username, user_id, email } = req.body || {};
+    if (!username && !user_id && !email) {
+      return res.status(400).json({ error: 'Forneça username, user_id ou email' });
+    }
 
-    
     const { data: membership } = await supabase
       .from('team_members')
       .select('role')
@@ -213,73 +216,89 @@ router.post('/:id/invite', [
       return res.status(403).json({ error: 'Apenas administradores podem convidar membros' });
     }
 
-    const { data: selfUser } = await supabase
-      .from('users')
-      .select('email')
-      .eq('id', req.userId)
-      .single();
+    // Resolve the invited user. Order: user_id (most specific) → username
+    // → email. We *do not* fall back from one to the next within a single
+    // request; the caller picks the mode.
+    let invitedUser = null;
 
-    if (selfUser?.email === email) {
+    if (user_id) {
+      const { data } = await supabase
+        .from('users')
+        .select('id, name, email, username, avatar_url')
+        .eq('id', user_id)
+        .maybeSingle();
+      invitedUser = data || null;
+    } else if (username) {
+      const cleaned = String(username).trim().replace(/^@/, '').toLowerCase();
+      const { data } = await supabase
+        .from('users')
+        .select('id, name, email, username, avatar_url')
+        .ilike('username', cleaned)
+        .maybeSingle();
+      invitedUser = data || null;
+      if (!invitedUser) {
+        return res.status(404).json({ error: 'username_not_found' });
+      }
+    } else {
+      // Legacy email path. Ranks duplicates by provider to be deterministic
+      // (local > google > github), same logic as before.
+      const lowered = String(email).trim().toLowerCase();
+      const { data: invitedCandidates } = await supabase
+        .from('users')
+        .select('id, name, email, username, avatar_url, provider, created_at')
+        .ilike('email', lowered);
+
+      invitedUser = (invitedCandidates || []).sort((a, b) => {
+        const score = (p) => (p === 'local' ? 0 : p === 'google' ? 1 : 2);
+        return score(a.provider) - score(b.provider);
+      })[0] || null;
+
+      if (!invitedUser) {
+        return res.status(404).json({ error: 'Nenhum usuário encontrado com este email' });
+      }
+    }
+
+    if (invitedUser.id === req.userId) {
       return res.status(400).json({ error: 'Você não pode convidar a si mesmo' });
     }
 
-    const { data: invitedCandidates } = await supabase
-      .from('users')
-      .select('id, name, email, provider, created_at')
-      .eq('email', email)
-      .order('provider', { ascending: true })
-      .order('created_at', { ascending: true });
-
-    const invitedUser = (invitedCandidates || []).sort((a, b) => {
-      const score = (p) => (p === 'local' ? 0 : p === 'google' ? 1 : 2);
-      return score(a.provider) - score(b.provider);
-    })[0];
-
-    if (!invitedUser) {
-      return res.status(404).json({ error: 'Nenhum usuário encontrado com este email' });
-    }
-
-    
     const { data: existingMember } = await supabase
       .from('team_members')
       .select('id')
       .eq('team_id', id)
       .eq('user_id', invitedUser.id)
-      .single();
+      .maybeSingle();
 
     if (existingMember) {
       return res.status(400).json({ error: 'Este usuário já é membro do time' });
     }
 
-    
     const { data: existingInvite } = await supabase
       .from('team_invitations')
       .select('id, status')
       .eq('team_id', id)
-      .eq('invited_email', email)
+      .eq('invited_user_id', invitedUser.id)
       .eq('status', 'pending')
-      .single();
+      .maybeSingle();
 
     if (existingInvite) {
-      return res.status(400).json({ error: 'Já existe um convite pendente para este email' });
+      return res.status(400).json({ error: 'Já existe um convite pendente para este usuário' });
     }
 
-    
     const { data: invitation, error: invErr } = await supabase
       .from('team_invitations')
       .insert({
         team_id: id,
         invited_by: req.userId,
-        invited_email: email,
+        invited_email: invitedUser.email,
         invited_user_id: invitedUser.id,
-        status: 'pending'
+        status: 'pending',
       })
       .select('*')
       .single();
 
     if (invErr) throw invErr;
 
-    
     const { data: team } = await supabase
       .from('teams')
       .select('name, type')
@@ -288,7 +307,7 @@ router.post('/:id/invite', [
 
     const { data: inviter } = await supabase
       .from('users')
-      .select('name, email, avatar_url')
+      .select('name, email, avatar_url, username')
       .eq('id', req.userId)
       .single();
 
@@ -296,11 +315,110 @@ router.post('/:id/invite', [
       ...invitation,
       team,
       invited_by_user: inviter,
-      invited_user: invitedUser
+      invited_user: invitedUser,
     });
   } catch (err) {
     console.error('Erro ao enviar convite:', err);
     res.status(500).json({ error: 'Erro ao enviar convite' });
+  }
+});
+
+// Phase 4: invite-by-link. Admin generates a signed token; anyone with
+// the link can join by hitting POST /teams/invitations/accept-link
+// authenticated. Token is a JWT signed with the same access secret —
+// no DB row, so it's not revocable. 7-day TTL.
+router.post('/:id/invitations/links', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const role = req.body?.role && ['admin', 'member'].includes(req.body.role)
+      ? req.body.role
+      : 'member';
+
+    const { data: membership } = await supabase
+      .from('team_members')
+      .select('role')
+      .eq('team_id', id)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (!membership) return res.status(403).json({ error: 'Você não é membro deste time' });
+    if (!['owner', 'admin'].includes(membership.role)) {
+      return res.status(403).json({ error: 'Apenas administradores podem gerar links' });
+    }
+
+    // Don't let admins generate "owner" links — only one owner per team,
+    // and ownership transfer should be explicit, not via a stale link.
+    const token = jwt.sign(
+      { purpose: 'team_invite', team_id: id, role, invited_by: req.userId },
+      config.jwt.accessSecret,
+      { expiresIn: '7d' }
+    );
+
+    const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.status(201).json({
+      token,
+      url: `${frontend}/invite/${token}`,
+      expires_in_days: 7,
+      role,
+    });
+  } catch (err) {
+    console.error('Erro ao gerar link de convite:', err);
+    res.status(500).json({ error: 'Erro ao gerar link' });
+  }
+});
+
+// Authenticated. Trade an invite token for a team_members row. The token's
+// JWT signature proves it came from us; we still re-check membership and
+// team existence in case the team was deleted after the link was issued.
+router.post('/invitations/accept-link', async (req, res) => {
+  try {
+    const { token } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'token_missing' });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, config.jwt.accessSecret);
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(400).json({ error: 'invite_link_expired' });
+      }
+      return res.status(400).json({ error: 'invite_link_invalid' });
+    }
+
+    if (decoded.purpose !== 'team_invite' || !decoded.team_id) {
+      return res.status(400).json({ error: 'invite_link_invalid' });
+    }
+
+    const { data: team } = await supabase
+      .from('teams')
+      .select('id, name, type')
+      .eq('id', decoded.team_id)
+      .maybeSingle();
+    if (!team) return res.status(410).json({ error: 'team_not_found' });
+
+    const { data: existing } = await supabase
+      .from('team_members')
+      .select('id, role')
+      .eq('team_id', team.id)
+      .eq('user_id', req.userId)
+      .maybeSingle();
+
+    if (existing) {
+      // Idempotent: already a member, just acknowledge.
+      return res.json({ already_member: true, team });
+    }
+
+    const role = ['admin', 'member'].includes(decoded.role) ? decoded.role : 'member';
+
+    const { error: memberErr } = await supabase
+      .from('team_members')
+      .insert({ team_id: team.id, user_id: req.userId, role });
+    if (memberErr) throw memberErr;
+
+    res.status(201).json({ already_member: false, team, role });
+  } catch (err) {
+    console.error('Erro ao aceitar link:', err);
+    res.status(500).json({ error: 'Erro ao aceitar convite' });
   }
 });
 

@@ -14,6 +14,7 @@ import { useConfirm } from '../../contexts/ConfirmModalContext';
 import { useTranslation } from '../../utils/translations';
 import { useTheme, THEMES } from '../../contexts/ThemeContext';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
+import { processAvatar } from '../../lib/imageProcessing';
 
 export default function SettingsMobile() {
   const [form, setForm] = useState({ name: '' });
@@ -239,12 +240,28 @@ export default function SettingsMobile() {
                     <Camera size={24} className="text-white" />
                   </div>
                 </div>
-                <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={(e) => {
+                <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => { setAvatarBase64(reader.result); setAvatarUrl(reader.result); };
-                    reader.readAsDataURL(file);
+                  if (!file) return;
+                  // Cap pre-conversion: iPhone HEIC photos are large but
+                  // we always re-encode to compressed JPEG before sending.
+                  if (file.size > 12 * 1024 * 1024) {
+                    error('Imagem muito grande (máx 12MB).');
+                    e.target.value = '';
+                    return;
+                  }
+                  try {
+                    const dataUrl = await processAvatar(file);
+                    setAvatarBase64(dataUrl);
+                    setAvatarUrl(dataUrl);
+                  } catch (err) {
+                    error(
+                      err.message === 'unsupported_image_format'
+                        ? 'Formato de imagem não suportado neste navegador. Tente JPG ou PNG.'
+                        : 'Não foi possível processar a imagem.'
+                    );
+                  } finally {
+                    e.target.value = '';
                   }
                 }} />
             </div>

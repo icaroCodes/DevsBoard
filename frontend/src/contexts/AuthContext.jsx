@@ -157,6 +157,24 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  // Phase 3: confirms an OAuth merge. The OAuth callback bounced the user
+  // here with `?merge_code=…` because the email matched an existing
+  // account; this trades that code for a real session on the existing user.
+  const confirmOAuthMerge = async (mergeCode) => {
+    const data = await api('/auth/oauth/merge', {
+      method: 'POST',
+      body: JSON.stringify({ merge_code: mergeCode }),
+    });
+    if (data.token) localStorage.setItem('token', data.token);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    if (data.supabaseToken) applyRealtimeAuth(data.supabaseToken);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    if (data.user?.name) localStorage.setItem('_userName', data.user.name);
+    setUser(data.user);
+    setActiveTeam(null);
+    return data;
+  };
+
   const switchAccount = () => {
     logout();
     window.location.href = '/auth';
@@ -207,6 +225,7 @@ export function AuthProvider({ children }) {
       login,
       register,
       bootstrapSession,
+      confirmOAuthMerge,
       switchAccount,
       switchTeam,
       logout,

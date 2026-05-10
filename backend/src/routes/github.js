@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import supabase from '../database/connection.js';
 import config from '../config/index.js';
+import { resolveOAuthLogin } from '../utils/oauth.js';
 
 const router = Router();
 
@@ -74,44 +74,27 @@ router.get('/callback', async (req, res) => {
     const name = githubUser.name || githubUser.login;
     const avatar_url = githubUser.avatar_url || null;
 
-    let { data: user } = await supabase
-      .from('users')
-      .select('id, name, email, avatar_url')
-      .eq('email', email)
-      .eq('provider', 'github')
-      .maybeSingle();
+    const result = await resolveOAuthLogin({
+      provider: 'github',
+      providerId: githubUser.id,
+      email,
+      name,
+      avatarUrl: avatar_url,
+    });
 
-    if (!user) {
-      const auth_id = crypto.randomUUID();
-      const { data: newUser, error } = await supabase
-        .from('users')
-        .insert({
-          name,
-          email,
-          password_hash: `github:${githubUser.id}`,
-          avatar_url,
-          provider: 'github',
-          provider_id: String(githubUser.id),
-          auth_id,
-        })
-        .select('id, name, email, avatar_url')
-        .single();
-      if (error) {
-        console.error('[GitHub Auth] Erro ao criar usuário:', error);
-        return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
-      }
-      user = newUser;
-    } else if (!user.avatar_url && avatar_url) {
-      await supabase.from('users').update({ avatar_url }).eq('id', user.id);
-      user.avatar_url = avatar_url;
+    if (result.kind === 'merge_required') {
+      return res.redirect(
+        `${FRONTEND_URL}/auth?merge_code=${encodeURIComponent(result.mergeCode)}` +
+          `&merge_provider=github&merge_email=${encodeURIComponent(result.suggestedEmail)}`
+      );
     }
 
-
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const userId = result.userId;
+    const { accessToken, refreshToken } = generateTokens(userId);
     setAuthCookies(res, { accessToken, refreshToken });
 
     const exchangeCode = jwt.sign(
-      { userId: user.id, purpose: 'oauth_exchange' },
+      { userId, purpose: 'oauth_exchange' },
       config.jwt.accessSecret,
       { expiresIn: '60s' }
     );

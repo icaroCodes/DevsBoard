@@ -19,6 +19,8 @@ import taskCardsRoutes from './routes/task-cards.js';
 import teamsRoutes from './routes/teams.js';
 import achievementsRoutes from './routes/achievements.js';
 import sessionsRoutes from './routes/sessions.js';
+import publicRoutes from './routes/public.js';
+import profilesRoutes from './routes/profiles.js';
 import { interceptMembers } from './middleware/interceptMembers.js';
 import { authenticate, checksOwnership } from './middleware/auth.js';
 import { securityHeaders, apiRateLimiter } from './middleware/security.js';
@@ -45,6 +47,7 @@ app.use(apiRateLimiter);
 app.use('/auth', authRoutes);
 app.use('/auth/github', githubRoutes);
 app.use('/auth/google', googleRoutes);
+app.use('/public', publicRoutes);
 
 
 app.use(authenticate);
@@ -64,6 +67,7 @@ app.use('/routines', interceptMembers('routines'), routinesRoutes);
 app.use('/goals', interceptMembers('goals'), goalsRoutes);
 app.use('/projects', interceptMembers('projects'), projectsRoutes);
 app.use('/settings', settingsRoutes);
+app.use('/profiles', profilesRoutes);
 app.use('/task-boards', interceptMembers('task_boards'), taskBoardsRoutes);
 app.use('/task-lists', interceptMembers('task_lists'), taskListsRoutes);
 app.use('/task-cards', interceptMembers('task_cards'), taskCardsRoutes);

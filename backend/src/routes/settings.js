@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url')
+      .select('id, name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url, username, display_name, bio, social_links, is_public, last_username_change_at')
       .eq('id', req.userId)
       .single();
     if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -36,6 +36,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       ...data,
+      needs_onboarding: !data.username,
       current_streak: streakRow?.current_streak || 0,
       longest_streak: streakRow?.longest_streak || 0,
       last_access_date: streakRow?.last_access_date || null,
@@ -85,15 +86,33 @@ router.put('/', [
     
     if (avatar_base64) {
       try {
+        // Parse the data URL prefix (`data:image/jpeg;base64,...`) and only
+        // accept formats every browser can actually render. iPhone HEICs
+        // used to slip through and get stored as image/heic — fine on
+        // Safari, broken everywhere else. The frontend re-encodes to JPEG,
+        // so reaching this branch with a bad mime means an old client.
+        const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+        const header = avatar_base64.split(',')[0] || '';
+        const mimeMatch = header.match(/^data:([^;]+)/);
+        const mimeType = mimeMatch ? mimeMatch[1].toLowerCase() : null;
+
+        if (!mimeType || !ALLOWED_MIMES.has(mimeType)) {
+          return res.status(400).json({
+            error: 'unsupported_image_format',
+            message:
+              'Formato de imagem não suportado. Use JPG, PNG ou WebP. (HEIC do iPhone não é aceito; converta antes.)',
+          });
+        }
+
         const buffer = Buffer.from(avatar_base64.split(',')[1], 'base64');
-        const fileExt = avatar_base64.split(';')[0].split('/')[1];
+        const fileExt = mimeType.split('/')[1];
         const fileName = `${req.userId}-${Date.now()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, buffer, {
-            contentType: `image/${fileExt}`,
+            contentType: mimeType,
             upsert: true
           });
 

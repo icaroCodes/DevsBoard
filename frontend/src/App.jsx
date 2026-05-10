@@ -17,6 +17,9 @@ import Settings from './pages/Settings';
 import Achievements from './pages/Achievements';
 import Leaderboard from './pages/Leaderboard';
 import NotFound from './pages/NotFound';
+import PublicProfile from './pages/PublicProfile';
+import InviteLink from './pages/InviteLink';
+import Onboarding from './components/Onboarding';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmModalContext';
 import { RealtimeProvider } from './contexts/RealtimeContext';
@@ -27,7 +30,18 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   // Render otimisticamente se já temos user hidratado do localStorage —
   // evita ficar travado no skeleton se o /settings estiver lento.
-  if (user) return <Layout>{children}</Layout>;
+  if (user) {
+    // Onboarding gate: usuários sem username não conseguem usar o app
+    // até escolherem um (Phase 2). O /settings popula needs_onboarding;
+    // até esse fetch responder, deixamos o app renderizar normalmente
+    // (cache do localStorage não tem o campo).
+    return (
+      <>
+        <Layout>{children}</Layout>
+        {user.needs_onboarding === true && <Onboarding />}
+      </>
+    );
+  }
   if (loading) return <LoadingSkeleton />;
   return <Navigate to="/auth" replace />;
 }
@@ -90,6 +104,8 @@ export default function App() {
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
                     <Route path="/achievements/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                    <Route path="/invite/:token" element={<InviteLink />} />
+                    <Route path="/:atUsername" element={<PublicProfile />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </RealtimeProvider>

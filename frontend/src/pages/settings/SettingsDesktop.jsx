@@ -14,6 +14,7 @@ import { useConfirm } from '../../contexts/ConfirmModalContext';
 import { useTranslation } from '../../utils/translations';
 import { useTheme, THEMES } from '../../contexts/ThemeContext';
 import LoadingSkeleton from '../../components/LoadingSkeleton';
+import { processAvatar } from '../../lib/imageProcessing';
 
 export default function Settings() {
   const [form, setForm] = useState({ name: '' });
@@ -80,17 +81,28 @@ export default function Settings() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) return error(t.settingsImgMax);
+    // Pre-conversion size cap: iPhone HEICs can be 5–8 MB on disk and we
+    // need to read the whole file before canvas can downscale it. 12 MB is
+    // generous; the canvas output will be well under 200 KB.
+    if (file.size > 12 * 1024 * 1024) return error(t.settingsImgMax);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarBase64(reader.result);
-      setAvatarUrl(reader.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await processAvatar(file);
+      setAvatarBase64(dataUrl);
+      setAvatarUrl(dataUrl);
+    } catch (err) {
+      // unsupported_image_format = HEIC opened on Chrome desktop, etc.
+      const msg = err.message === 'unsupported_image_format'
+        ? 'Formato de imagem não suportado neste navegador. Tente JPG ou PNG.'
+        : 'Não foi possível processar a imagem.';
+      error(msg);
+    } finally {
+      // Allow selecting the same file again (e.g. after fixing format).
+      e.target.value = '';
+    }
   };
 
   const handleSubmit = async (e) => {

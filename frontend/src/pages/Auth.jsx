@@ -169,7 +169,13 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(null);
-  const { user, login, register, bootstrapSession } = useAuth();
+  // Phase 3: when the OAuth callback detects an email collision it bounces
+  // back with ?merge_code=…&merge_provider=…&merge_email=…. We capture that
+  // up-front so the rest of the page knows to render the confirmation card
+  // instead of the regular login form.
+  const [mergeIntent, setMergeIntent] = useState(null);
+  const [mergeSubmitting, setMergeSubmitting] = useState(false);
+  const { user, login, register, bootstrapSession, confirmOAuthMerge } = useAuth();
   const navigate = useNavigate();
 
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'pt');
@@ -178,13 +184,34 @@ export default function Auth() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
+    // Merge intent has higher priority than the regular OAuth code: if the
+    // backend issued a merge_code it expects us to render the confirmation
+    // UI before completing any login.
+    const mergeCode = params.get('merge_code');
+    if (mergeCode) {
+      setMergeIntent({
+        code: mergeCode,
+        provider: params.get('merge_provider') || 'oauth',
+        email: params.get('merge_email') || '',
+      });
+      window.history.replaceState({}, '', '/auth');
+      return;
+    }
+
     const oauthCode = params.get('code');
     if (oauthCode || params.get('success') === 'true') {
       setOauthLoading('finalizing');
       bootstrapSession(oauthCode || undefined)
         .then(() => {
           window.history.replaceState({}, '', '/auth');
-          navigate('/dashboard');
+          // Pending invite (Phase 4) takes priority over /dashboard.
+          const pending = sessionStorage.getItem('devsboard:pendingInvite');
+          if (pending) {
+            sessionStorage.removeItem('devsboard:pendingInvite');
+            navigate(`/invite/${pending}`);
+          } else {
+            navigate('/dashboard');
+          }
         })
         .catch((err) => {
           console.error('[OAuth bootstrap]', err);
@@ -202,9 +229,86 @@ export default function Auth() {
 
   }, []);
 
+  const handleMergeConfirm = async () => {
+    if (!mergeIntent || mergeSubmitting) return;
+    setMergeSubmitting(true);
+    setError('');
+    try {
+      await confirmOAuthMerge(mergeIntent.code);
+      navigate('/dashboard');
+    } catch (err) {
+      const msg = err.message || '';
+      const friendly =
+        msg === 'merge_code_expired'
+          ? 'O pedido expirou. Tente fazer login com o provider de novo.'
+          : msg === 'identity_owned_by_other'
+          ? 'Esta conta do provider já está conectada a outro usuário.'
+          : msg === 'merge_target_missing'
+          ? 'A conta original não existe mais.'
+          : 'Não foi possível conectar as contas.';
+      setError(friendly);
+      setMergeSubmitting(false);
+    }
+  };
+
+  const handleMergeCancel = () => {
+    setMergeIntent(null);
+    setError('');
+  };
+
   useEffect(() => {
-    if (user) navigate('/dashboard');
+    if (!user) return;
+    const pending = sessionStorage.getItem('devsboard:pendingInvite');
+    if (pending) {
+      sessionStorage.removeItem('devsboard:pendingInvite');
+      navigate(`/invite/${pending}`);
+    } else {
+      navigate('/dashboard');
+    }
   }, [user, navigate]);
+
+  // Phase 3 fix: when the backend says the email already belongs to a
+  // different login method, translate the bare code into a sentence that
+  // tells the user *which* method to use. Without this they'd see the raw
+  // string "email_in_use" / "use_oauth", which is useless.
+  const providerLabel = (p) => (p === 'google' ? 'Google' : p === 'github' ? 'GitHub' : null);
+  const friendlyAuthError = (err) => {
+    const code = err?.message;
+    const provider = err?.existing_provider;
+    const label = providerLabel(provider);
+    if (code === 'email_in_use') {
+      if (provider === 'local') {
+        return lang === 'pt'
+          ? 'Este e-mail já está cadastrado. Faça login.'
+          : 'This email is already registered. Sign in instead.';
+      }
+      if (label) {
+        return lang === 'pt'
+          ? `Este e-mail já está conectado ao ${label}. Faça login com ${label} em vez de criar uma nova conta.`
+          : `This email is already linked to ${label}. Sign in with ${label} instead of creating a new account.`;
+      }
+    }
+    if (code === 'use_oauth' && label) {
+      return lang === 'pt'
+        ? `Esta conta usa ${label}. Clique em "Continuar com ${label}".`
+        : `This account uses ${label}. Click "Continue with ${label}".`;
+    }
+    return err?.message || t.errAuth;
+  };
+
+  // Phase 4: if the user landed on /auth from an invite link, send them
+  // back to /invite/:token after sign-in so they can accept the invite.
+  // The InviteLink page stashes the token in sessionStorage on the
+  // "Faça login" click; we read it here.
+  const consumePendingInvite = () => {
+    const pending = sessionStorage.getItem('devsboard:pendingInvite');
+    if (pending) {
+      sessionStorage.removeItem('devsboard:pendingInvite');
+      navigate(`/invite/${pending}`);
+      return true;
+    }
+    return false;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -217,9 +321,9 @@ export default function Auth() {
         if (!name.trim()) { setLoading(false); return setError(t.nameObj); }
         await register(name, email, password);
       }
-      navigate('/dashboard');
+      if (!consumePendingInvite()) navigate('/dashboard');
     } catch (err) {
-      setError(err.message || t.errAuth);
+      setError(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -270,12 +374,88 @@ export default function Auth() {
         <div style={s.logoSection}>
           <img src="/devsboard.png" alt="DevsBoard" style={s.logoImg} />
           <h1 style={s.brandTitle}>
-            {isLogin ? t.loginHead : t.registerHead}{' '}
+            {mergeIntent
+              ? (lang === 'pt' ? 'Conectar conta no' : 'Link account on')
+              : isLogin ? t.loginHead : t.registerHead}{' '}
             <span style={s.brandAccent}>DevsBoard</span>
           </h1>
-          <p style={s.brandSub}>{isLogin ? t.loginSub : t.registerSub}</p>
+          <p style={s.brandSub}>
+            {mergeIntent
+              ? (lang === 'pt'
+                  ? 'Já existe uma conta com este e-mail. Quer conectar?'
+                  : 'An account with this email already exists. Link them?')
+              : isLogin ? t.loginSub : t.registerSub}
+          </p>
         </div>
 
+        {mergeIntent && (
+          <div style={s.mergeCard}>
+            <div style={s.mergeRow}>
+              <span style={s.mergeLabel}>{lang === 'pt' ? 'E-mail' : 'Email'}</span>
+              <span style={s.mergeValue}>{mergeIntent.email}</span>
+            </div>
+            <div style={s.mergeRow}>
+              <span style={s.mergeLabel}>{lang === 'pt' ? 'Provedor' : 'Provider'}</span>
+              <span style={{ ...s.mergeValue, display: 'flex', alignItems: 'center', gap: 6 }}>
+                {mergeIntent.provider === 'github' ? <IconGithub /> : <IconGoogle />}
+                {mergeIntent.provider === 'github' ? 'GitHub' : 'Google'}
+              </span>
+            </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  key="merge-err"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div style={s.error}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button
+              type="button"
+              onClick={handleMergeConfirm}
+              disabled={mergeSubmitting}
+              style={{ ...s.btnPrimary, opacity: mergeSubmitting ? 0.7 : 1, cursor: mergeSubmitting ? 'wait' : 'pointer' }}
+            >
+              {mergeSubmitting && (
+                <span style={s.spinner} aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                </span>
+              )}
+              {mergeSubmitting
+                ? (lang === 'pt' ? 'Conectando…' : 'Linking…')
+                : (lang === 'pt' ? 'Conectar contas' : 'Link accounts')}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleMergeCancel}
+              disabled={mergeSubmitting}
+              className="auth-switch"
+              style={{ ...s.switchBtn, marginTop: 12, alignSelf: 'center', background: 'transparent', border: 'none' }}
+            >
+              {lang === 'pt' ? 'Cancelar' : 'Cancel'}
+            </button>
+          </div>
+        )}
+
+{!mergeIntent && (
+        <>
         <form onSubmit={handleSubmit} noValidate style={s.form}>
           <AnimatePresence initial={false}>
             {!isLogin && (
@@ -419,6 +599,8 @@ export default function Auth() {
             {isLogin ? t.btnSwToReg : t.btnSwToLog}
           </button>
         </p>
+        </>
+        )}
 
         <div style={s.langRow}>
           <div style={s.langToggle} role="tablist" aria-label="Idioma">
@@ -529,6 +711,36 @@ const s = {
     flexDirection: 'column',
     gap: 10,
     marginBottom: 20,
+  },
+
+  mergeCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    padding: 16,
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  mergeRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    fontSize: 13,
+  },
+  mergeLabel: {
+    color: '#777',
+    fontWeight: 500,
+  },
+  mergeValue: {
+    color: '#ececec',
+    fontWeight: 500,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: '60%',
   },
 
   eyeBtn: {

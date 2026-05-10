@@ -31,7 +31,9 @@ export async function api(endpoint, options = {}, isRetry = false) {
     const isAuthRoute = endpoint.includes('/auth/login') || endpoint.includes('/auth/register');
     if (isAuthRoute) {
       const errorMsg = errorData?.error || (errorData?.errors?.[0]?.message) || 'Credenciais inválidas';
-      throw new Error(errorMsg);
+      const e = new Error(errorMsg);
+      if (errorData && typeof errorData === 'object') Object.assign(e, errorData);
+      throw e;
     }
 
     if (errorData?.error === 'TOKEN_EXPIRED') {
@@ -84,7 +86,9 @@ export async function api(endpoint, options = {}, isRetry = false) {
 
   if (!res.ok) {
     const errorMsg = data?.error || (data?.errors && (data.errors[0]?.message || data.errors[0]?.msg)) || 'Erro na requisição';
-    throw new Error(errorMsg);
+    const e = new Error(errorMsg);
+    if (data && typeof data === 'object') Object.assign(e, data);
+    throw e;
   }
 
   

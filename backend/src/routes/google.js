@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import supabase from '../database/connection.js';
 import config from '../config/index.js';
+import { resolveOAuthLogin } from '../utils/oauth.js';
 
 const router = Router();
 
@@ -83,43 +83,31 @@ router.get('/callback', async (req, res) => {
     const name = profile.name || profile.given_name || email.split('@')[0];
     const avatar_url = profile.picture || null;
 
-    let { data: user } = await supabase
-      .from('users')
-      .select('id, name, email, avatar_url')
-      .eq('email', email)
-      .eq('provider', 'google')
-      .maybeSingle();
+    const result = await resolveOAuthLogin({
+      provider: 'google',
+      providerId: profile.sub,
+      email,
+      name,
+      avatarUrl: avatar_url,
+    });
 
-    if (!user) {
-      const auth_id = crypto.randomUUID();
-      const { data: newUser, error } = await supabase
-        .from('users')
-        .insert({
-          name,
-          email,
-          password_hash: `google:${profile.sub}`,
-          avatar_url,
-          auth_id,
-          provider: 'google',
-          provider_id: String(profile.sub),
-        })
-        .select('id, name, email, avatar_url')
-        .single();
-      if (error) {
-        console.error('[Google Auth] Erro ao criar usuário:', error);
-        return res.redirect(`${FRONTEND_URL}/auth?error=erro_banco`);
-      }
-      user = newUser;
-    } else if (!user.avatar_url && avatar_url) {
-      await supabase.from('users').update({ avatar_url }).eq('id', user.id);
-      user.avatar_url = avatar_url;
+    if (result.kind === 'merge_required') {
+      // Email already belongs to a different account. Bounce to the
+      // frontend with a merge_code so the user can confirm linking.
+      return res.redirect(
+        `${FRONTEND_URL}/auth?merge_code=${encodeURIComponent(result.mergeCode)}` +
+          `&merge_provider=google&merge_email=${encodeURIComponent(result.suggestedEmail)}`
+      );
     }
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    // result.kind === 'login' or 'created' — both fall through to a normal
+    // exchange-code redirect.
+    const userId = result.userId;
+    const { accessToken, refreshToken } = generateTokens(userId);
     setAuthCookies(res, { accessToken, refreshToken });
 
     const exchangeCode = jwt.sign(
-      { userId: user.id, purpose: 'oauth_exchange' },
+      { userId, purpose: 'oauth_exchange' },
       config.jwt.accessSecret,
       { expiresIn: '60s' }
     );
