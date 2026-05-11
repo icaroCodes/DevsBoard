@@ -11,10 +11,10 @@ router.get('/', async (req, res) => {
     
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url, username, display_name, bio, social_links, is_public, last_username_change_at')
+      .select('id, display_name as name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url, username, display_name, bio, social_links, is_public, last_username_change_at')
       .eq('id', req.userId)
       .single();
-    if (error || !data) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (error || !data) return res.status(404).json({ error: 'Usu├írio n├úo encontrado' });
 
     
     const { data: streakRow } = await supabase
@@ -54,14 +54,14 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro ao carregar configurações' });
+    res.status(500).json({ error: 'Erro ao carregar configura├º├Áes' });
   }
 });
 
 router.put('/', [
-  body('name').optional().trim().notEmpty().withMessage('Nome é obrigatório'),
-  body('avatar_url').optional().isURL().withMessage('Avatar inválido'),
-  body('language').optional().isIn(['pt', 'en']).withMessage('Idioma inválido'),
+  body('name').optional().trim().notEmpty().withMessage('Nome ├® obrigat├│rio'),
+  body('avatar_url').optional().isURL().withMessage('Avatar inv├ílido'),
+  body('language').optional().isIn(['pt', 'en']).withMessage('Idioma inv├ílido'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -74,7 +74,7 @@ router.put('/', [
       audio_name, audio_artist, audio_cover_base64,
     } = req.body;
     const updateData = {};
-    if (name) updateData.name = name;
+    if (name) updateData.display_name = name;
     if (language !== undefined) updateData.language = language;
     if (theme !== undefined) updateData.theme = theme;
     if (wallpaper_opacity !== undefined) updateData.wallpaper_opacity = Math.max(0, Math.min(100, parseInt(wallpaper_opacity) || 15));
@@ -88,7 +88,7 @@ router.put('/', [
       try {
         // Parse the data URL prefix (`data:image/jpeg;base64,...`) and only
         // accept formats every browser can actually render. iPhone HEICs
-        // used to slip through and get stored as image/heic — fine on
+        // used to slip through and get stored as image/heic ÔÇö fine on
         // Safari, broken everywhere else. The frontend re-encodes to JPEG,
         // so reaching this branch with a bad mime means an old client.
         const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -100,7 +100,7 @@ router.put('/', [
           return res.status(400).json({
             error: 'unsupported_image_format',
             message:
-              'Formato de imagem não suportado. Use JPG, PNG ou WebP. (HEIC do iPhone não é aceito; converta antes.)',
+              'Formato de imagem n├úo suportado. Use JPG, PNG ou WebP. (HEIC do iPhone n├úo ├® aceito; converta antes.)',
           });
         }
 
@@ -128,7 +128,7 @@ router.put('/', [
         updateData.avatar_url = publicUrl;
       } catch (err) {
         console.error('Erro ao processar Base64:', err);
-        return res.status(400).json({ error: 'Formato de imagem inválido' });
+        return res.status(400).json({ error: 'Formato de imagem inv├ílido' });
       }
     } else if (avatar_url !== undefined) {
       updateData.avatar_url = avatar_url;
@@ -164,7 +164,7 @@ router.put('/', [
         updateData.wallpaper_type = isVideo ? 'video' : 'image';
       } catch (err) {
         console.error('Erro ao processar wallpaper Base64:', err);
-        return res.status(400).json({ error: 'Formato de arquivo de wallpaper inválido' });
+        return res.status(400).json({ error: 'Formato de arquivo de wallpaper inv├ílido' });
       }
     } else if (wpUrl !== undefined) {
       updateData.wallpaper_url = wpUrl; 
@@ -178,7 +178,7 @@ router.put('/', [
         const buffer = Buffer.from(audio_base64.split(',')[1], 'base64');
         const mimeType = audio_base64.split(';')[0].split(':')[1] || 'audio/mpeg';
         if (!mimeType.startsWith('audio/')) {
-          return res.status(400).json({ error: 'Arquivo precisa ser de áudio' });
+          return res.status(400).json({ error: 'Arquivo precisa ser de ├íudio' });
         }
         const fileExt = (mimeType.split('/')[1] || 'mp3').split(';')[0];
         const fileName = `${req.userId}-${Date.now()}.${fileExt}`;
@@ -190,7 +190,7 @@ router.put('/', [
 
         if (uploadError) {
           console.error('Erro upload audio:', uploadError);
-          return res.status(500).json({ error: 'Erro ao fazer upload do áudio' });
+          return res.status(500).json({ error: 'Erro ao fazer upload do ├íudio' });
         }
 
         const { data: { publicUrl } } = supabase.storage
@@ -200,7 +200,7 @@ router.put('/', [
         updateData.audio_url = publicUrl;
       } catch (err) {
         console.error('Erro ao processar audio Base64:', err);
-        return res.status(400).json({ error: 'Formato de áudio inválido' });
+        return res.status(400).json({ error: 'Formato de ├íudio inv├ílido' });
       }
     } else if (aUrl !== undefined) {
       updateData.audio_url = aUrl; 
@@ -240,7 +240,7 @@ router.put('/', [
       .from('users')
       .update(updateData)
       .eq('id', req.userId)
-      .select('id, name, email, avatar_url, language, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url')
+      .select('id, display_name as name, email, avatar_url, language, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url')
       .single();
 
     if (error) throw error;

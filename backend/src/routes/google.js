@@ -83,26 +83,13 @@ router.get('/callback', async (req, res) => {
     const name = profile.name || profile.given_name || email.split('@')[0];
     const avatar_url = profile.picture || null;
 
-    const result = await resolveOAuthLogin({
+    const { userId } = await resolveOAuthLogin({
       provider: 'google',
       providerId: profile.sub,
       email,
       name,
       avatarUrl: avatar_url,
     });
-
-    if (result.kind === 'merge_required') {
-      // Email already belongs to a different account. Bounce to the
-      // frontend with a merge_code so the user can confirm linking.
-      return res.redirect(
-        `${FRONTEND_URL}/auth?merge_code=${encodeURIComponent(result.mergeCode)}` +
-          `&merge_provider=google&merge_email=${encodeURIComponent(result.suggestedEmail)}`
-      );
-    }
-
-    // result.kind === 'login' or 'created' — both fall through to a normal
-    // exchange-code redirect.
-    const userId = result.userId;
     const { accessToken, refreshToken } = generateTokens(userId);
     setAuthCookies(res, { accessToken, refreshToken });
 

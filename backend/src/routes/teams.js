@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
       const memberIds = members?.map(m => m.user_id) || [];
       const { data: users } = await supabase
         .from('users')
-        .select('id, name, email, avatar_url')
+        .select('id, display_name as name, email, avatar_url')
         .in('id', memberIds);
 
       const membersWithInfo = members?.map(m => ({
@@ -189,16 +189,14 @@ router.delete('/:id', async (req, res) => {
 
 
 
-// Phase 4: invite by username, user_id or email. Username is the
-// preferred form because it's stable and unique; email is kept as a
-// fallback for users who haven't picked a username yet (legacy accounts
-// pre-Phase 2).
+// Phase 4: invite by username or user_id. Username is the
+// preferred form because it's stable and unique.
 router.post('/:id/invite', async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, user_id, email } = req.body || {};
-    if (!username && !user_id && !email) {
-      return res.status(400).json({ error: 'Forneça username, user_id ou email' });
+    const { username, user_id } = req.body || {};
+    if (!username && !user_id) {
+      return res.status(400).json({ error: 'Forneça username ou user_id' });
     }
 
     const { data: membership } = await supabase
@@ -224,7 +222,7 @@ router.post('/:id/invite', async (req, res) => {
     if (user_id) {
       const { data } = await supabase
         .from('users')
-        .select('id, name, email, username, avatar_url')
+        .select('id, display_name as name, email, username, avatar_url')
         .eq('id', user_id)
         .maybeSingle();
       invitedUser = data || null;
@@ -232,29 +230,12 @@ router.post('/:id/invite', async (req, res) => {
       const cleaned = String(username).trim().replace(/^@/, '').toLowerCase();
       const { data } = await supabase
         .from('users')
-        .select('id, name, email, username, avatar_url')
+        .select('id, display_name as name, email, username, avatar_url')
         .ilike('username', cleaned)
         .maybeSingle();
       invitedUser = data || null;
       if (!invitedUser) {
         return res.status(404).json({ error: 'username_not_found' });
-      }
-    } else {
-      // Legacy email path. Ranks duplicates by provider to be deterministic
-      // (local > google > github), same logic as before.
-      const lowered = String(email).trim().toLowerCase();
-      const { data: invitedCandidates } = await supabase
-        .from('users')
-        .select('id, name, email, username, avatar_url, provider, created_at')
-        .ilike('email', lowered);
-
-      invitedUser = (invitedCandidates || []).sort((a, b) => {
-        const score = (p) => (p === 'local' ? 0 : p === 'google' ? 1 : 2);
-        return score(a.provider) - score(b.provider);
-      })[0] || null;
-
-      if (!invitedUser) {
-        return res.status(404).json({ error: 'Nenhum usuário encontrado com este email' });
       }
     }
 
@@ -274,11 +255,10 @@ router.post('/:id/invite', async (req, res) => {
     }
 
     const { data: existingInvite } = await supabase
-      .from('team_invitations')
-      .select('id, status')
+      .from('team_invites')
+      .select('id')
       .eq('team_id', id)
       .eq('invited_user_id', invitedUser.id)
-      .eq('status', 'pending')
       .maybeSingle();
 
     if (existingInvite) {
@@ -286,13 +266,12 @@ router.post('/:id/invite', async (req, res) => {
     }
 
     const { data: invitation, error: invErr } = await supabase
-      .from('team_invitations')
+      .from('team_invites')
       .insert({
         team_id: id,
         invited_by: req.userId,
-        invited_email: invitedUser.email,
+        invited_username: invitedUser.username,
         invited_user_id: invitedUser.id,
-        status: 'pending',
       })
       .select('*')
       .single();
@@ -307,7 +286,7 @@ router.post('/:id/invite', async (req, res) => {
 
     const { data: inviter } = await supabase
       .from('users')
-      .select('name, email, avatar_url, username')
+      .select('display_name as name, email, avatar_url, username')
       .eq('id', req.userId)
       .single();
 
@@ -427,21 +406,10 @@ router.post('/invitations/accept-link', async (req, res) => {
 
 router.get('/invitations/inbox', async (req, res) => {
   try {
-    
-    const { data: user } = await supabase
-      .from('users')
-      .select('email')
-      .eq('id', req.userId)
-      .single();
-
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-
-    
     const { data: invitations, error } = await supabase
-      .from('team_invitations')
+      .from('team_invites')
       .select('*')
-      .or(`invited_email.eq.${user.email},invited_user_id.eq.${req.userId}`)
-      .eq('status', 'pending')
+      .eq('invited_user_id', req.userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -456,7 +424,7 @@ router.get('/invitations/inbox', async (req, res) => {
 
       const { data: inviter } = await supabase
         .from('users')
-        .select('name, email, avatar_url')
+        .select('display_name as name, email, avatar_url')
         .eq('id', inv.invited_by)
         .single();
 
@@ -480,7 +448,7 @@ router.get('/invitations/inbox', async (req, res) => {
 router.get('/invitations/sent', async (req, res) => {
   try {
     const { data: invitations, error } = await supabase
-      .from('team_invitations')
+      .from('team_invites')
       .select('*')
       .eq('invited_by', req.userId)
       .order('created_at', { ascending: false });
@@ -494,17 +462,16 @@ router.get('/invitations/sent', async (req, res) => {
         .eq('id', inv.team_id)
         .single();
 
-      const { data: invitedUserList } = await supabase
+      const { data: invitedUser } = await supabase
         .from('users')
-        .select('name, email, avatar_url')
-        .eq('email', inv.invited_email)
-        .limit(1);
-      const invitedUser = invitedUserList?.[0] || null;
+        .select('display_name as name, email, avatar_url')
+        .eq('id', inv.invited_user_id)
+        .single();
 
       return {
         ...inv,
         team,
-        invited_user: invitedUser
+        invited_user: invitedUser || null
       };
     }));
 
@@ -558,7 +525,7 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
 
     
     const { data: invitation } = await supabase
-      .from('team_invitations')
+      .from('team_invites')
       .select('*')
       .eq('id', invitationId)
       .single();
@@ -567,35 +534,23 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
       return res.status(404).json({ error: 'Convite não encontrado' });
     }
 
-    
-    const { data: user } = await supabase
-      .from('users')
-      .select('email')
-      .eq('id', req.userId)
-      .single();
-
-    if (invitation.invited_user_id !== req.userId && invitation.invited_email !== user?.email) {
+    if (invitation.invited_user_id !== req.userId) {
       return res.status(403).json({ error: 'Este convite não é para você' });
     }
-
-    if (invitation.status !== 'pending') {
-      return res.status(400).json({ error: 'Este convite já foi processado' });
-    }
-
     
-    const { error: updateErr } = await supabase
-      .from('team_invitations')
-      .update({ status: 'accepted', invited_user_id: req.userId })
-      .eq('id', invitationId);
-
-    if (updateErr) throw updateErr;
-
-    
+    // We just insert the member. If successful, delete the invite
     const { error: memberErr } = await supabase
       .from('team_members')
       .insert({ team_id: invitation.team_id, user_id: req.userId, role: 'member' });
 
     if (memberErr) throw memberErr;
+    
+    const { error: updateErr } = await supabase
+      .from('team_invites')
+      .delete()
+      .eq('id', invitationId);
+
+    if (updateErr) throw updateErr;
 
     
     const { data: team } = await supabase
@@ -619,7 +574,7 @@ router.post('/invitations/:invitationId/reject', async (req, res) => {
     const { invitationId } = req.params;
 
     const { data: invitation } = await supabase
-      .from('team_invitations')
+      .from('team_invites')
       .select('*')
       .eq('id', invitationId)
       .single();
@@ -628,23 +583,13 @@ router.post('/invitations/:invitationId/reject', async (req, res) => {
       return res.status(404).json({ error: 'Convite não encontrado' });
     }
 
-    const { data: user } = await supabase
-      .from('users')
-      .select('email')
-      .eq('id', req.userId)
-      .single();
-
-    if (invitation.invited_user_id !== req.userId && invitation.invited_email !== user?.email) {
+    if (invitation.invited_user_id !== req.userId) {
       return res.status(403).json({ error: 'Este convite não é para você' });
     }
 
-    if (invitation.status !== 'pending') {
-      return res.status(400).json({ error: 'Este convite já foi processado' });
-    }
-
     const { error } = await supabase
-      .from('team_invitations')
-      .update({ status: 'rejected' })
+      .from('team_invites')
+      .delete()
       .eq('id', invitationId);
 
     if (error) throw error;

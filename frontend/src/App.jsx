@@ -43,7 +43,7 @@ function ProtectedRoute({ children }) {
     );
   }
   if (loading) return <LoadingSkeleton />;
-  return <Navigate to="/auth" replace />;
+  return <Navigate to="/" replace />;
 }
 
 function PublicRoute({ children }) {

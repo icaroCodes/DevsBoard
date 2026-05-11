@@ -346,7 +346,7 @@ export default function InboxSheet({ open, onClose }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13.5px] font-medium text-[#F5F5F7] truncate">
-                        {inv.invited_email || inv.email || 'Convidado'}
+                        {inv.invited_username || 'Convidado'}
                       </p>
                       <p className="text-[11px] text-[#86868B] truncate">
                         {inv.team?.name || 'Time'} · {inv.status || 'pendente'}

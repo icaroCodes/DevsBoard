@@ -1,8 +1,66 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, CheckCircle2, Users } from 'lucide-react';
+
+const IconGitHub = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+  </svg>
+);
+
+const IconGoogle = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+);
+
+function OAuthLoginDropdown({ visible, onLogin, align = 'right', lang = 'pt' }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.96 }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          className={`absolute top-full mt-2 z-[99999] w-[260px] ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
+          style={{ pointerEvents: 'auto' }}
+        >
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-3 shadow-[0_16px_48px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-xl">
+            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.15em] px-2 mb-2">
+              {lang === 'pt' ? 'Entrar com' : 'Sign in with'}
+            </p>
+            <button
+              onClick={() => onLogin('github')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.12] text-white text-[13px] font-medium transition-all duration-200 mb-1.5 cursor-pointer group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center group-hover:bg-white/[0.1] transition-colors">
+                <IconGitHub />
+              </div>
+              <span>GitHub</span>
+            </button>
+            <button
+              onClick={() => onLogin('google')}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.12] text-white text-[13px] font-medium transition-all duration-200 cursor-pointer group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center group-hover:bg-white/[0.1] transition-colors">
+                <IconGoogle />
+              </div>
+              <span>Google</span>
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 
 const translations = {
@@ -362,6 +420,7 @@ const TeamCollaborationAnimation = () => {
 export default function Landing() {
   const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'pt');
   const t = translations[lang];
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     localStorage.setItem('lang', lang);
@@ -371,7 +430,35 @@ export default function Landing() {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, loginWithOAuth } = useAuth();
+
+  // Login dropdown state
+  const [loginDropdown, setLoginDropdown] = useState(null); // 'enter' | 'create' | null
+  const dropdownTimeoutRef = useRef(null);
+
+  const showDropdown = (id) => {
+    clearTimeout(dropdownTimeoutRef.current);
+    setLoginDropdown(id);
+  };
+  const hideDropdown = () => {
+    dropdownTimeoutRef.current = setTimeout(() => setLoginDropdown(null), 200);
+  };
+
+  // Login error from OAuth redirect
+  const [loginError, setLoginError] = useState(null);
+  useEffect(() => {
+    const err = searchParams.get('login_error');
+    if (err) {
+      setLoginError(
+        err === 'auth_failed'
+          ? (lang === 'pt' ? 'Falha na autenticação. Tente novamente.' : 'Authentication failed. Try again.')
+          : (lang === 'pt' ? 'Erro no login. Tente novamente.' : 'Login error. Try again.')
+      );
+      // Auto-dismiss after 5s
+      const t = setTimeout(() => setLoginError(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams, lang]);
 
   const scrollToSection = (e, id) => {
     e.preventDefault();
@@ -488,22 +575,43 @@ export default function Landing() {
                 </Link>
               ) : (
                 <>
-                  <Link
-                    to="/auth"
-                    className="hidden sm:block px-4 py-2 text-[13px] font-medium text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
+                  <div
+                    className="hidden sm:block relative"
+                    onMouseEnter={() => showDropdown('enter')}
+                    onMouseLeave={hideDropdown}
                   >
-                    {t.navLogin}
-                  </Link>
+                    <button
+                      className="px-4 py-2 text-[13px] font-medium text-zinc-400 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
+                    >
+                      {t.navLogin}
+                    </button>
+                    <OAuthLoginDropdown
+                      visible={loginDropdown === 'enter'}
+                      onLogin={loginWithOAuth}
+                      align="right"
+                      lang={lang}
+                    />
+                  </div>
 
-                  <Link to="/auth">
+                  <div
+                    className="relative"
+                    onMouseEnter={() => showDropdown('create')}
+                    onMouseLeave={hideDropdown}
+                  >
                     <motion.button
                       whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.03)" }}
                       whileTap={{ scale: 0.98 }}
-                      className="relative px-5 py-2 rounded-full border border-white/10 text-zinc-300 text-[13px] font-medium transition-colors hover:border-white/30 hover:text-white whitespace-nowrap"
+                      className="relative px-5 py-2 rounded-full border border-white/10 text-zinc-300 text-[13px] font-medium transition-colors hover:border-white/30 hover:text-white whitespace-nowrap cursor-pointer"
                     >
                       {t.navStart}
                     </motion.button>
-                  </Link>
+                    <OAuthLoginDropdown
+                      visible={loginDropdown === 'create'}
+                      onLogin={loginWithOAuth}
+                      align="right"
+                      lang={lang}
+                    />
+                  </div>
                 </>
               )}
 
@@ -536,13 +644,14 @@ export default function Landing() {
                   {t.bannerText}
                 </p>
               </div>
-              <Link
-                to="/auth"
+              <a
+                href="#features"
+                onClick={(e) => scrollToSection(e, '#features')}
                 className="text-[9.5px] sm:text-[11px] md:text-[12px] font-bold text-[#8E9C78] hover:text-white transition-colors flex items-center gap-1 group whitespace-nowrap"
               >
                 {t.bannerLink}
                 <ArrowRight size={10} className="md:w-3 md:h-3 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              </a>
             </div>
           </motion.div>
         </motion.nav>
@@ -645,13 +754,22 @@ export default function Landing() {
                   </div>
                 </div>
 
-                <Link
-                  to="/auth"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full py-4 sm:py-5 rounded-[1.2rem] bg-white text-black text-[15px] font-bold tracking-[-0.01em] text-center hover:scale-[1.02] transition-transform"
-                >
-                  {t.mobileJourney}
-                </Link>
+                <div className="w-full flex flex-col gap-3">
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); loginWithOAuth('github'); }}
+                    className="w-full py-4 sm:py-5 rounded-[1.2rem] bg-white text-black text-[15px] font-bold tracking-[-0.01em] text-center hover:scale-[1.02] transition-transform flex items-center justify-center gap-3 cursor-pointer"
+                  >
+                    <IconGitHub />
+                    <span>{lang === 'pt' ? 'Entrar com GitHub' : 'Sign in with GitHub'}</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); loginWithOAuth('google'); }}
+                    className="w-full py-4 sm:py-5 rounded-[1.2rem] bg-[#1a1a1a] text-white border border-white/10 text-[15px] font-bold tracking-[-0.01em] text-center hover:scale-[1.02] transition-transform flex items-center justify-center gap-3 cursor-pointer"
+                  >
+                    <IconGoogle />
+                    <span>{lang === 'pt' ? 'Entrar com Google' : 'Sign in with Google'}</span>
+                  </button>
+                </div>
 
                 <div className="flex justify-between items-center w-full px-1 mb-2">
                   <span className="text-zinc-600 font-medium text-[9px] tracking-[0.14em] uppercase">
@@ -667,7 +785,7 @@ export default function Landing() {
         </AnimatePresence>
 
         { }
-        <section className="pt-24 md:pt-40 pb-16 md:pb-20 px-4 sm:px-6 min-h-[90vh] md:min-h-[95vh] flex flex-col items-center justify-center relative overflow-hidden">
+        <section className="pt-24 md:pt-40 pb-16 md:pb-20 px-4 sm:px-6 min-h-[90vh] md:min-h-[95vh] flex flex-col items-center justify-center relative z-[50]">
           { }
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[radial-gradient(circle,_rgba(142,156,120,0.1)_0%,_transparent_70%)] rounded-full pointer-events-none" />
 
@@ -675,7 +793,7 @@ export default function Landing() {
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="max-w-4xl mx-auto text-center relative z-10 motion-gpu"
+            className="max-w-4xl mx-auto text-center relative z-30 motion-gpu"
           >
             <motion.div variants={fadeIn} className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3 py-1.5 sm:py-1 rounded-full bg-white/5 border border-white/10 text-[11px] md:text-xs font-medium text-[#8E9C78] mb-5 md:mb-8 shadow-[0_0_20px_rgba(142,156,120,0.15)] md:shadow-none">
               <Sparkles size={12} />
@@ -695,13 +813,34 @@ export default function Landing() {
             </motion.p>
 
             <motion.div variants={fadeIn} className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full px-4 sm:px-0">
-              <Link
-                to={user ? "/dashboard" : "/auth"}
-                className="group flex items-center justify-center gap-1.5 sm:gap-2 bg-white text-black px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-sm font-medium hover:scale-[1.02] transition-transform whitespace-nowrap"
-              >
-                {user ? t.heroBtnDash : t.heroBtnStart}
-                <ArrowRight className="w-[14px] h-[14px] sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+                {user ? (
+                  <Link
+                    to="/dashboard"
+                    className="group flex items-center justify-center gap-1.5 sm:gap-2 bg-white text-black px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-sm font-medium hover:scale-[1.02] transition-transform whitespace-nowrap"
+                  >
+                    {t.heroBtnDash}
+                    <ArrowRight className="w-[14px] h-[14px] sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                ) : (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => showDropdown('hero')}
+                    onMouseLeave={hideDropdown}
+                  >
+                    <button
+                      className="group flex items-center justify-center gap-1.5 sm:gap-2 bg-white text-black px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-[12px] sm:text-sm font-medium hover:scale-[1.02] transition-transform whitespace-nowrap cursor-pointer"
+                    >
+                      {t.heroBtnStart}
+                      <ArrowRight className="w-[14px] h-[14px] sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <OAuthLoginDropdown
+                      visible={loginDropdown === 'hero'}
+                      onLogin={loginWithOAuth}
+                      align="left"
+                      lang={lang}
+                    />
+                  </div>
+                )}
               <a href="#features" onClick={(e) => scrollToSection(e, '#features')} className="text-[12px] sm:text-sm font-medium text-zinc-400 hover:text-white px-3 sm:px-6 py-2.5 sm:py-3 transition-colors whitespace-nowrap">
                 {t.heroBtnDiscover}
               </a>
@@ -950,10 +1089,10 @@ export default function Landing() {
         </section>
 
         { }
-        <section className="py-20 md:py-32 px-4 sm:px-6">
+        <section className="py-20 md:py-32 px-4 sm:px-6 relative z-[50]">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}
-            className="max-w-5xl mx-auto bg-[#111] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-8 sm:p-12 md:p-24 text-center relative overflow-hidden shadow-[0_0_80px_rgba(142,156,120,0.05)] will-change-transform will-change-opacity"
+            className="max-w-5xl mx-auto bg-[#111] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-8 sm:p-12 md:p-24 text-center relative shadow-[0_0_80px_rgba(142,156,120,0.05)] will-change-transform will-change-opacity"
           >
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] md:w-[80%] md:h-[80%] bg-[radial-gradient(circle,_rgba(142,156,120,0.1)_0%,_transparent_70%)] rounded-[100%] pointer-events-none" />
             <div className="relative z-10 flex flex-col items-center">
@@ -963,14 +1102,24 @@ export default function Landing() {
               <p className="text-zinc-400 text-[13px] sm:text-sm md:text-base font-light mb-8 md:mb-12 max-w-xl leading-relaxed">
                 {t.ctaDesc}
               </p>
-              <Link
-                to="/auth"
-                className="group relative overflow-hidden inline-flex items-center gap-3 bg-[#8E9C78] text-[#0A0A0A] px-8 py-4 rounded-full text-[15px] font-bold hover:scale-[1.02] transition-transform"
+              <div
+                className="relative inline-block"
+                onMouseEnter={() => showDropdown('cta')}
+                onMouseLeave={hideDropdown}
               >
-
-                <span className="relative z-10">{t.ctaBtn}</span>
-                <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform" />
-              </Link>
+                <button
+                  className="group relative overflow-hidden inline-flex items-center gap-3 bg-[#8E9C78] text-[#0A0A0A] px-8 py-4 rounded-full text-[15px] font-bold hover:scale-[1.02] transition-transform cursor-pointer"
+                >
+                  <span className="relative z-10">{t.ctaBtn}</span>
+                  <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <OAuthLoginDropdown
+                  visible={loginDropdown === 'cta'}
+                  onLogin={loginWithOAuth}
+                  align="left"
+                  lang={lang}
+                />
+              </div>
             </div>
           </motion.div>
         </section>
@@ -1026,6 +1175,20 @@ export default function Landing() {
             </div>
           </div>
         </footer>
+
+        {/* Login error toast */}
+        <AnimatePresence>
+          {loginError && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] px-5 py-3 rounded-2xl bg-red-500/15 border border-red-500/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+            >
+              <p className="text-sm text-red-400 font-medium">{loginError}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
   );

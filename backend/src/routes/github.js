@@ -22,10 +22,10 @@ const setAuthCookies = (res, { accessToken, refreshToken }) => {
     httpOnly: true,
     secure: config.cookie.secure,
     sameSite: config.cookie.sameSite,
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
-  
-  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 }); 
+
+  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
   res.cookie('refreshToken', refreshToken, cookieOptions);
 };
 
@@ -74,22 +74,13 @@ router.get('/callback', async (req, res) => {
     const name = githubUser.name || githubUser.login;
     const avatar_url = githubUser.avatar_url || null;
 
-    const result = await resolveOAuthLogin({
+    const { userId } = await resolveOAuthLogin({
       provider: 'github',
       providerId: githubUser.id,
       email,
       name,
       avatarUrl: avatar_url,
     });
-
-    if (result.kind === 'merge_required') {
-      return res.redirect(
-        `${FRONTEND_URL}/auth?merge_code=${encodeURIComponent(result.mergeCode)}` +
-          `&merge_provider=github&merge_email=${encodeURIComponent(result.suggestedEmail)}`
-      );
-    }
-
-    const userId = result.userId;
     const { accessToken, refreshToken } = generateTokens(userId);
     setAuthCookies(res, { accessToken, refreshToken });
 

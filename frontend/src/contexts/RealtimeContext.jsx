@@ -43,7 +43,7 @@ const DATA_TABLES = [
 const TEAM_MGMT_TABLES = [
   'teams',
   'team_members',
-  'team_invitations',
+  'team_invites',
 ];
 
 
@@ -59,7 +59,7 @@ const TABLE_LABELS = {
   projects: 'projetos',
   teams: 'times',
   team_members: 'membros',
-  team_invitations: 'convites',
+  team_invites: 'convites',
 };
 
 
@@ -113,23 +113,23 @@ export function RealtimeProvider({ children }) {
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'team_invitations',
+        table: 'team_invites',
       }, (payload) => {
         if (payload.new?.invited_user_id !== user.id) return;
         console.log('🔔 [GLOBAL] Novo convite recebido:', payload.new?.id);
         success('📩 Você recebeu um novo convite de time!');
         api('/teams/invitations/inbox').then(setNotifications).catch(console.error);
-        dispatcherRef.current('team_invitations', payload);
+        dispatcherRef.current('team_invites', payload);
       })
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'team_invitations',
+        table: 'team_invites',
       }, (payload) => {
         if (payload.new?.invited_user_id !== user.id) return;
         console.log('🔔 [GLOBAL] Convite atualizado:', payload.new?.id, payload.new?.status);
         api('/teams/invitations/inbox').then(setNotifications).catch(console.error);
-        dispatcherRef.current('team_invitations', payload);
+        dispatcherRef.current('team_invites', payload);
       })
       .subscribe((status, err) => {
         console.log(`📡 [GLOBAL] WebSocket: ${status}`, err || '');
@@ -282,14 +282,14 @@ export function RealtimeProvider({ children }) {
     mgmtChannel.on('postgres_changes', {
       event: '*',
       schema: 'public',
-      table: 'team_invitations',
+      table: 'team_invites',
     }, (payload) => {
       const record = payload.new || payload.old;
       if (!record) return;
 
       if (record.invited_by === user.id) {
         console.log('📡 [MGMT] Convite enviado atualizado:', payload.eventType, record.id, record.status);
-        dispatcherRef.current('team_invitations_sent', payload);
+        dispatcherRef.current('team_invites_sent', payload);
         if (payload.eventType === 'UPDATE') {
           dispatcherRef.current('teams', payload);
           dispatcherRef.current('team_members', payload);
@@ -298,7 +298,7 @@ export function RealtimeProvider({ children }) {
 
       if (record.invited_user_id === user.id) {
         console.log('📡 [MGMT] Convite recebido atualizado:', payload.eventType, record.id, record.status);
-        dispatcherRef.current('team_invitations', payload);
+        dispatcherRef.current('team_invites', payload);
         if (payload.eventType === 'UPDATE' && record.status === 'accepted') {
           dispatcherRef.current('teams', payload);
         }

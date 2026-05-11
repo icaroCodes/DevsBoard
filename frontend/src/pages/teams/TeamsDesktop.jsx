@@ -30,7 +30,7 @@ export default function Teams() {
   const [showInviteModal, setShowInviteModal] = useState(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteUsername, setInviteUsername] = useState('');
-  // Phase 4: three invite modes — username (preferred), link (shareable), email (legacy).
+  // Phase 4: two invite modes — username (preferred), link (shareable).
   const [inviteMode, setInviteMode] = useState('username');
   const [generatedInvite, setGeneratedInvite] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -178,13 +178,6 @@ export default function Teams() {
           body: JSON.stringify({ username: cleaned }),
         });
         success(`Convite enviado para @${cleaned}!`);
-      } else {
-        if (!inviteEmail.trim()) return;
-        await api(`/teams/${showInviteModal}/invite`, {
-          method: 'POST',
-          body: JSON.stringify({ email: inviteEmail.trim() }),
-        });
-        success(`Convite enviado para ${inviteEmail}!`);
       }
       closeInviteModal();
       fetchSentInvites();
@@ -408,17 +401,15 @@ export default function Teams() {
               {[
                 { id: 'username', label: 'Username', icon: AtSign },
                 { id: 'link', label: 'Link', icon: Link2 },
-                { id: 'email', label: 'E-mail', icon: Mail },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => { setInviteMode(id); setGeneratedInvite(null); }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 h-10 rounded-[10px] text-[12px] font-bold transition-all ${
-                    inviteMode === id
-                      ? 'bg-white text-black'
-                      : 'text-[#86868B] hover:text-white'
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-1.5 h-10 rounded-[10px] text-[12px] font-bold transition-all ${inviteMode === id
+                    ? 'bg-white text-black'
+                    : 'text-[#86868B] hover:text-white'
+                    }`}
                 >
                   <Icon size={14} strokeWidth={2.5} />
                   {label}
@@ -479,7 +470,7 @@ export default function Teams() {
               </div>
             ) : (
               <form onSubmit={handleInvite} className="space-y-5">
-                {inviteMode === 'username' ? (
+                {inviteMode === 'username' && (
                   <div className="space-y-2">
                     <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">@Username</label>
                     <div className="relative">
@@ -500,25 +491,6 @@ export default function Teams() {
                       Forma preferida — não depende de e-mail e funciona mesmo se a pessoa trocar de provider.
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black text-[#86868B] ml-1 uppercase tracking-[0.2em]">Endereço de E-mail</label>
-                    <div className="relative">
-                      <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#86868B]" />
-                      <input
-                        type="email"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="usuario@email.com"
-                        className="w-full pl-14 pr-6 py-4 rounded-[22px] bg-[#2C2C2E]/50 border border-white/5 text-[16px] font-bold text-white focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:outline-none transition-all placeholder:text-[#86868B]/50"
-                        required
-                        autoFocus
-                      />
-                    </div>
-                    <p className="text-[11px] text-[#86868B] ml-1">
-                      Só funciona se a pessoa já tiver conta com esse e-mail.
-                    </p>
-                  </div>
                 )}
                 <div className="flex gap-4">
                   <button
@@ -530,7 +502,7 @@ export default function Teams() {
                   </button>
                   <button
                     type="submit"
-                    disabled={inviting || (inviteMode === 'username' ? !inviteUsername.trim() : !inviteEmail.trim())}
+                    disabled={inviting || !inviteUsername.trim()}
                     className="flex-1 h-14 rounded-[20px] bg-white text-black text-[14px] font-black hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-white/5"
                   >
                     {inviting ? 'Enviando...' : (<><Send size={16} strokeWidth={3} /> Enviar</>)}
@@ -554,148 +526,148 @@ export default function Teams() {
 
     return (
       <>
-      {inviteModal}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
-        { }
-        <div className="mb-8 px-1">
-          <button
-            onClick={() => { setSelectedTeam(null); setSelectedTeamData(null); }}
-            className="flex items-center gap-2 text-[#86868B] hover:text-white transition-all mb-6 group w-fit"
-          >
-            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-              <ArrowLeft size={16} strokeWidth={3} />
-            </div>
-            <span className="text-[14px] font-bold uppercase tracking-widest">Painel Geral</span>
-          </button>
+        {inviteModal}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto pb-12">
+          { }
+          <div className="mb-8 px-1">
+            <button
+              onClick={() => { setSelectedTeam(null); setSelectedTeamData(null); }}
+              className="flex items-center gap-2 text-[#86868B] hover:text-white transition-all mb-6 group w-fit"
+            >
+              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                <ArrowLeft size={16} strokeWidth={3} />
+              </div>
+              <span className="text-[14px] font-bold uppercase tracking-widest">Painel Geral</span>
+            </button>
 
-          <div className="flex items-center gap-5">
-            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-[28px] flex items-center justify-center relative overflow-hidden ${team.type === 'family'
+            <div className="flex items-center gap-5">
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-[28px] flex items-center justify-center relative overflow-hidden ${team.type === 'family'
                 ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
                 : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
-              }`}>
-              { }
-              <div className={`absolute inset-0 opacity-20 blur-xl ${team.type === 'family' ? 'bg-pink-500' : 'bg-[#0A84FF]'}`} />
-              <div className="relative z-10 scale-125">
-                {team.type === 'family' ? <Heart size={28} /> : <Briefcase size={28} />}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-[28px] sm:text-[36px] font-extrabold text-white tracking-tight leading-none">{team.name}</h1>
-                <div className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${team.type === 'family' ? 'bg-pink-500/20 text-pink-400' : 'bg-[#0A84FF]/20 text-[#0A84FF]'
-                  }`}>
-                  {team.type === 'family' ? 'Família' : 'Time'}
+                }`}>
+                { }
+                <div className={`absolute inset-0 opacity-20 blur-xl ${team.type === 'family' ? 'bg-pink-500' : 'bg-[#0A84FF]'}`} />
+                <div className="relative z-10 scale-125">
+                  {team.type === 'family' ? <Heart size={28} /> : <Briefcase size={28} />}
                 </div>
               </div>
-              <p className="text-[14px] text-[#86868B] font-medium">
-                {team.member_count} {team.member_count === 1 ? 'membro conectado' : 'membros conectados'}
-              </p>
-            </div>
-          </div>
-        </div>
 
-        { }
-        <section className="bg-transparent mb-8">
-          <div className="flex items-center justify-between mb-5 px-1">
-            <h2 className="text-[18px] font-bold text-white tracking-tight flex items-center gap-2">
-              Membros do grupo
-              <span className="text-[14px] text-[#86868B] font-medium">({team.member_count})</span>
-            </h2>
-            {['owner', 'admin'].includes(team.my_role) && (
-              <button
-                onClick={() => setShowInviteModal(team.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-[13px] font-bold hover:scale-105 active:scale-95 transition-all shadow-lg"
-              >
-                <UserPlus size={14} strokeWidth={3} />
-                Convidar
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            {team.members?.map((member) => (
-              <div
-                key={member.user_id}
-                className="flex items-center justify-between p-4 rounded-3xl bg-[#202020] border border-white/[0.03] hover:border-white/[0.1] transition-all group/member"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    {member.user?.avatar_url ? (
-                      <img src={member.user.avatar_url} alt="" className="w-11 h-11 rounded-full border-2 border-white/10 object-cover" />
-                    ) : (
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#3A3A3C] to-[#2C2C2E] flex items-center justify-center border-2 border-white/10">
-                        <span className="text-sm font-black text-zinc-300">{member.user?.name?.[0]?.toUpperCase() || '?'}</span>
-                      </div>
-                    )}
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#202020] flex items-center justify-center border border-white/5">
-                      {getRoleIcon(member.role)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-bold text-white leading-none">{member.user?.name || 'Usuário'}</span>
-                      {member.user_id === user.id && (
-                        <span className="text-[9px] bg-white text-black px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">EU</span>
-                      )}
-                    </div>
-                    <span className="text-[12px] text-[#86868B] font-medium">{member.user?.email}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {['owner', 'admin'].includes(team.my_role) && member.role !== 'owner' && member.user_id !== user.id && (
-                    <select
-                      value={member.role}
-                      onChange={(e) => handleChangeRole(team.id, member.user_id, e.target.value)}
-                      className="bg-[#2C2C2E] border border-white/10 text-white text-[11px] font-bold rounded-lg px-2 py-1 outline-none mr-2 appearance-none cursor-pointer hover:bg-[#3A3A3C] transition-colors"
-                    >
-                      <option value="admin">ADMIN</option>
-                      <option value="member">MEMBRO</option>
-                    </select>
-                  )}
-
-                  {member.user_id === user.id && member.role !== 'owner' && (
-                    <button
-                      onClick={() => handleLeaveTeam(team.id, team.name)}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all active:scale-90"
-                      title="Sair do time"
-                    >
-                      <LogOut size={18} />
-                    </button>
-                  )}
-                  {['owner', 'admin'].includes(team.my_role) && member.user_id !== user.id && member.role !== 'owner' && (
-                    <button
-                      onClick={() => handleRemoveMember(team.id, member.user_id, member.user?.name)}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all active:scale-90"
-                      title="Remover membro"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        { }
-        {team.my_role === 'owner' && (
-          <section className="bg-[#202020] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-6">
-            <div className="flex items-center justify-between p-4 bg-[#FF453A]/5 border border-[#FF453A]/10 rounded-2xl">
               <div>
-                <p className="text-[14px] font-medium text-[#F5F5F7]">Excluir {team.type === 'family' ? 'família' : 'time'}</p>
-                <p className="text-[12px] text-[#86868B] mt-0.5">Ação irreversível. Todos os membros serão removidos.</p>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-[28px] sm:text-[36px] font-extrabold text-white tracking-tight leading-none">{team.name}</h1>
+                  <div className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${team.type === 'family' ? 'bg-pink-500/20 text-pink-400' : 'bg-[#0A84FF]/20 text-[#0A84FF]'
+                    }`}>
+                    {team.type === 'family' ? 'Família' : 'Time'}
+                  </div>
+                </div>
+                <p className="text-[14px] text-[#86868B] font-medium">
+                  {team.member_count} {team.member_count === 1 ? 'membro conectado' : 'membros conectados'}
+                </p>
               </div>
-              <button
-                onClick={() => handleDeleteTeam(team.id, team.name)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF453A] text-white text-[12px] font-bold hover:bg-[#FF3B30] transition-colors"
-              >
-                <Trash2 size={14} /> Excluir
-              </button>
+            </div>
+          </div>
+
+          { }
+          <section className="bg-transparent mb-8">
+            <div className="flex items-center justify-between mb-5 px-1">
+              <h2 className="text-[18px] font-bold text-white tracking-tight flex items-center gap-2">
+                Membros do grupo
+                <span className="text-[14px] text-[#86868B] font-medium">({team.member_count})</span>
+              </h2>
+              {['owner', 'admin'].includes(team.my_role) && (
+                <button
+                  onClick={() => setShowInviteModal(team.id)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-[13px] font-bold hover:scale-105 active:scale-95 transition-all shadow-lg"
+                >
+                  <UserPlus size={14} strokeWidth={3} />
+                  Convidar
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {team.members?.map((member) => (
+                <div
+                  key={member.user_id}
+                  className="flex items-center justify-between p-4 rounded-3xl bg-[#202020] border border-white/[0.03] hover:border-white/[0.1] transition-all group/member"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      {member.user?.avatar_url ? (
+                        <img src={member.user.avatar_url} alt="" className="w-11 h-11 rounded-full border-2 border-white/10 object-cover" />
+                      ) : (
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#3A3A3C] to-[#2C2C2E] flex items-center justify-center border-2 border-white/10">
+                          <span className="text-sm font-black text-zinc-300">{member.user?.name?.[0]?.toUpperCase() || '?'}</span>
+                        </div>
+                      )}
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#202020] flex items-center justify-center border border-white/5">
+                        {getRoleIcon(member.role)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[15px] font-bold text-white leading-none">{member.user?.name || 'Usuário'}</span>
+                        {member.user_id === user.id && (
+                          <span className="text-[9px] bg-white text-black px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">EU</span>
+                        )}
+                      </div>
+                      <span className="text-[12px] text-[#86868B] font-medium">{member.user?.email}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {['owner', 'admin'].includes(team.my_role) && member.role !== 'owner' && member.user_id !== user.id && (
+                      <select
+                        value={member.role}
+                        onChange={(e) => handleChangeRole(team.id, member.user_id, e.target.value)}
+                        className="bg-[#2C2C2E] border border-white/10 text-white text-[11px] font-bold rounded-lg px-2 py-1 outline-none mr-2 appearance-none cursor-pointer hover:bg-[#3A3A3C] transition-colors"
+                      >
+                        <option value="admin">ADMIN</option>
+                        <option value="member">MEMBRO</option>
+                      </select>
+                    )}
+
+                    {member.user_id === user.id && member.role !== 'owner' && (
+                      <button
+                        onClick={() => handleLeaveTeam(team.id, team.name)}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all active:scale-90"
+                        title="Sair do time"
+                      >
+                        <LogOut size={18} />
+                      </button>
+                    )}
+                    {['owner', 'admin'].includes(team.my_role) && member.user_id !== user.id && member.role !== 'owner' && (
+                      <button
+                        onClick={() => handleRemoveMember(team.id, member.user_id, member.user?.name)}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-[#86868B] hover:text-[#FF453A] hover:bg-[#FF453A]/10 transition-all active:scale-90"
+                        title="Remover membro"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
-        )}
-      </motion.div>
+
+          { }
+          {team.my_role === 'owner' && (
+            <section className="bg-[#202020] border border-white/[0.04] rounded-[28px] overflow-hidden shadow-sm p-6">
+              <div className="flex items-center justify-between p-4 bg-[#FF453A]/5 border border-[#FF453A]/10 rounded-2xl">
+                <div>
+                  <p className="text-[14px] font-medium text-[#F5F5F7]">Excluir {team.type === 'family' ? 'família' : 'time'}</p>
+                  <p className="text-[12px] text-[#86868B] mt-0.5">Ação irreversível. Todos os membros serão removidos.</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteTeam(team.id, team.name)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF453A] text-white text-[12px] font-bold hover:bg-[#FF3B30] transition-colors"
+                >
+                  <Trash2 size={14} /> Excluir
+                </button>
+              </div>
+            </section>
+          )}
+        </motion.div>
       </>
     );
   }
@@ -717,8 +689,8 @@ export default function Teams() {
 
         <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center">
           <div className={`px-2.5 py-1 rounded-full border flex items-center gap-1.5 transition-all duration-500 ${realtimeConnected
-              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
-              : 'bg-amber-500/5 border-amber-500/20 text-amber-400'
+            ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
+            : 'bg-amber-500/5 border-amber-500/20 text-amber-400'
             }`}>
             <div className={`w-1.5 h-1.5 rounded-full ${realtimeConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
@@ -762,8 +734,8 @@ export default function Teams() {
                 <span className="hidden sm:inline">{tab.label}</span>
                 {tab.count !== null && tab.count > 0 && (
                   <span className={`inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full text-[10px] font-black border ${activeTab === tab.id
-                      ? 'bg-white text-black border-white'
-                      : 'bg-white/5 text-[#86868B] border-white/10'
+                    ? 'bg-white text-black border-white'
+                    : 'bg-white/5 text-[#86868B] border-white/10'
                     }`}>
                     {tab.count}
                   </span>
@@ -822,8 +794,8 @@ export default function Teams() {
                     <div className="flex items-center gap-4 sm:gap-6 relative z-10 transition-transform">
                       { }
                       <div className={`w-14 h-14 sm:w-12 sm:h-12 rounded-[20px] sm:rounded-xl shrink-0 flex items-center justify-center transition-all duration-500 group-hover:scale-105 ${team.type === 'family'
-                          ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
-                          : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
+                        ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
+                        : 'bg-[#0A84FF]/10 text-[#0A84FF] border border-[#0A84FF]/20'
                         }`}>
                         {getTypeIcon(team.type)}
                       </div>
@@ -835,8 +807,8 @@ export default function Teams() {
                             {team.name}
                           </h3>
                           <span className={`shrink-0 text-[9px] uppercase font-black tracking-widest px-2 py-0.5 rounded-md border ${team.my_role === 'owner'
-                              ? 'bg-amber-400/10 text-amber-400 border-amber-400/20'
-                              : 'bg-white/5 text-[#86868B] border-white/5'
+                            ? 'bg-amber-400/10 text-amber-400 border-amber-400/20'
+                            : 'bg-white/5 text-[#86868B] border-white/5'
                             }`}>
                             {getRoleLabel(team.my_role)}
                           </span>
@@ -1044,7 +1016,7 @@ export default function Teams() {
                           <Send size={14} className="text-[#86868B]" />
                           <div>
                             <span className="text-[13px] text-[#F5F5F7]">
-                              {inv.invited_user?.name || inv.invited_email}
+                              {inv.invited_user?.name || inv.invited_username}
                             </span>
                             <span className="text-[12px] text-[#86868B] ml-2">→ {inv.team?.name}</span>
                           </div>
@@ -1103,8 +1075,8 @@ export default function Teams() {
                         )}
 
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-500 ${newTeam.type === opt.value
-                            ? opt.color === 'blue' ? 'bg-[#0A84FF] text-white' : 'bg-pink-500 text-white'
-                            : 'bg-white/5 text-[#86868B]'
+                          ? opt.color === 'blue' ? 'bg-[#0A84FF] text-white' : 'bg-pink-500 text-white'
+                          : 'bg-white/5 text-[#86868B]'
                           }`}>
                           <opt.icon size={24} strokeWidth={2.5} />
                         </div>

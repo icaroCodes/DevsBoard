@@ -4,7 +4,7 @@ import supabase from '../database/connection.js';
 import config from '../config/index.js';
 
 /**
- * Public profile routes — mounted BEFORE the global `authenticate` middleware
+ * Public profile routes ÔÇö mounted BEFORE the global `authenticate` middleware
  * in server.js so anonymous visitors can fetch a profile by its @username.
  *
  * What gets exposed: only fields that are explicitly safe to share. We never
@@ -32,7 +32,7 @@ router.get('/profile/:username', async (req, res) => {
     if (!data) return res.status(404).json({ error: 'profile_not_found' });
     if (!data.is_public) return res.status(404).json({ error: 'profile_private' });
 
-    // Drop is_public from the response — the client never needs it.
+    // Drop is_public from the response ÔÇö the client never needs it.
     const { is_public, ...publicData } = data;
     void is_public;
 

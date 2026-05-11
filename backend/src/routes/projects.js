@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { data, error } = await supabase.from('projects').select('*').eq('id', req.projectId).single();
     if (error) throw error;
     res.json(data);
@@ -37,7 +37,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', [body('name').trim().notEmpty().withMessage('Nome é obrigatório')], async (req, res) => {
+router.post('/', [body('name').trim().notEmpty().withMessage('Nome ├® obrigat├│rio')], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -64,7 +64,7 @@ router.post('/', [body('name').trim().notEmpty().withMessage('Nome é obrigatór
 router.put('/:id', [body('name').optional().trim().notEmpty()], async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const pid = req.projectId;
 
     const updates = {};
@@ -90,7 +90,7 @@ router.put('/:id', [body('name').optional().trim().notEmpty()], async (req, res)
 router.delete('/:id', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('projects').delete().eq('id', req.projectId);
     if (error) throw error;
     res.status(204).send();
@@ -104,22 +104,22 @@ router.delete('/:id', async (req, res) => {
 router.get('/:id/tasks', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { data, error } = await supabase.from('project_tasks').select('*').eq('project_id', req.projectId).order('position').order('id');
     if (error) throw error;
     res.json(data);
   } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao listar tarefas' }); }
 });
 
-router.post('/:id/tasks', [body('title').trim().notEmpty().withMessage('Título é obrigatório')], async (req, res) => {
+router.post('/:id/tasks', [body('title').trim().notEmpty().withMessage('T├¡tulo ├® obrigat├│rio')], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const { title, description = null, status = 'todo' } = req.body;
-    if (!['todo', 'doing', 'done'].includes(status)) return res.status(400).json({ error: 'Status inválido' });
+    if (!['todo', 'doing', 'done'].includes(status)) return res.status(400).json({ error: 'Status inv├ílido' });
 
     const { data, error } = await supabase.from('project_tasks')
       .insert({ project_id: req.projectId, title, description, status })
@@ -132,16 +132,16 @@ router.post('/:id/tasks', [body('title').trim().notEmpty().withMessage('Título 
 router.put('/:id/tasks/:taskId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const updates = {};
     if (req.body.title !== undefined) {
-      if (!String(req.body.title).trim()) return res.status(400).json({ error: 'Título é obrigatório' });
+      if (!String(req.body.title).trim()) return res.status(400).json({ error: 'T├¡tulo ├® obrigat├│rio' });
       updates.title = req.body.title;
     }
     if (req.body.description !== undefined) updates.description = req.body.description;
     if (req.body.status !== undefined) {
-      if (!['todo', 'doing', 'done'].includes(req.body.status)) return res.status(400).json({ error: 'Status inválido' });
+      if (!['todo', 'doing', 'done'].includes(req.body.status)) return res.status(400).json({ error: 'Status inv├ílido' });
       updates.status = req.body.status;
     }
     if (req.body.position !== undefined) updates.position = Number(req.body.position) || 0;
@@ -151,7 +151,7 @@ router.put('/:id/tasks/:taskId', async (req, res) => {
       .eq('id', req.params.taskId).eq('project_id', req.projectId)
       .select().single();
     if (error) throw error;
-    if (!data) return res.status(404).json({ error: 'Tarefa não encontrada' });
+    if (!data) return res.status(404).json({ error: 'Tarefa n├úo encontrada' });
     res.json(data);
   } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao atualizar tarefa' }); }
 });
@@ -159,7 +159,7 @@ router.put('/:id/tasks/:taskId', async (req, res) => {
 router.delete('/:id/tasks/:taskId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('project_tasks').delete()
       .eq('id', req.params.taskId).eq('project_id', req.projectId);
     if (error) throw error;
@@ -171,17 +171,17 @@ router.delete('/:id/tasks/:taskId', async (req, res) => {
 router.get('/:id/doc', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const pid = req.projectId;
     const { data } = await supabase.from('project_docs').select('*').eq('project_id', pid).maybeSingle();
     res.json(data || { project_id: pid, content: '', updated_at: null });
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao carregar documentação' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao carregar documenta├º├úo' }); }
 });
 
 router.put('/:id/doc', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const pid = req.projectId;
     const content = typeof req.body.content === 'string' ? req.body.content : '';
     const { data, error } = await supabase.from('project_docs')
@@ -189,7 +189,7 @@ router.put('/:id/doc', async (req, res) => {
       .select().single();
     if (error) throw error;
     res.json(data);
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao salvar documentação' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao salvar documenta├º├úo' }); }
 });
 
 
@@ -197,7 +197,7 @@ router.put('/:id/doc', async (req, res) => {
 router.get('/:id/assets', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { data, error } = await supabase.from('assets').select('*')
       .eq('project_id', req.projectId).order('created_at', { ascending: false });
     if (error) throw error;
@@ -205,16 +205,16 @@ router.get('/:id/assets', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao listar assets' }); }
 });
 
-router.post('/:id/assets', [body('title').trim().notEmpty().withMessage('Título é obrigatório')], async (req, res) => {
+router.post('/:id/assets', [body('title').trim().notEmpty().withMessage('T├¡tulo ├® obrigat├│rio')], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const pid = req.projectId;
     const { title, type, url, image_base64 } = req.body;
-    if (!['logo', 'screen', 'figma', 'inspiration', 'link'].includes(type)) return res.status(400).json({ error: 'Tipo inválido' });
+    if (!['logo', 'screen', 'figma', 'inspiration', 'link'].includes(type)) return res.status(400).json({ error: 'Tipo inv├ílido' });
 
     let image_url = null;
     if (image_base64) {
@@ -234,7 +234,7 @@ router.post('/:id/assets', [body('title').trim().notEmpty().withMessage('Título
 router.delete('/:id/assets/:assetId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('assets').delete()
       .eq('id', req.params.assetId).eq('project_id', req.projectId);
     if (error) throw error;
@@ -242,11 +242,11 @@ router.delete('/:id/assets/:assetId', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao excluir asset' }); }
 });
 
-// ============ COMENTÁRIOS DE PÁGINA ============
+// ============ COMENT├üRIOS DE P├üGINA ============
 router.get('/:id/comments', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const pid = req.projectId;
     const { data: comments, error } = await supabase.from('project_comments')
@@ -255,17 +255,17 @@ router.get('/:id/comments', async (req, res) => {
       .order('created_at', { ascending: true });
     if (error) throw error;
 
-    // Backfill on-the-fly: para comentários sem snapshot, busca em users e atualiza a linha
+    // Backfill on-the-fly: para coment├írios sem snapshot, busca em users e atualiza a linha
     const needs = (comments || []).filter(c => !c.user_name);
     if (needs.length > 0) {
       const ids = [...new Set(needs.map(c => c.user_id))];
       const { data: users, error: uerr } = await supabase.from('users')
-        .select('id, name, avatar_url, email').in('id', ids);
+        .select('id, display_name as name, avatar_url, email').in('id', ids);
 
       if (uerr) {
         console.error('[comments] lookup users falhou:', uerr.message, 'ids:', ids);
       } else {
-        console.log('[comments] backfill: encontrei', (users || []).length, 'de', ids.length, 'usuários');
+        console.log('[comments] backfill: encontrei', (users || []).length, 'de', ids.length, 'usu├írios');
         const map = Object.fromEntries((users || []).map(u => [String(u.id), u]));
         for (const c of needs) {
           const u = map[String(c.user_id)];
@@ -283,16 +283,16 @@ router.get('/:id/comments', async (req, res) => {
 
     res.json((comments || []).map(c => ({
       ...c,
-      user_name: c.user_name || 'Usuário',
+      user_name: c.user_name || 'Usu├írio',
       user_avatar: c.user_avatar || null,
     })));
-  } catch (err) { console.error('[comments GET]', err); res.status(500).json({ error: 'Erro ao listar comentários' }); }
+  } catch (err) { console.error('[comments GET]', err); res.status(500).json({ error: 'Erro ao listar coment├írios' }); }
 });
 
 router.post('/:id/comments', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     let content = (typeof req.body.content === 'string' ? req.body.content : '').trim();
 
@@ -303,11 +303,11 @@ router.post('/:id/comments', async (req, res) => {
       content = (content ? content + '\n\n' : '') + `![anexo](${url})`;
     }
 
-    if (!content) return res.status(400).json({ error: 'Comentário vazio' });
+    if (!content) return res.status(400).json({ error: 'Coment├írio vazio' });
 
-    // Snapshot do usuário no momento do insert — independente de joins funcionarem.
+    // Snapshot do usu├írio no momento do insert ÔÇö independente de joins funcionarem.
     const { data: u, error: uerr } = await supabase.from('users')
-      .select('id, name, avatar_url, email').eq('id', req.userId).maybeSingle();
+      .select('id, display_name as name, avatar_url, email').eq('id', req.userId).maybeSingle();
     if (uerr) console.error('[comments] user fetch on insert:', uerr);
 
     const userName   = u?.name || u?.email?.split('@')[0] || null;
@@ -329,16 +329,16 @@ router.post('/:id/comments', async (req, res) => {
 
     res.status(201).json({
       ...c,
-      user_name: c.user_name || userName || 'Usuário',
+      user_name: c.user_name || userName || 'Usu├írio',
       user_avatar: c.user_avatar || userAvatar || null,
     });
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao criar comentário' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao criar coment├írio' }); }
 });
 
 router.delete('/:id/comments/:commentId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('project_comments')
       .delete()
       .eq('id', req.params.commentId)
@@ -346,14 +346,14 @@ router.delete('/:id/comments/:commentId', async (req, res) => {
       .eq('user_id', req.userId);
     if (error) throw error;
     res.status(204).send();
-  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao excluir comentário' }); }
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Erro ao excluir coment├írio' }); }
 });
 
-// ============ COMENTÁRIOS DE CÓDIGO ============
+// ============ COMENT├üRIOS DE C├ôDIGO ============
 router.get('/:id/code-comments', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const { data, error } = await supabase.from('code_comments')
       .select('*, replies:code_comment_replies(*)')
@@ -374,10 +374,10 @@ router.get('/:id/code-comments', async (req, res) => {
 router.post('/:id/code-comments', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const { block_id, line_start, line_end, content } = req.body;
-    if (!block_id || !content?.trim()) return res.status(400).json({ error: 'Dados inválidos' });
+    if (!block_id || !content?.trim()) return res.status(400).json({ error: 'Dados inv├ílidos' });
 
     const { data: u } = await supabase.from('users')
       .select('name, avatar_url, email').eq('id', req.userId).maybeSingle();
@@ -390,7 +390,7 @@ router.post('/:id/code-comments', async (req, res) => {
         line_start: line_start ?? 0,
         line_end: line_end ?? line_start ?? 0,
         content: content.trim(),
-        user_name: u?.name || u?.email?.split('@')[0] || 'Usuário',
+        user_name: u?.name || u?.email?.split('@')[0] || 'Usu├írio',
         user_avatar: u?.avatar_url || null,
       })
       .select('*, replies:code_comment_replies(*)').single();
@@ -402,7 +402,7 @@ router.post('/:id/code-comments', async (req, res) => {
 router.put('/:id/code-comments/:commentId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const updates = {};
     if (req.body.content !== undefined) updates.content = req.body.content;
@@ -422,7 +422,7 @@ router.put('/:id/code-comments/:commentId', async (req, res) => {
 router.delete('/:id/code-comments/:commentId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('code_comments')
       .delete()
       .eq('id', req.params.commentId)
@@ -435,7 +435,7 @@ router.delete('/:id/code-comments/:commentId', async (req, res) => {
 router.post('/:id/code-comments/:commentId/replies', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const { content } = req.body;
     if (!content?.trim()) return res.status(400).json({ error: 'Resposta vazia' });
@@ -448,7 +448,7 @@ router.post('/:id/code-comments/:commentId/replies', async (req, res) => {
         comment_id: req.params.commentId,
         user_id: req.userId,
         content: content.trim(),
-        user_name: u?.name || u?.email?.split('@')[0] || 'Usuário',
+        user_name: u?.name || u?.email?.split('@')[0] || 'Usu├írio',
         user_avatar: u?.avatar_url || null,
       })
       .select('*').single();
@@ -460,15 +460,15 @@ router.post('/:id/code-comments/:commentId/replies', async (req, res) => {
 router.put('/:id/code-comments/:commentId/replies/:replyId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const { content } = req.body;
-    if (content === undefined || !String(content).trim()) return res.status(400).json({ error: 'Conteúdo inválido' });
+    if (content === undefined || !String(content).trim()) return res.status(400).json({ error: 'Conte├║do inv├ílido' });
 
     const { data: row } = await supabase.from('code_comment_replies')
       .select('id, user_id').eq('id', req.params.replyId).eq('comment_id', req.params.commentId).maybeSingle();
-    if (!row) return res.status(404).json({ error: 'Resposta não encontrada' });
-    if (String(row.user_id) !== String(req.userId)) return res.status(403).json({ error: 'Sem permissão' });
+    if (!row) return res.status(404).json({ error: 'Resposta n├úo encontrada' });
+    if (String(row.user_id) !== String(req.userId)) return res.status(403).json({ error: 'Sem permiss├úo' });
 
     const { data, error } = await supabase.from('code_comment_replies')
       .update({ content: String(content).trim() })
@@ -482,12 +482,12 @@ router.put('/:id/code-comments/:commentId/replies/:replyId', async (req, res) =>
 router.delete('/:id/code-comments/:commentId/replies/:replyId', async (req, res) => {
   try {
     const ok = await assertProjectAccess(req.params.id, req);
-    if (!ok) return res.status(404).json({ error: 'Projeto não encontrado' });
+    if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
     const { data: row } = await supabase.from('code_comment_replies')
       .select('id, user_id').eq('id', req.params.replyId).eq('comment_id', req.params.commentId).maybeSingle();
-    if (!row) return res.status(404).json({ error: 'Resposta não encontrada' });
-    if (String(row.user_id) !== String(req.userId)) return res.status(403).json({ error: 'Sem permissão' });
+    if (!row) return res.status(404).json({ error: 'Resposta n├úo encontrada' });
+    if (String(row.user_id) !== String(req.userId)) return res.status(403).json({ error: 'Sem permiss├úo' });
 
     const { error } = await supabase.from('code_comment_replies').delete().eq('id', req.params.replyId);
     if (error) throw error;

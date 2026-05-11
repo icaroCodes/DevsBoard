@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Inbox, Plus, Heart, Briefcase,
   ChevronRight, Crown, Shield, User,
-  MailPlus, Check, X, Clock, UserPlus, Mail, Send, LogOut, Trash2
+  MailPlus, Check, X, Clock, UserPlus, Mail, Send, LogOut, Trash2, AtSign
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,7 +29,7 @@ export default function TeamsMobile() {
   const [newTeam, setNewTeam] = useState({ name: '', type: 'team' });
   const [creating, setCreating] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(null);
-  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteUsername, setInviteUsername] = useState('');
   const [inviting, setInviting] = useState(false);
 
   const fetchTeams = useCallback(async () => {
@@ -136,15 +136,16 @@ export default function TeamsMobile() {
 
   const handleInvite = async (e) => {
     e.preventDefault();
-    if (!inviteEmail.trim() || !showInviteModal || inviting) return;
+    const cleaned = inviteUsername.trim().replace(/^@/, '');
+    if (!cleaned || !showInviteModal || inviting) return;
     setInviting(true);
     try {
       await api(`/teams/${showInviteModal}/invite`, {
         method: 'POST',
-        body: JSON.stringify({ email: inviteEmail }),
+        body: JSON.stringify({ username: cleaned }),
       });
-      success(`Convite enviado para ${inviteEmail}!`);
-      setInviteEmail('');
+      success(`Convite enviado para @${cleaned}!`);
+      setInviteUsername('');
       setShowInviteModal(null);
       fetchSentInvites();
     } catch (err) {
@@ -239,12 +240,14 @@ export default function TeamsMobile() {
             </div>
             <form onSubmit={handleInvite} className="space-y-4">
               <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868B]" />
+                <AtSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#86868B]" />
                 <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="usuario@email.com"
+                  type="text"
+                  value={inviteUsername}
+                  onChange={(e) => setInviteUsername(e.target.value.replace(/^@/, '').toLowerCase())}
+                  placeholder="icarocodes"
+                  autoComplete="off"
+                  spellCheck={false}
                   className="w-full pl-11 pr-4 py-3.5 rounded-[18px] bg-[#2C2C2E] border border-white/5 text-[15px] font-bold text-white focus:border-[#0A84FF] focus:outline-none transition-all placeholder:text-[#86868B]/60"
                   required
                   autoFocus
@@ -253,14 +256,14 @@ export default function TeamsMobile() {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => { setShowInviteModal(null); setInviteEmail(''); }}
+                  onClick={() => { setShowInviteModal(null); setInviteUsername(''); }}
                   className="flex-1 h-12 rounded-[16px] bg-white/5 text-[#86868B] text-[13px] font-bold active:scale-95 transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  disabled={inviting || !inviteEmail.trim()}
+                  disabled={inviting || !inviteUsername.trim()}
                   className="flex-1 h-12 rounded-[16px] bg-white text-black text-[13px] font-black active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {inviting ? 'Enviando...' : (<><Send size={14} strokeWidth={3} /> Enviar</>)}

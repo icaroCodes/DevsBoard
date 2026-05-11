@@ -23,6 +23,10 @@ const loadEnv = () => {
             const value = trimmed.substring(index + 1).trim();
             
             fileEnv[key] = value.replace(/^["']|["']$/g, '');
+            // Inject into process.env so routes that read process.env directly can find them
+            if (!process.env[key]) {
+              process.env[key] = fileEnv[key];
+            }
           }
         }
       });
