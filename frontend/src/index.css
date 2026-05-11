@@ -14,6 +14,15 @@
   box-sizing: border-box;
 }
 
+/* iOS Safari auto-zooms when input font-size < 16px — prevent by clamping to 16px on touch devices */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Hard floor on html — paints before any CSS var resolves and before
    ThemeContext sets vars on documentElement. Stops the white flash on
    first paint + browser overscroll bounce. */

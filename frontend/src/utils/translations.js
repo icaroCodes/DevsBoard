@@ -473,5 +473,8 @@ export function useTranslation() {
     }
   };
 
-  return { t: globalTranslations[lang] || globalTranslations['pt'], lang, setLang };
+  const en = globalTranslations['en'];
+  const current = globalTranslations[lang] || en;
+  const t = { ...en, ...current };
+  return { t, lang, setLang };
 }

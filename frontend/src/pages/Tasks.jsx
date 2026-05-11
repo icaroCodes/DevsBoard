@@ -1,1556 +1,1603 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+﻿import { useState, useEffect, useRef } from'react';
+import { motion, AnimatePresence } from'framer-motion';
 import {
-  Plus, Trash2, Pencil, X, Loader2, LayoutList,
-  GripVertical, Check, CheckSquare, ListTodo, Kanban, Circle, Clock, MoreHorizontal, CopyPlus, CheckCircle2, CircleDashed
-} from 'lucide-react';
+ Plus, Trash2, Pencil, X, Loader2, LayoutList,
+ GripVertical, Check, CheckSquare, ListTodo, Kanban, Circle, Clock, MoreHorizontal, CopyPlus, CheckCircle2, CircleDashed, Bell, BellOff
+} from'lucide-react';
 import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-  defaultDropAnimationSideEffects,
-} from '@dnd-kit/core';
+ DndContext,
+ DragOverlay,
+ PointerSensor,
+ MouseSensor,
+ TouchSensor,
+ useSensor,
+ useSensors,
+ closestCorners,
+ defaultDropAnimationSideEffects,
+} from'@dnd-kit/core';
 import {
-  SortableContext,
-  useSortable,
-  rectSortingStrategy,
-  verticalListSortingStrategy,
-  horizontalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { api } from '../lib/api';
-import { useToast } from '../contexts/ToastContext';
-import { useConfirm } from '../contexts/ConfirmModalContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useRealtimeSubscription } from '../contexts/RealtimeContext';
-import { useTranslation } from '../utils/translations';
-import { useIsMobile } from '../hooks/useIsMobile';
-import LoadingSkeleton from '../components/LoadingSkeleton';
-import LiveCursors from '../components/LiveCursors';
-import TeamLiveCursors from '../components/TeamLiveCursors';
-import MobileListView from './tasks/MobileListView';
-import MobileBoardGallery from './tasks/MobileBoardGallery';
+ SortableContext,
+ useSortable,
+ rectSortingStrategy,
+ verticalListSortingStrategy,
+ horizontalListSortingStrategy,
+ arrayMove,
+} from'@dnd-kit/sortable';
+import { CSS } from'@dnd-kit/utilities';
+import { api } from'../lib/api';
+import { useToast } from'../contexts/ToastContext';
+import { useConfirm } from'../contexts/ConfirmModalContext';
+import { useAuth } from'../contexts/AuthContext';
+import { useRealtimeSubscription } from'../contexts/RealtimeContext';
+import { useTranslation } from'../utils/translations';
+import { useIsMobile } from'../hooks/useIsMobile';
+import LoadingSkeleton from'../components/LoadingSkeleton';
+import LiveCursors from'../components/LiveCursors';
+import TeamLiveCursors from'../components/TeamLiveCursors';
+import MobileListView from'./tasks/MobileListView';
+import MobileBoardGallery from'./tasks/MobileBoardGallery';
 
-const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const FONT ='-apple-system, BlinkMacSystemFont,"SF Pro Text","Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
 
 function ViewToggle({ view, onChange }) {
-  const { t } = useTranslation();
-  return (
-    <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
-      {[
-        { id: 'list', label: 'Ver em Lista', Icon: LayoutList },
-        { id: 'board', label: 'Ver em Blocos', Icon: Kanban },
-      ].map(({ id, label, Icon }) => (
-        <button
-          key={id}
-          type="button"
-          onClick={() => onChange(id)}
-          className={`relative flex items-center gap-1.5 px-4 py-1.5 rounded-[8px] text-[13px] font-medium transition-colors outline-none cursor-pointer z-10 ${view === id ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
-        >
-          {view === id && (
-            <motion.div
-              layoutId="activeViewFilter"
-              className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-            />
-          )}
-          <Icon size={14} strokeWidth={2} />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
-    </div>
-  );
+ const { t } = useTranslation();
+ return (
+ <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
+ {[
+ { id:'list', label:'Ver em Lista', Icon: LayoutList },
+ { id:'board', label:'Ver em Blocos', Icon: Kanban },
+ ].map(({ id, label, Icon }) => (
+ <button
+ key={id}
+ type="button"
+ onClick={() => onChange(id)}
+ className={`relative flex items-center gap-1.5 px-4 py-1.5 rounded-[8px] text-[13px] font-medium transition-colors outline-none cursor-pointer z-10 ${view === id ?'text-[#F5F5F7]' :'text-[#86868B] hover:text-[#F5F5F7]'}`}
+ >
+ {view === id && (
+ <motion.div
+ layoutId="activeViewFilter"
+ className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10"
+ transition={{ type:'spring', bounce: 0.2, duration: 0.6 }}
+ />
+ )}
+ <Icon size={14} strokeWidth={2} />
+ <span className="hidden sm:inline">{label}</span>
+ </button>
+ ))}
+ </div>
+ );
 }
 
 
 function TaskStatusCheck({ completed, priority, onClick }) {
-  const getColor = () => {
-    if (completed) return 'text-[#10B981] group-hover:text-[#10B981]/80';
-    if (priority === 'high') return 'text-[#EF4444] group-hover:text-[#EF4444]/80';
-    if (priority === 'medium') return 'text-[#F59E0B] group-hover:text-[#F59E0B]/80';
-    if (priority === 'low') return 'text-[#3B82F6] group-hover:text-[#3B82F6]/80';
-    return 'text-[#86868B] group-hover:text-[#A1A1AA]';
-  };
+ const getColor = () => {
+ if (completed) return'text-[#10B981] group-hover:text-[#10B981]/80';
+ if (priority ==='high') return'text-[#EF4444] group-hover:text-[#EF4444]/80';
+ if (priority ==='medium') return'text-[#F59E0B] group-hover:text-[#F59E0B]/80';
+ if (priority ==='low') return'text-[#3B82F6] group-hover:text-[#3B82F6]/80';
+ return'text-[#86868B] group-hover:text-[#A1A1AA]';
+ };
 
-  return (
-    <button type="button" onClick={onClick} className={`flex items-center justify-center shrink-0 transition-all outline-none cursor-pointer hover:scale-110 active:scale-95 ${getColor()}`}>
-      <CircleDashed size={20} strokeWidth={2} />
-    </button>
-  );
+ return (
+ <button type="button" onClick={onClick} className={`flex items-center justify-center shrink-0 transition-all outline-none cursor-pointer hover:scale-110 active:scale-95 ${getColor()}`}>
+ <CircleDashed size={20} strokeWidth={2} />
+ </button>
+ );
 }
 
-const priorityLabels = { none: 'Não marcado', low: 'Pode esperar', medium: 'Importante', high: 'Muito Urgente' };
-const priorityColors = { none: 'text-[#86868B]', low: 'text-[#32D74B]', medium: 'text-[#FF9F0A]', high: 'text-[#FF453A]' };
-const priorityBg = { none: 'bg-[#86868B]/10', low: 'bg-[#32D74B]/10', medium: 'bg-[#FF9F0A]/10', high: 'bg-[#FF453A]/10' };
+const priorityLabels = { none:'Não marcado', low:'Pode esperar', medium:'Importante', high:'Muito Urgente' };
+const priorityColors = { none:'text-[#86868B]', low:'text-[#32D74B]', medium:'text-[#FF9F0A]', high:'text-[#FF453A]' };
+const priorityBg = { none:'bg-[#86868B]/10', low:'bg-[#32D74B]/10', medium:'bg-[#FF9F0A]/10', high:'bg-[#FF453A]/10' };
 
 const containerVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+ hidden: { opacity: 0 },
+ show: { opacity: 1, transition: { staggerChildren: 0.05 } }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
+ hidden: { opacity: 0, y: 15 },
+ show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
 };
 
 
 function ListView() {
-  const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [formParams, setFormParams] = useState({ title: '', description: '', priority: 'medium', submitting: false });
-  const { success, error: showError } = useToast();
-  const { confirm } = useConfirm();
-  const { activeTeam } = useAuth();
-  const { t } = useTranslation();
-  const isMobile = useIsMobile();
+ const [items, setItems] = useState([]);
+ const [filter, setFilter] = useState('all');
+ const [loading, setLoading] = useState(true);
+ const [modalOpen, setModalOpen] = useState(false);
+ const [editing, setEditing] = useState(null);
+ const [formParams, setFormParams] = useState({ title:'', description:'', priority:'medium', alarm_time:'', submitting: false });
+ const { success, error: showError } = useToast();
+ const { confirm } = useConfirm();
+ const { activeTeam } = useAuth();
+ const { t } = useTranslation();
+ const isMobile = useIsMobile();
 
 
-  const load = ({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
-    api('/tasks').then(data => { setItems(data); setLoading(false); }).catch(err => { showError(err.message); setLoading(false); });
-  };
+ const load = ({ silent = false } = {}) => {
+ if (!silent) setLoading(true);
+ api('/tasks').then(data => { setItems(data); setLoading(false); }).catch(err => { showError(err.message); setLoading(false); });
+ };
 
-  useEffect(() => {
-    load();
-  }, [activeTeam]);
+ useEffect(() => {
+ load();
+ }, [activeTeam]);
 
-  useRealtimeSubscription(['tasks'], () => { load({ silent: true }); });
+ useRealtimeSubscription(['tasks'], () => { load({ silent: true }); });
 
-  const filteredItems = items.filter(i => {
-    if (filter === 'completed') return i.completed;
-    if (filter === 'pending') return !i.completed;
-    return true;
-  });
+ const filteredItems = items.filter(i => {
+ if (filter ==='completed') return i.completed;
+ if (filter ==='pending') return !i.completed;
+ return true;
+ });
 
-  const pendingCount = items.filter(i => !i.completed).length;
+ const pendingCount = items.filter(i => !i.completed).length;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (formParams.submitting) return;
-    setFormParams(prev => ({ ...prev, submitting: true }));
-    try {
-      const payload = { ...formParams };
-      delete payload.submitting;
+ const handleSubmit = async (e) => {
+ e.preventDefault();
+ if (formParams.submitting) return;
+ setFormParams(prev => ({ ...prev, submitting: true }));
+ try {
+ const payload = { ...formParams };
+ delete payload.submitting;
+ if (!payload.alarm_time) payload.alarm_time = null;
 
-      if (editing) {
-        await api(`/tasks/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      } else {
-        await api('/tasks', { method: 'POST', body: JSON.stringify(payload) });
-      }
-      setModalOpen(false);
-      setEditing(null);
-      setFormParams({ title: '', description: '', priority: 'medium', submitting: false });
-      success(editing ? 'Pronto, atualizado!' : 'Pronto, criado!');
-      load();
-    } catch (err) {
-      showError(err.message);
-      setFormParams(prev => ({ ...prev, submitting: false }));
-    }
-  };
+ if (editing) {
+ await api(`/tasks/${editing.id}`, { method:'PUT', body: JSON.stringify(payload) });
+ } else {
+ await api('/tasks', { method:'POST', body: JSON.stringify(payload) });
+ }
+ setModalOpen(false);
+ setEditing(null);
+ setFormParams({ title:'', description:'', priority:'medium', alarm_time:'', submitting: false });
+ success(editing ?'Pronto, atualizado!' :'Pronto, criado!');
+ load();
+ } catch (err) {
+ showError(err.message);
+ setFormParams(prev => ({ ...prev, submitting: false }));
+ }
+ };
 
-  const toggleComplete = async (item) => {
-    setItems(items.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i));
-    try {
-      await api(`/tasks/${item.id}`, { method: 'PUT', body: JSON.stringify({ completed: !item.completed }) });
-      setItems(await api('/tasks'));
-    } catch (err) {
-      showError(err.message);
-      load();
-    }
-  };
+ const toggleComplete = async (item) => {
+ setItems(items.map(i => i.id === item.id ? { ...i, completed: !i.completed } : i));
+ try {
+ await api(`/tasks/${item.id}`, { method:'PUT', body: JSON.stringify({ completed: !item.completed }) });
+ setItems(await api('/tasks'));
+ } catch (err) {
+ showError(err.message);
+ load();
+ }
+ };
 
-  const handleDelete = async (id) => {
-    confirm({
-      title: 'Apagar esta atividade?',
-      message: 'Você tem certeza? Isso vai remover a atividade da lista para sempre.',
-      onConfirm: async () => {
-        try {
-          await api(`/tasks/${id}`, { method: 'DELETE' });
-          success('Atividade removida');
-          load();
-        } catch (err) {
-          showError(err.message);
-        }
-      }
-    });
-  };
+ const handleDelete = async (id) => {
+ confirm({
+ title:'Apagar esta atividade?',
+ message:'Você tem certeza? Isso vai remover a atividade da lista para sempre.',
+ onConfirm: async () => {
+ try {
+ await api(`/tasks/${id}`, { method:'DELETE' });
+ success('Atividade removida');
+ load();
+ } catch (err) {
+ showError(err.message);
+ }
+ }
+ });
+ };
 
-  const openEdit = (item) => {
-    setEditing(item);
-    setFormParams({ title: item.title, description: item.description || '', priority: item.priority || 'medium', submitting: false });
-    setModalOpen(true);
-  };
+ const openEdit = (item) => {
+ setEditing(item);
+ setFormParams({ title: item.title, description: item.description ||'', priority: item.priority ||'medium', alarm_time: item.alarm_time ||'', submitting: false });
+ setModalOpen(true);
+ };
 
-  if (loading) return <LoadingSkeleton variant="tasks" />;
+ if (loading) return <LoadingSkeleton variant="tasks" />;
 
-  if (isMobile) {
-    return (
-      <MobileListView
-        items={items}
-        pendingCount={pendingCount}
-        filter={filter}
-        setFilter={setFilter}
-        toggleComplete={toggleComplete}
-        openEdit={openEdit}
-        handleDelete={handleDelete}
-        formParams={formParams}
-        setFormParams={setFormParams}
-        handleSubmit={handleSubmit}
-        modalOpen={modalOpen}
-        setModalOpen={setModalOpen}
-        editing={editing}
-        setEditing={setEditing}
-        t={t}
-      />
-    );
-  }
+ if (isMobile) {
+ return (
+ <MobileListView
+ items={items}
+ pendingCount={pendingCount}
+ filter={filter}
+ setFilter={setFilter}
+ toggleComplete={toggleComplete}
+ openEdit={openEdit}
+ handleDelete={handleDelete}
+ formParams={formParams}
+ setFormParams={setFormParams}
+ handleSubmit={handleSubmit}
+ modalOpen={modalOpen}
+ setModalOpen={setModalOpen}
+ editing={editing}
+ setEditing={setEditing}
+ t={t}
+ />
+ );
+ }
 
-  return (
-    <>
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 lg:mb-10">
-        <div className="space-y-1">
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Minhas Atividades</h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">Você tem {pendingCount} atividade{pendingCount !== 1 && 's'} para concluir.</p>
-        </div>
+ return (
+ <>
+ <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 lg:mb-10">
+ <div className="space-y-1">
+ <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Minhas Atividades</h1>
+ <p className="text-[15px] sm:text-[17px] text-[#86868B]">Você tem {pendingCount} atividade{pendingCount !== 1 &&'s'} para concluir.</p>
+ </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
-            {['all', 'pending', 'completed'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`relative flex-1 sm:flex-none px-2 sm:px-5 py-2 sm:py-1.5 rounded-[8px] text-[12px] sm:text-[13px] font-medium transition-colors z-10 outline-none ${filter === f ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}
-              >
-                {filter === f && (
-                  <motion.div layoutId="activeTaskFilter" className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
-                )}
-                <span className="whitespace-nowrap">{f === 'all' ? 'Tudo' : f === 'pending' ? 'Para fazer' : 'Terminadas'}</span>
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => {
-              setEditing(null);
-              setFormParams({ title: '', description: '', priority: 'medium', submitting: false });
-              setModalOpen(true);
-            }}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-3 sm:py-2 rounded-[12px] sm:rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[14px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95"
-          >
-            <Plus size={16} strokeWidth={3} className="sm:w-4 sm:h-4" /> Nova Atividade
-          </button>
-        </div>
-      </motion.div>
+ <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+ <div className="flex p-1 bg-[#202020]/80 backdrop-blur-md rounded-[12px] shadow-sm border border-white/[0.04] relative">
+ {['all','pending','completed'].map((f) => (
+ <button
+ key={f}
+ onClick={() => setFilter(f)}
+ className={`relative flex-1 sm:flex-none px-2 sm:px-5 py-2 sm:py-1.5 rounded-[8px] text-[12px] sm:text-[13px] font-medium transition-colors z-10 outline-none ${filter === f ?'text-[#F5F5F7]' :'text-[#86868B] hover:text-[#F5F5F7]'}`}
+ >
+ {filter === f && (
+ <motion.div layoutId="activeTaskFilter" className="absolute inset-0 bg-[#3A3A3C] rounded-[8px] shadow-sm -z-10" transition={{ type:"spring", bounce: 0.2, duration: 0.6 }} />
+ )}
+ <span className="whitespace-nowrap">{f ==='all' ?'Tudo' : f ==='pending' ?'Para fazer' :'Terminadas'}</span>
+ </button>
+ ))}
+ </div>
+ <button
+ onClick={() => {
+ setEditing(null);
+ setFormParams({ title:'', description:'', priority:'medium', alarm_time:'', submitting: false });
+ setModalOpen(true);
+ }}
+ className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-3 sm:py-2 rounded-[12px] sm:rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[14px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95"
+ >
+ <Plus size={16} strokeWidth={3} className="sm:w-4 sm:h-4" /> Nova Atividade
+ </button>
+ </div>
+ </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-5 mb-8">
-        <div className="glass-card bg-[#202020] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
-          <div className="z-10">
-            <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Para fazer</span>
-            <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{pendingCount}</p>
-          </div>
-          <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] z-10 transition-transform group-hover:scale-110">
-            <ListTodo size={18} className="sm:hidden" strokeWidth={2} />
-            <ListTodo size={24} className="hidden sm:block" strokeWidth={2} />
-          </div>
-          <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
-        </div>
-        <div className="glass-card bg-[#202020] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
-          <div className="z-10">
-            <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Terminadas</span>
-            <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{items.length - pendingCount}</p>
-          </div>
-          <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#30D158]/10 flex items-center justify-center text-[#30D158] z-10 transition-transform group-hover:scale-110">
-            <CheckSquare size={18} className="sm:hidden" strokeWidth={2} />
-            <CheckSquare size={24} className="hidden sm:block" strokeWidth={2} />
-          </div>
-          <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#30D158] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
-        </div>
-      </motion.div>
+ <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-5 mb-8">
+ <div className="glass-card bg-[#202020] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
+ <div className="z-10">
+ <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Para fazer</span>
+ <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{pendingCount}</p>
+ </div>
+ <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF] z-10 transition-transform group-hover:scale-110">
+ <ListTodo size={18} className="sm:hidden" strokeWidth={2} />
+ <ListTodo size={24} className="hidden sm:block" strokeWidth={2} />
+ </div>
+ <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#0A84FF] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
+ </div>
+ <div className="glass-card bg-[#202020] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 border border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between shadow-sm relative overflow-hidden group h-[100px] sm:h-[120px]">
+ <div className="z-10">
+ <span className="text-[12px] sm:text-[14px] font-medium text-[#86868B]">Terminadas</span>
+ <p className="text-[24px] sm:text-[32px] font-semibold text-[#F5F5F7] tracking-tight mt-0.5 sm:mt-1">{items.length - pendingCount}</p>
+ </div>
+ <div className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#30D158]/10 flex items-center justify-center text-[#30D158] z-10 transition-transform group-hover:scale-110">
+ <CheckSquare size={18} className="sm:hidden" strokeWidth={2} />
+ <CheckSquare size={24} className="hidden sm:block" strokeWidth={2} />
+ </div>
+ <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#30D158] opacity-[0.03] blur-3xl rounded-full pointer-events-none transition-opacity group-hover:opacity-[0.05]" />
+ </div>
+ </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[400px] shadow-sm">
-        {filteredItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
-            <ListTodo size={48} strokeWidth={1} className="text-[#86868B]" />
-            <p className="text-[15px] text-[#86868B]">Ainda não há atividades aqui.</p>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 space-y-2">
-            {filteredItems.map(item => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`glass-card flex items-center justify-between p-3 sm:p-4 rounded-[16px] bg-[#202020]/60 hover:bg-white/[0.04] transition-colors group cursor-default border border-white/[0.04] ${item.completed ? 'opacity-60' : ''}`}
-              >
-                <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                  <div className="mt-0.5 sm:mt-0 shrink-0">
-                    <TaskStatusCheck completed={item.completed} priority={item.priority} onClick={() => toggleComplete(item)} />
-                  </div>
-                  <div className="flex flex-col min-w-0 flex-1 pr-2 sm:pr-4">
-                    <span className={`text-[15px] sm:text-[16px] font-medium truncate transition-colors ${item.completed ? 'line-through text-[#86868B]' : 'text-[#F5F5F7]'}`}>
-                      {item.title}
-                    </span>
-                    {item.description && (
-                      <span className={`text-[12px] sm:text-[13px] mt-0.5 line-clamp-2 transition-colors ${item.completed ? 'text-[#86868B]/70' : 'text-[#86868B]'}`}>
-                        {item.description}
-                      </span>
-                    )}
-                  </div>
-                </div>
+ <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="glass-card bg-[#202020] rounded-[24px] border border-white/[0.04] flex flex-col min-h-[400px] shadow-sm">
+ {filteredItems.length === 0 ? (
+ <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-60 py-20">
+ <ListTodo size={48} strokeWidth={1} className="text-[#86868B]" />
+ <p className="text-[15px] text-[#86868B]">Ainda não há atividades aqui.</p>
+ </div>
+ ) : (
+ <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-4 space-y-2">
+ {filteredItems.map(item => (
+ <motion.div
+ key={item.id}
+ layout
+ initial={{ opacity: 0, scale: 0.98 }}
+ animate={{ opacity: 1, scale: 1 }}
+ exit={{ opacity: 0, scale: 0.95 }}
+ className={`glass-card flex items-center justify-between p-3 sm:p-4 rounded-[16px] bg-[#202020]/60 hover:bg-white/[0.04] transition-colors group cursor-default border border-white/[0.04] ${item.completed ?'opacity-60' :''}`}
+ >
+ <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+ <div className="mt-0.5 sm:mt-0 shrink-0">
+ <TaskStatusCheck completed={item.completed} priority={item.priority} onClick={() => toggleComplete(item)} />
+ </div>
+ <div className="flex flex-col min-w-0 flex-1 pr-2 sm:pr-4">
+ <span className={`text-[15px] sm:text-[16px] font-medium truncate transition-colors ${item.completed ?'line-through text-[#86868B]' :'text-[#F5F5F7]'}`}>
+ {item.title}
+ </span>
+ {item.description && (
+ <span className={`text-[12px] sm:text-[13px] mt-0.5 line-clamp-2 transition-colors ${item.completed ?'text-[#86868B]/70' :'text-[#86868B]'}`}>
+ {item.description}
+ </span>
+ )}
+ </div>
+ </div>
 
-                <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                  <span className={`hidden sm:inline-flex px-2.5 py-1 rounded-[6px] text-[12px] font-semibold tracking-wide uppercase ${priorityBg[item.priority] || ''} ${priorityColors[item.priority] || ''}`}>
-                    {priorityLabels[item.priority] || item.priority}
-                  </span>
+ <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+ <span className={`hidden sm:inline-flex px-2.5 py-1 rounded-[6px] text-[12px] font-semibold tracking-wide ${priorityBg[item.priority] ||''} ${priorityColors[item.priority] ||''}`}>
+ {priorityLabels[item.priority] || item.priority}
+ </span>
 
-                  <div className="flex items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(item)} className="p-2 sm:p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
-                      <Pencil size={15} />
-                    </button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 sm:p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </motion.div>
+ <div className="flex items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+ <button onClick={() => openEdit(item)} className="p-2 sm:p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/10 transition-colors outline-none cursor-pointer">
+ <Pencil size={15} />
+ </button>
+ <button onClick={() => handleDelete(item.id)} className="p-2 sm:p-2 text-[#86868B] hover:text-[#FF453A] rounded-[8px] hover:bg-[#FF453A]/10 transition-colors outline-none cursor-pointer">
+ <Trash2 size={15} />
+ </button>
+ </div>
+ </div>
+ </motion.div>
+ ))}
+ </div>
+ )}
+ </motion.div>
 
-      <AnimatePresence>
-        {modalOpen && (
-          <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 font-sans" style={{ fontFamily: FONT }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
-                  {editing ? 'Mudar Atividade' : 'Nova Atividade'}
-                </h2>
-                <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer">
-                  <X size={18} />
-                </button>
-              </div>
+ <AnimatePresence>
+ {modalOpen && (
+ <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4 font-sans" style={{ fontFamily: FONT }}>
+ <motion.div
+ initial={{ opacity: 0, scale: 0.95, y: 15 }}
+ animate={{ opacity: 1, scale: 1, y: 0 }}
+ exit={{ opacity: 0, scale: 0.95, y: 15 }}
+ transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+ className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative"
+ >
+ <div className="flex justify-between items-center mb-6">
+ <h2 className="text-[20px] font-semibold text-[#F5F5F7] tracking-tight">
+ {editing ?'Mudar Atividade' :'Nova Atividade'}
+ </h2>
+ <button onClick={() => { setModalOpen(false); setEditing(null); }} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] bg-white/[0.04] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer">
+ <X size={18} />
+ </button>
+ </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">O que precisa ser feito?</label>
-                    <input type="text" value={formParams.title} onChange={(e) => setFormParams({ ...formParams, title: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Comprar pão, Pagar conta..." required />
-                  </div>
+ <form onSubmit={handleSubmit} className="space-y-5">
+ <div className="space-y-4">
+ <div className="space-y-1.5">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">O que precisa ser feito?</label>
+ <input type="text" value={formParams.title} onChange={(e) => setFormParams({ ...formParams, title: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50" placeholder="Ex: Comprar pão, Pagar conta..." required />
+ </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Mais detalhes (Opcional)</label>
-                    <textarea value={formParams.description} onChange={(e) => setFormParams({ ...formParams, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50 resize-none" rows={3} placeholder="Escreva aqui mais informações..." />
-                  </div>
+ <div className="space-y-1.5">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">Mais detalhes (Opcional)</label>
+ <textarea value={formParams.description} onChange={(e) => setFormParams({ ...formParams, description: e.target.value })} className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#0A84FF] focus:bg-[#202020] focus:ring-4 focus:ring-[#0A84FF]/10 focus:outline-none transition-all placeholder:text-[#86868B]/50 resize-none" rows={3} placeholder="Escreva aqui mais informações..." />
+ </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[13px] font-medium text-[#86868B] ml-1">Importância</label>
-                    <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.02] relative">
-                      {['low', 'medium', 'high'].map(pLevel => (
-                        <button type="button" key={pLevel} onClick={() => setFormParams({ ...formParams, priority: pLevel })} className={`relative flex-1 py-3 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${formParams.priority === pLevel ? 'text-[#F5F5F7]' : 'text-[#86868B] hover:text-[#F5F5F7]'}`}>
-                          {formParams.priority === pLevel && (
-                            <motion.div layoutId="activePriority" className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
-                          )}
-                          {priorityLabels[pLevel]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+ <div className="space-y-1.5">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">Importância</label>
+ <div className="flex p-1 bg-[#2C2C2E] rounded-[16px] border border-white/[0.02] relative">
+ {['low','medium','high'].map(pLevel => (
+ <button type="button" key={pLevel} onClick={() => setFormParams({ ...formParams, priority: pLevel })} className={`relative flex-1 py-3 rounded-[12px] text-[13px] font-medium transition-colors z-10 outline-none ${formParams.priority === pLevel ?'text-[#F5F5F7]' :'text-[#86868B] hover:text-[#F5F5F7]'}`}>
+ {formParams.priority === pLevel && (
+ <motion.div layoutId="activePriority" className="absolute inset-0 bg-[#3A3A3C] rounded-[12px] shadow-sm -z-10" transition={{ type:"spring", bounce: 0.2, duration: 0.6 }} />
+ )}
+ {priorityLabels[pLevel]}
+ </button>
+ ))}
+ </div>
+ </div>
 
-                <div className="pt-4">
-                  <button
-                    type="submit"
-                    disabled={formParams.submitting}
-                    className="w-full py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {formParams.submitting ? (
-                      <>
-                        <Loader2 size={20} className="animate-spin" />
-                        <span>{t.taskSaving}</span>
-                      </>
-                    ) : editing ? 'Salvar mudanças' : 'Criar Atividade'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+ <div className="space-y-1.5">
+ <label className="flex items-center gap-1.5 text-[13px] font-medium text-[#86868B] ml-1">
+ <Bell size={13} className={formParams.alarm_time ?'text-[#FFD60A]' :''} />
+ Alarme (horário de Brasília)
+ </label>
+ <div className="flex items-center gap-2">
+ <input
+ type="time"
+ value={formParams.alarm_time ||''}
+ onChange={e => setFormParams({ ...formParams, alarm_time: e.target.value })}
+ className="flex-1 px-4 py-3 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[15px] text-[#F5F5F7] focus:border-[#FFD60A]/50 focus:outline-none transition-all [color-scheme:dark]"
+ />
+ {formParams.alarm_time && (
+ <button type="button" onClick={() => setFormParams({ ...formParams, alarm_time:'' })} className="p-2.5 text-[#86868B] hover:text-[#FF453A] rounded-full hover:bg-[#FF453A]/10 transition-colors shrink-0">
+ <BellOff size={16} />
+ </button>
+ )}
+ </div>
+ {formParams.alarm_time && (
+ <p className="text-[11px] text-[#FFD60A]/80 ml-1">Alarme configurado para {formParams.alarm_time} (Brasília)</p>
+ )}
+ </div>
+ </div>
+
+ <div className="pt-4">
+ <button
+ type="submit"
+ disabled={formParams.submitting}
+ className="w-full py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all shadow-lg shadow-[#0A84FF]/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+ >
+ {formParams.submitting ? (
+ <>
+ <Loader2 size={20} className="animate-spin" />
+ <span>{t.taskSaving}</span>
+ </>
+ ) : editing ?'Salvar mudanças' :'Criar Atividade'}
+ </button>
+ </div>
+ </form>
+ </motion.div>
+ </div>
+ )}
+ </AnimatePresence>
+ </>
+ );
 }
 
 
 function SortableCard({ card, listId, onEdit, onDelete, onToggle }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: card.id,
-    data: { type: 'card', card, listId },
-  });
+ const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+ id: card.id,
+ data: { type:'card', card, listId },
+ });
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return null;
-    const date = new Date(dateStr + 'T12:00:00');
-    return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
-  };
+ const formatDate = (dateStr) => {
+ if (!dateStr) return null;
+ const date = new Date(dateStr +'T12:00:00');
+ return date.toLocaleDateString('pt-BR', { day:'numeric', month:'short' }).replace('.','');
+ };
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.35 : 1 }}
-      className="group outline-none pb-2"
-    >
-      <div
-        className="flex flex-col relative rounded-[14px] overflow-hidden border border-white/[0.06] hover:border-white/15 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-all duration-200"
-        style={{ background: 'linear-gradient(180deg, #1F1F22 0%, #1A1A1D 100%)', boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 2px 6px rgba(0,0,0,0.25)' }}>
+ return (
+ <div
+ ref={setNodeRef}
+ style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.35 : 1 }}
+ className="group outline-none pb-2"
+ >
+ <div
+ className="flex flex-col relative rounded-[14px] overflow-hidden border border-white/[0.06] hover:border-white/15 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-all duration-200"
+ style={{ background:'linear-gradient(180deg, #1F1F22 0%, #1A1A1D 100%)', boxShadow:'0 1px 0 rgba(255,255,255,0.04) inset, 0 2px 6px rgba(0,0,0,0.25)' }}>
 
-        {/* Dedicated Drag Handle */}
-        <div
-          {...listeners}
-          {...attributes}
-          className="absolute inset-y-0 left-0 w-8 flex items-center justify-center text-[#86868B] hover:text-[#F5F5F7] opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-30 touch-none pointer-events-auto"
-          title="Arrastar"
-        >
-          <div className="p-1 rounded-[6px] hover:bg-white/10">
-            <GripVertical size={14} />
-          </div>
-        </div>
-        {card.cover_url && (
-          <div className="w-full h-[128px] bg-[#202020] relative shrink-0 pointer-events-none overflow-hidden">
-            <img src={card.cover_url} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
-          </div>
-        )}
-        <div className="flex flex-col gap-2 px-3.5 py-3 pl-8">
-          <div className="flex items-start gap-2.5">
-            <button type="button" onClick={() => onToggle(card)}
-              className="mt-[2px] shrink-0 transition-all outline-none border-none hover:scale-110 active:scale-95" title="Concluir">
-              {card.completed ? (
-                <div className="w-[17px] h-[17px] rounded-full bg-[#30D158] flex items-center justify-center shadow-[0_0_8px_rgba(48,209,88,0.4)]">
-                  <Check size={11} strokeWidth={3} className="text-black" />
-                </div>
-              ) : (
-                <div className="w-[17px] h-[17px] rounded-full border-[1.5px] border-[#48484A] hover:border-[#30D158] transition-colors" />
-              )}
-            </button>
-            <div className="flex-1 min-w-0 pr-7">
-              <span className={`block text-[13.5px] font-medium leading-snug tracking-tight transition-colors ${card.completed ? 'line-through text-[#63646B]' : 'text-[#F5F5F7]'}`}>
-                {card.name}
-              </span>
-            </div>
-          </div>
+ {/* Dedicated Drag Handle */}
+ <div
+ {...listeners}
+ {...attributes}
+ className="absolute inset-y-0 left-0 w-8 flex items-center justify-center text-[#86868B] hover:text-[#F5F5F7] opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-30 touch-none pointer-events-auto"
+ title="Arrastar"
+ >
+ <div className="p-1 rounded-[6px] hover:bg-white/10">
+ <GripVertical size={14} />
+ </div>
+ </div>
+ {card.cover_url && (
+ <div className="w-full bg-[#141416] shrink-0 pointer-events-none">
+ <img src={card.cover_url} alt="" className="w-full h-auto block" style={{ maxHeight: 320 }} />
+ </div>
+ )}
+ <div className="flex flex-col gap-2 px-3.5 py-3 pl-8">
+ <div className="flex items-start gap-2.5">
+ <button type="button" onClick={() => onToggle(card)}
+ className="mt-[2px] shrink-0 transition-all outline-none border-none hover:scale-110 active:scale-95" title="Concluir">
+ {card.completed ? (
+ <div className="w-[17px] h-[17px] rounded-full bg-[#30D158] flex items-center justify-center shadow-[0_0_8px_rgba(48,209,88,0.4)]">
+ <Check size={11} strokeWidth={3} className="text-black" />
+ </div>
+ ) : (
+ <div className="w-[17px] h-[17px] rounded-full border-[1.5px] border-[#48484A] hover:border-[#30D158] transition-colors" />
+ )}
+ </button>
+ <div className="flex-1 min-w-0 pr-7">
+ <span className={`block text-[13.5px] font-medium leading-snug tracking-tight transition-colors ${card.completed ?'line-through text-[#63646B]' :'text-[#F5F5F7]'}`}>
+ {card.name}
+ </span>
+ </div>
+ </div>
 
-          {card.due_date && (
-            <div className="flex pl-[26px]">
-              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.5 py-0.5 rounded-[6px] text-[#FFD60A] bg-[#FFD60A]/10 border border-[#FFD60A]/20">
-                <Clock size={10} strokeWidth={2.5} /> {formatDate(card.due_date)}
-              </span>
-            </div>
-          )}
-        </div>
+ {card.due_date && (
+ <div className="flex pl-[26px]">
+ <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.5 py-0.5 rounded-[6px] text-[#FFD60A] bg-[#FFD60A]/10 border border-[#FFD60A]/20">
+ <Clock size={10} strokeWidth={2.5} /> {formatDate(card.due_date)}
+ </span>
+ </div>
+ )}
+ </div>
 
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 z-20">
-          <button type="button" onClick={() => onEdit(card)}
-            className="p-1.5 rounded-[7px] text-[#A1A1AA] hover:text-white hover:bg-white/[0.08] transition-colors outline-none backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.45)' }} title="Editar"><Pencil size={12} /></button>
-          <button type="button" onClick={() => onDelete(card.id)}
-            className="p-1.5 rounded-[7px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition-colors outline-none backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.45)' }} title="Excluir"><Trash2 size={12} /></button>
-        </div>
-      </div>
-    </div>
-  );
+ <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 z-20">
+ <button type="button" onClick={() => onEdit(card)}
+ className="p-1.5 rounded-[7px] text-[#A1A1AA] hover:text-white hover:bg-white/[0.08] transition-colors outline-none backdrop-blur-md" style={{ background:'rgba(0,0,0,0.45)' }} title="Editar"><Pencil size={12} /></button>
+ <button type="button" onClick={() => onDelete(card.id)}
+ className="p-1.5 rounded-[7px] text-[#A1A1AA] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition-colors outline-none backdrop-blur-md" style={{ background:'rgba(0,0,0,0.45)' }} title="Excluir"><Trash2 size={12} /></button>
+ </div>
+ </div>
+ </div>
+ );
 }
 
 function CardPreview({ card, isOverlay = false }) {
-  return (
-    <div className={`flex flex-col relative rounded-[14px] overflow-hidden border border-white/15 ${isOverlay ? 'rotate-1 scale-[1.03]' : ''}`}
-      style={{ background: 'linear-gradient(180deg, #232326 0%, #1B1B1E 100%)', boxShadow: '0 14px 36px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset' }}>
-      {card.cover_url && (
-        <div className="w-full h-[110px] overflow-hidden shrink-0">
-          <img src={card.cover_url} alt="" className="w-full h-full object-cover" />
-        </div>
-      )}
-      <div className="flex items-center gap-2.5 px-3.5 py-3 pl-8">
-        <div className="w-[17px] h-[17px] rounded-full border-[1.5px] border-[#48484A] shrink-0" />
-        <span className="flex-1 text-[13.5px] font-medium leading-tight text-[#F5F5F7] tracking-tight truncate">{card.name}</span>
-      </div>
-    </div>
-  );
+ return (
+ <div className={`flex flex-col relative rounded-[14px] overflow-hidden border border-white/15 ${isOverlay ?'rotate-1 scale-[1.03]' :''}`}
+ style={{ background:'linear-gradient(180deg, #232326 0%, #1B1B1E 100%)', boxShadow:'0 14px 36px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.06) inset' }}>
+ {card.cover_url && (
+ <div className="w-full bg-[#141416] shrink-0">
+ <img src={card.cover_url} alt="" className="w-full h-auto block" style={{ maxHeight: 320 }} />
+ </div>
+ )}
+ <div className="flex items-center gap-2.5 px-3.5 py-3 pl-8">
+ <div className="w-[17px] h-[17px] rounded-full border-[1.5px] border-[#48484A] shrink-0" />
+ <span className="flex-1 text-[13.5px] font-medium leading-tight text-[#F5F5F7] tracking-tight truncate">{card.name}</span>
+ </div>
+ </div>
+ );
 }
 
 function ListOverlay({ list }) {
-  return (
-    <div className="w-[280px] flex-shrink-0 rotate-1 opacity-95 shadow-2xl scale-[1.05] cursor-grabbing">
-      <div className="rounded-[16px] flex flex-col pt-3 border border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)]" style={{ background: '#202020', maxHeight: '60vh' }}>
-        <div className="flex items-center justify-between px-4 pb-3">
-          <h3 className="text-[14px] font-semibold text-[#F5F5F7] truncate">{list.name}</h3>
-          <MoreHorizontal size={16} className="text-[#A1A1AA] opacity-70" />
-        </div>
-        <div className="flex-1 overflow-y-auto px-2 space-y-2 pb-3 scrollbar-hide">
-          {list.cards?.map(card => (
-            <CardPreview key={card.id} card={card} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+ return (
+ <div className="w-[280px] flex-shrink-0 rotate-1 opacity-95 shadow-2xl scale-[1.05] cursor-grabbing">
+ <div className="rounded-[16px] flex flex-col pt-3 border border-white/30 ring-1 ring-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.5)]" style={{ background:'#202020', maxHeight:'60vh' }}>
+ <div className="flex items-center justify-between px-4 pb-3">
+ <h3 className="text-[14px] font-semibold text-[#F5F5F7] truncate">{list.name}</h3>
+ <MoreHorizontal size={16} className="text-[#A1A1AA] opacity-70" />
+ </div>
+ <div className="flex-1 overflow-y-auto px-2 space-y-2 pb-3 scrollbar-hide">
+ {list.cards?.map(card => (
+ <CardPreview key={card.id} card={card} />
+ ))}
+ </div>
+ </div>
+ </div>
+ );
 }
 
 function CardOverlay({ card }) {
-  return <CardPreview card={card} isOverlay />;
+ return <CardPreview card={card} isOverlay />;
 }
 
 function KanbanList({ list, onRename, onDelete, onCardAdded, onEditCard, onDeleteCard, onToggleCard }) {
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleVal, setTitleVal] = useState(list.name);
-  const [saving, setSaving] = useState(false);
-  const [showAdd, setShowAdd] = useState(false);
-  const [cardName, setCardName] = useState('');
-  const [addingCard, setAddingCard] = useState(false);
-  const titleRef = useRef(null);
-  const cardRef = useRef(null);
-  const { error: showError } = useToast();
-  const { t } = useTranslation();
+ const [editingTitle, setEditingTitle] = useState(false);
+ const [titleVal, setTitleVal] = useState(list.name);
+ const [saving, setSaving] = useState(false);
+ const [showAdd, setShowAdd] = useState(false);
+ const [cardName, setCardName] = useState('');
+ const [addingCard, setAddingCard] = useState(false);
+ const titleRef = useRef(null);
+ const cardRef = useRef(null);
+ const { error: showError } = useToast();
+ const { t } = useTranslation();
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `list-${list.id}`,
-    data: { type: 'list', list },
-  });
+ const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+ id: `list-${list.id}`,
+ data: { type:'list', list },
+ });
 
-  useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
-  useEffect(() => { if (showAdd) cardRef.current?.focus(); }, [showAdd]);
+ useEffect(() => { if (editingTitle) titleRef.current?.focus(); }, [editingTitle]);
+ useEffect(() => { if (showAdd) cardRef.current?.focus(); }, [showAdd]);
 
-  async function saveTitle() {
-    const v = titleVal.trim();
-    if (!v || v === list.name) { setTitleVal(list.name); setEditingTitle(false); return; }
-    setSaving(true);
-    try {
-      const upd = await api(`/task-lists/${list.id}`, { method: 'PUT', body: JSON.stringify({ name: v }) });
-      onRename(upd);
-      setEditingTitle(false);
-    } catch (err) { showError(err.message); setTitleVal(list.name); }
-    finally { setSaving(false); }
-  }
+ async function saveTitle() {
+ const v = titleVal.trim();
+ if (!v || v === list.name) { setTitleVal(list.name); setEditingTitle(false); return; }
+ setSaving(true);
+ try {
+ const upd = await api(`/task-lists/${list.id}`, { method:'PUT', body: JSON.stringify({ name: v }) });
+ onRename(upd);
+ setEditingTitle(false);
+ } catch (err) { showError(err.message); setTitleVal(list.name); }
+ finally { setSaving(false); }
+ }
 
-  async function addCard() {
-    const v = cardName.trim();
-    if (!v) return;
-    setAddingCard(true);
-    try {
-      const card = await api('/task-cards', { method: 'POST', body: JSON.stringify({ name: v, list_id: list.id }) });
-      onCardAdded(list.id, card);
-      setCardName('');
-      cardRef.current?.focus();
-    } catch (err) { showError(err.message); }
-    finally { setAddingCard(false); }
-  }
+ async function addCard() {
+ const v = cardName.trim();
+ if (!v) return;
+ setAddingCard(true);
+ try {
+ const card = await api('/task-cards', { method:'POST', body: JSON.stringify({ name: v, list_id: list.id }) });
+ onCardAdded(list.id, card);
+ setCardName('');
+ cardRef.current?.focus();
+ } catch (err) { showError(err.message); }
+ finally { setAddingCard(false); }
+ }
 
-  const cardIds = list.cards.map(c => c.id);
+ const cardIds = list.cards.map(c => c.id);
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
-      className="w-[280px] sm:w-[300px] flex-shrink-0 snap-center sm:snap-align-none"
-    >
-      <div
-        className="rounded-[18px] flex flex-col pt-3 border border-white/[0.05]"
-        style={{
-          background: 'rgba(20,20,22,0.72)',
-          backdropFilter: 'blur(24px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-          boxShadow: '0 24px 48px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
-          maxHeight: '75vh'
-        }}>
-        <div className="flex items-center justify-between px-4 pb-3 cursor-grab active:cursor-grabbing touch-none" {...attributes} {...listeners}>
-          {editingTitle ? (
-            <div className="flex-1 flex items-center gap-2">
-              <input ref={titleRef} value={titleVal} onChange={e => setTitleVal(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setTitleVal(list.name); setEditingTitle(false); } }}
-                onBlur={saveTitle} onPointerDown={e => e.stopPropagation()}
-                className="flex-1 rounded-[8px] px-2 py-1 text-[13.5px] font-semibold text-[#F5F5F7] outline-none border border-[#0A84FF]/60 min-w-0"
-                style={{ background: '#2C2C2E' }} />
-              {saving && <Loader2 size={13} className="animate-spin text-[#86868B] shrink-0" />}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <h3 onDoubleClick={() => setEditingTitle(true)}
-                className="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-[#E5E5EA] truncate cursor-default select-none pointer-events-auto">
-                {list.name}
-              </h3>
-              <span className="text-[10.5px] font-semibold text-[#63646B] bg-white/[0.05] px-1.5 py-0.5 rounded-full">{list.cards.length}</span>
-            </div>
-          )}
+ return (
+ <div
+ ref={setNodeRef}
+ style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+ className="w-[280px] sm:w-[300px] flex-shrink-0 snap-center sm:snap-align-none"
+ >
+ <div
+ className="rounded-[18px] flex flex-col pt-3 border border-white/[0.05]"
+ style={{
+ background:'rgba(20,20,22,0.72)',
+ backdropFilter:'blur(24px) saturate(160%)',
+ WebkitBackdropFilter:'blur(24px) saturate(160%)',
+ boxShadow:'0 24px 48px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
+ maxHeight:'75vh'
+ }}>
+ <div className="flex items-center justify-between px-4 pb-3 cursor-grab active:cursor-grabbing touch-none" {...attributes} {...listeners}>
+ {editingTitle ? (
+ <div className="flex-1 flex items-center gap-2">
+ <input ref={titleRef} value={titleVal} onChange={e => setTitleVal(e.target.value)}
+ onKeyDown={e => { if (e.key ==='Enter') saveTitle(); if (e.key ==='Escape') { setTitleVal(list.name); setEditingTitle(false); } }}
+ onBlur={saveTitle} onPointerDown={e => e.stopPropagation()}
+ className="flex-1 rounded-[8px] px-2 py-1 text-[13.5px] font-semibold text-[#F5F5F7] outline-none border border-[#0A84FF]/60 min-w-0"
+ style={{ background:'#2C2C2E' }} />
+ {saving && <Loader2 size={13} className="animate-spin text-[#86868B] shrink-0" />}
+ </div>
+ ) : (
+ <div className="flex items-center gap-2 flex-1 min-w-0">
+ <h3 onDoubleClick={() => setEditingTitle(true)}
+ className="text-[12.5px] font-semibold text-[#E5E5EA] truncate cursor-default select-none pointer-events-auto">
+ {list.name}
+ </h3>
+ <span className="text-[10.5px] font-semibold text-[#63646B] bg-white/[0.05] px-1.5 py-0.5 rounded-full">{list.cards.length}</span>
+ </div>
+ )}
 
-          <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
-            <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(list.id)} className="p-1 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/[0.08] transition-colors outline-none cursor-pointer" title="Opções da coluna">
-              <MoreHorizontal size={16} />
-            </button>
-          </div>
-        </div>
+ <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
+ <button type="button" onPointerDown={e => e.stopPropagation()} onClick={() => onDelete(list.id)} className="p-1 rounded-[6px] text-[#A1A1AA] hover:text-white hover:bg-white/[0.08] transition-colors outline-none cursor-pointer" title="Opções da coluna">
+ <MoreHorizontal size={16} />
+ </button>
+ </div>
+ </div>
 
-        <div className="flex-1 overflow-y-auto px-2 space-y-0 scrollbar-hide pb-2">
-          <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-            {list.cards.map(card => (
-              <SortableCard key={card.id} card={card} listId={list.id} onEdit={onEditCard} onDelete={onDeleteCard} onToggle={onToggleCard} />
-            ))}
-          </SortableContext>
+ <div className="flex-1 overflow-y-auto px-2 space-y-0 scrollbar-hide pb-2">
+ <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+ {list.cards.map(card => (
+ <SortableCard key={card.id} card={card} listId={list.id} onEdit={onEditCard} onDelete={onDeleteCard} onToggle={onToggleCard} />
+ ))}
+ </SortableContext>
 
-          {showAdd ? (
-            <div className="mt-1 pb-2 px-1">
-              <div className="p-2 py-2 rounded-[12px] border border-[#0A84FF]/50" style={{ background: '#2C2C2E' }}>
-                <input ref={cardRef} value={cardName} onChange={e => setCardName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') addCard(); if (e.key === 'Escape') { setShowAdd(false); setCardName(''); } }}
-                  placeholder={t.boardCardPh}
-                  className="w-full bg-transparent text-[14px] text-[#E5E5EA] placeholder:text-[#86868B] outline-none" />
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button type="button" onClick={addCard} disabled={addingCard || !cardName.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-medium text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:bg-opacity-80"
-                  style={{ background: '#0A84FF' }}>
-                  {addingCard ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={2.5} />}
-                  {t.boardAdd}
-                </button>
-                <button type="button" onClick={() => { setShowAdd(false); setCardName(''); }}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-[13px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
-                  <X size={13} /> {t.boardCancel}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="pt-1 pb-2 px-1">
-              <button type="button" onClick={() => setShowAdd(true)}
-                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-[10px] text-[12.5px] font-medium text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.04] transition-colors outline-none cursor-pointer group/add">
-                <Plus size={14} strokeWidth={2.2} className="opacity-70 group-hover/add:opacity-100 transition-opacity" />
-                <span className="tracking-tight">Adicionar tarefa</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+ {showAdd ? (
+ <div className="mt-1 pb-2 px-1">
+ <div className="p-2 py-2 rounded-[12px] border border-[#0A84FF]/50" style={{ background:'#2C2C2E' }}>
+ <input ref={cardRef} value={cardName} onChange={e => setCardName(e.target.value)}
+ onKeyDown={e => { if (e.key ==='Enter') addCard(); if (e.key ==='Escape') { setShowAdd(false); setCardName(''); } }}
+ placeholder={t.boardCardPh}
+ className="w-full bg-transparent text-[14px] text-[#E5E5EA] placeholder:text-[#86868B] outline-none" />
+ </div>
+ <div className="flex gap-2 mt-2">
+ <button type="button" onClick={addCard} disabled={addingCard || !cardName.trim()}
+ className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-[13px] font-medium text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:bg-opacity-80"
+ style={{ background:'#0A84FF' }}>
+ {addingCard ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} strokeWidth={2.5} />}
+ {t.boardAdd}
+ </button>
+ <button type="button" onClick={() => { setShowAdd(false); setCardName(''); }}
+ className="flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-[13px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+ <X size={13} /> {t.boardCancel}
+ </button>
+ </div>
+ </div>
+ ) : (
+ <div className="pt-1 pb-2 px-1">
+ <button type="button" onClick={() => setShowAdd(true)}
+ className="w-full flex items-center gap-2 px-2.5 py-2 rounded-[10px] text-[12.5px] font-medium text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.04] transition-colors outline-none cursor-pointer group/add">
+ <Plus size={14} strokeWidth={2.2} className="opacity-70 group-hover/add:opacity-100 transition-opacity" />
+ <span className="tracking-tight">Adicionar tarefa</span>
+ </button>
+ </div>
+ )}
+ </div>
+ </div>
+ </div>
+ );
 }
 
 function EditCardModal({ card, onSave, onClose }) {
-  const [name, setName] = useState(card.name || '');
-  const [coverUrl, setCoverUrl] = useState(card.cover_url || '');
-  const [dueDate, setDueDate] = useState(card.due_date || '');
-  const [saving, setSaving] = useState(false);
-  const { error: showError } = useToast();
-  const { t } = useTranslation();
+ const [name, setName] = useState(card.name ||'');
+ const [coverUrl, setCoverUrl] = useState(card.cover_url ||'');
+ const [dueDate, setDueDate] = useState(card.due_date ||'');
+ const [alarmTime, setAlarmTime] = useState(card.alarm_time ||'');
+ const [saving, setSaving] = useState(false);
+ const { error: showError } = useToast();
+ const { t } = useTranslation();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const v = name.trim();
-    if (!v) return;
-    setSaving(true);
-    try {
-      const payload = { name: v };
-      if (coverUrl.trim()) payload.cover_url = coverUrl.trim();
-      else payload.cover_url = null;
-      if (dueDate) payload.due_date = dueDate;
-      else payload.due_date = null;
+ async function handleSubmit(e) {
+ e.preventDefault();
+ const v = name.trim();
+ if (!v) return;
+ setSaving(true);
+ try {
+ const payload = { name: v };
+ if (coverUrl.trim()) payload.cover_url = coverUrl.trim();
+ else payload.cover_url = null;
+ if (dueDate) payload.due_date = dueDate;
+ else payload.due_date = null;
+ payload.alarm_time = alarmTime || null;
 
-      const upd = await api(`/task-cards/${card.id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      onSave(upd);
-    } catch (err) { showError(err.message); }
-    finally { setSaving(false); }
-  }
+ const upd = await api(`/task-cards/${card.id}`, { method:'PUT', body: JSON.stringify(payload) });
+ onSave(upd);
+ } catch (err) { showError(err.message); }
+ finally { setSaving(false); }
+ }
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-      style={{ fontFamily: FONT, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }}>
-      <motion.div initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
-        transition={{ duration: 0.25 }}
-        className="solid-modal w-full max-w-sm rounded-[22px] p-6 shadow-2xl border border-white/[0.08]"
-        style={{ background: '#202020' }}>
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-[18px] font-semibold text-[#F5F5F7]">Editar Recado</h2>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-[8px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer"><X size={16} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-[#86868B] ml-1">O que está escrito no recado?</label>
-            <input autoFocus value={name} onChange={e => setName(e.target.value)} required
-              className="w-full px-4 py-3 rounded-[14px] text-[15px] text-[#F5F5F7] outline-none border border-transparent focus:border-[#0A84FF] transition-all"
-              style={{ background: '#2C2C2E' }}
-              placeholder="Ex: Não esquecer de levar o documento" />
-          </div>
+ return (
+ <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
+ style={{ fontFamily: FONT, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(10px)' }}>
+ <motion.div initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }}
+ transition={{ duration: 0.25 }}
+ className="solid-modal w-full max-w-sm rounded-[22px] p-6 shadow-2xl border border-white/[0.08]"
+ style={{ background:'#202020' }}>
+ <div className="flex justify-between items-center mb-5">
+ <h2 className="text-[18px] font-semibold text-[#F5F5F7]">Editar Recado</h2>
+ <button type="button" onClick={onClose} className="p-1.5 rounded-[8px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.08] transition-colors outline-none cursor-pointer"><X size={16} /></button>
+ </div>
+ <form onSubmit={handleSubmit} className="space-y-4">
+ <div className="space-y-1.5">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">O que está escrito no recado?</label>
+ <input autoFocus value={name} onChange={e => setName(e.target.value)} required
+ className="w-full px-4 py-3 rounded-[14px] text-[15px] text-[#F5F5F7] outline-none border border-transparent focus:border-[#0A84FF] transition-all"
+ style={{ background:'#2C2C2E' }}
+ placeholder="Ex: Não esquecer de levar o documento" />
+ </div>
 
-          <div className="space-y-1.5 flex flex-col">
-            <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.cardCoverLabel}</label>
-            {coverUrl && (
-              <div className="relative w-full h-24 rounded-[12px] border border-white/[0.05] overflow-hidden mb-2 group">
-                <img src={coverUrl} alt="Capa" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setCoverUrl('')} className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-md text-white opacity-0 group-hover:opacity-100 transition-opacity outline-none cursor-pointer"><X size={14} /></button>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => setCoverUrl(reader.result);
-                  reader.readAsDataURL(file);
-                }
-              }}
-              className="w-full text-[13px] text-[#86868B] file:mr-3 file:py-2 file:px-4 file:rounded-[8px] file:border-0 file:text-[13px] file:font-semibold file:bg-[#0A84FF]/10 file:text-[#0A84FF] hover:file:bg-[#0A84FF]/20 cursor-pointer outline-none"
-            />
-          </div>
+ <div className="space-y-1.5 flex flex-col">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.cardCoverLabel}</label>
+ {coverUrl && (
+ <div className="relative w-full h-24 rounded-[12px] border border-white/[0.05] overflow-hidden mb-2 group">
+ <img src={coverUrl} alt="Capa" className="w-full h-full object-cover" />
+ <button type="button" onClick={() => setCoverUrl('')} className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-md text-white opacity-0 group-hover:opacity-100 transition-opacity outline-none cursor-pointer"><X size={14} /></button>
+ </div>
+ )}
+ <input
+ type="file"
+ accept="image/*"
+ onChange={(e) => {
+ const file = e.target.files[0];
+ if (file) {
+ const reader = new FileReader();
+ reader.onloadend = () => setCoverUrl(reader.result);
+ reader.readAsDataURL(file);
+ }
+ }}
+ className="w-full text-[13px] text-[#86868B] file:mr-3 file:py-2 file:px-4 file:rounded-[8px] file:border-0 file:text-[13px] file:font-semibold file:bg-[#0A84FF]/10 file:text-[#0A84FF] hover:file:bg-[#0A84FF]/20 cursor-pointer outline-none"
+ />
+ </div>
 
-          <div className="flex flex-col gap-4 pt-1">
-            <h3 className="text-[14px] font-semibold text-[#86868B] uppercase tracking-wider mb-0">{t.cardDatesLabel}</h3>
+ <div className="flex flex-col gap-4 pt-1">
+ <h3 className="text-[14px] font-semibold text-[#86868B] tracking-normal mb-0">{t.cardDatesLabel}</h3>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-medium text-[#86868B]">{t.cardDueDateLabel}</label>
-              <div className="flex items-center gap-3">
-                <input type="checkbox" checked={!!dueDate} onChange={(e) => {
-                  if (!e.target.checked) setDueDate('');
-                  else setDueDate(new Date().toISOString().slice(0, 10));
-                }} className="w-4 h-4 rounded-sm border-white/20 accent-[#0A84FF] cursor-pointer" />
-                <div className="flex items-center gap-2">
-                  <input value={dueDate} onChange={e => setDueDate(e.target.value)} type="date" disabled={!dueDate} className={`px-3 py-1.5 text-[#F5F5F7] text-[14px] outline-none border transition-all w-[140px] [color-scheme:dark] ${dueDate ? 'border-[#0A84FF]' : 'border-transparent opacity-50 cursor-not-allowed'}`} style={{ background: '#2C2C2E', borderRadius: '4px' }} />
-                  <input type="time" defaultValue="20:59" disabled={!dueDate} className={`px-3 py-1.5 text-[#F5F5F7] text-[14px] outline-none border border-transparent focus:border-[#0A84FF] transition-all w-[90px] [color-scheme:dark] ${!dueDate && 'opacity-50 cursor-not-allowed'}`} style={{ background: '#2C2C2E', borderRadius: '4px' }} />
-                </div>
-              </div>
-            </div>
-          </div>
+ <div className="flex flex-col gap-2">
+ <label className="text-[13px] font-medium text-[#86868B]">{t.cardDueDateLabel}</label>
+ <div className="flex items-center gap-3">
+ <input type="checkbox" checked={!!dueDate} onChange={(e) => {
+ if (!e.target.checked) setDueDate('');
+ else setDueDate(new Date().toISOString().slice(0, 10));
+ }} className="w-4 h-4 rounded-sm border-white/20 accent-[#0A84FF] cursor-pointer" />
+ <div className="flex items-center gap-2">
+ <input value={dueDate} onChange={e => setDueDate(e.target.value)} type="date" disabled={!dueDate} className={`px-3 py-1.5 text-[#F5F5F7] text-[14px] outline-none border transition-all w-[140px] [color-scheme:dark] ${dueDate ?'border-[#0A84FF]' :'border-transparent opacity-50 cursor-not-allowed'}`} style={{ background:'#2C2C2E', borderRadius:'4px' }} />
+ <input type="time" defaultValue="20:59" disabled={!dueDate} className={`px-3 py-1.5 text-[#F5F5F7] text-[14px] outline-none border border-transparent focus:border-[#0A84FF] transition-all w-[90px] [color-scheme:dark] ${!dueDate &&'opacity-50 cursor-not-allowed'}`} style={{ background:'#2C2C2E', borderRadius:'4px' }} />
+ </div>
+ </div>
+ </div>
+ </div>
 
-          <button type="submit" disabled={saving || !name.trim()}
-            className="w-full py-3 rounded-[14px] text-white text-[15px] font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
-            style={{ background: '#0A84FF' }}>
-            {saving && <Loader2 size={18} className="animate-spin" />}
-            {t.cardSave}
-          </button>
-        </form>
-      </motion.div>
-    </div>
-  );
+ <div className="flex flex-col gap-2">
+ <label className="flex items-center gap-1.5 text-[13px] font-medium text-[#86868B]">
+ <Bell size={13} className={alarmTime ?'text-[#FFD60A]' :''} />
+ Alarme (horário de Brasília)
+ </label>
+ <div className="flex items-center gap-2">
+ <input
+ type="time"
+ value={alarmTime}
+ onChange={e => setAlarmTime(e.target.value)}
+ className="flex-1 px-3 py-2 text-[#F5F5F7] text-[14px] outline-none border border-transparent focus:border-[#FFD60A]/50 transition-all [color-scheme:dark]"
+ style={{ background:'#2C2C2E', borderRadius:'8px' }}
+ />
+ {alarmTime && (
+ <button type="button" onClick={() => setAlarmTime('')} className="p-1.5 text-[#86868B] hover:text-[#FF453A] rounded-full hover:bg-[#FF453A]/10 transition-colors">
+ <BellOff size={14} />
+ </button>
+ )}
+ </div>
+ {alarmTime && <p className="text-[11px] text-[#FFD60A]/80">Alarme em {alarmTime} (Brasília)</p>}
+ </div>
+
+ <button type="submit" disabled={saving || !name.trim()}
+ className="w-full py-3 rounded-[14px] text-white text-[15px] font-semibold disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
+ style={{ background:'#0A84FF' }}>
+ {saving && <Loader2 size={18} className="animate-spin" />}
+ {t.cardSave}
+ </button>
+ </form>
+ </motion.div>
+ </div>
+ );
 }
 
 /* ──────────────────────────────────────────────────────
-   BOARD GALLERY — shows all boards, click to enter
+ BOARD GALLERY — shows all boards, click to enter
 ────────────────────────────────────────────────────── */
 const BOARD_COLORS = [
-  '#2C2C2E', '#1A3A2A', '#2A1A3A', '#3A2A1A', '#1A2A3A', '#3A1A2A',
-  '#0A84FF', '#32D74B', '#FF9F0A', '#FF453A', '#BF5AF2', '#AC8E68',
+'#2C2C2E','#1A3A2A','#2A1A3A','#3A2A1A','#1A2A3A','#3A1A2A',
+'#0A84FF','#32D74B','#FF9F0A','#FF453A','#BF5AF2','#AC8E68',
 ];
 
 function BoardGallery({ onOpenBoard }) {
-  const [boards, setBoards] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [boardName, setBoardName] = useState('');
-  const [boardColor, setBoardColor] = useState('#2C2C2E');
-  const [adding, setAdding] = useState(false);
-  const [editingBoard, setEditingBoard] = useState(null);
-  const inputRef = useRef(null);
-  const { success, error: showError } = useToast();
-  const { confirm } = useConfirm();
+ const [boards, setBoards] = useState([]);
+ const [loading, setLoading] = useState(true);
+ const [showAdd, setShowAdd] = useState(false);
+ const [boardName, setBoardName] = useState('');
+ const [boardColor, setBoardColor] = useState('#2C2C2E');
+ const [adding, setAdding] = useState(false);
+ const [editingBoard, setEditingBoard] = useState(null);
+ const inputRef = useRef(null);
+ const { success, error: showError } = useToast();
+ const { confirm } = useConfirm();
 
-  const { activeTeam } = useAuth();
-  const { t } = useTranslation();
-  const isMobile = useIsMobile();
+ const { activeTeam } = useAuth();
+ const { t } = useTranslation();
+ const isMobile = useIsMobile();
 
-  useEffect(() => {
-    api('/task-boards')
-      .then(data => { setBoards(data); setLoading(false); })
-      .catch(err => { showError(err.message); setLoading(false); });
-  }, [activeTeam]); // eslint-disable-line
+ useEffect(() => {
+ api('/task-boards')
+ .then(data => { setBoards(data); setLoading(false); })
+ .catch(err => { showError(err.message); setLoading(false); });
+ }, [activeTeam]); // eslint-disable-line
 
-  useRealtimeSubscription(
-    ['task_boards', 'task_lists', 'task_cards'],
-    () => { api('/task-boards').then(setBoards).catch(console.error); }
-  );
+ useRealtimeSubscription(
+ ['task_boards','task_lists','task_cards'],
+ () => { api('/task-boards').then(setBoards).catch(console.error); }
+ );
 
-  useEffect(() => { if (showAdd) inputRef.current?.focus(); }, [showAdd]);
+ useEffect(() => { if (showAdd) inputRef.current?.focus(); }, [showAdd]);
 
-  async function addBoard() {
-    const v = boardName.trim();
-    if (!v) return;
-    setAdding(true);
-    try {
-      const board = await api('/task-boards', { method: 'POST', body: JSON.stringify({ name: v, color: boardColor }) });
-      setBoards(prev => [...prev, board]);
-      setBoardName('');
-      setBoardColor('#2C2C2E');
-      setShowAdd(false);
-      success('Mural criado com sucesso');
-    } catch (err) { showError(err.message); }
-    finally { setAdding(false); }
-  }
+ async function addBoard() {
+ const v = boardName.trim();
+ if (!v) return;
+ setAdding(true);
+ try {
+ const board = await api('/task-boards', { method:'POST', body: JSON.stringify({ name: v, color: boardColor }) });
+ setBoards(prev => [...prev, board]);
+ setBoardName('');
+ setBoardColor('#2C2C2E');
+ setShowAdd(false);
+ success('Mural criado com sucesso');
+ } catch (err) { showError(err.message); }
+ finally { setAdding(false); }
+ }
 
-  function deleteBoard(id) {
-    confirm({
-      title: 'Apagar este mural?',
-      message: 'Todos os recados e colunas deste mural serão removidos permanentemente.',
-      onConfirm: async () => {
-        try {
-          await api(`/task-boards/${id}`, { method: 'DELETE' });
-          setBoards(prev => prev.filter(b => b.id !== id));
-          success(t.boardDeleted);
-        } catch (err) { showError(err.message); }
-      },
-    });
-  }
+ function deleteBoard(id) {
+ confirm({
+ title:'Apagar este mural?',
+ message:'Todos os recados e colunas deste mural serão removidos permanentemente.',
+ onConfirm: async () => {
+ try {
+ await api(`/task-boards/${id}`, { method:'DELETE' });
+ setBoards(prev => prev.filter(b => b.id !== id));
+ success(t.boardDeleted);
+ } catch (err) { showError(err.message); }
+ },
+ });
+ }
 
-  async function handleUpdateBoard(updatedBoard) {
-    setBoards(prev => prev.map(b => b.id === updatedBoard.id ? updatedBoard : b));
-    setEditingBoard(null);
-    success('Mural atualizado');
-  }
+ async function handleUpdateBoard(updatedBoard) {
+ setBoards(prev => prev.map(b => b.id === updatedBoard.id ? updatedBoard : b));
+ setEditingBoard(null);
+ success('Mural atualizado');
+ }
 
-  if (loading) return <LoadingSkeleton variant="tasks" />;
+ if (loading) return <LoadingSkeleton variant="tasks" />;
 
-  if (isMobile) {
-    return (
-      <>
-        <MobileBoardGallery
-          boards={boards}
-          showAdd={showAdd}
-          setShowAdd={setShowAdd}
-          boardName={boardName}
-          setBoardName={setBoardName}
-          boardColor={boardColor}
-          setBoardColor={setBoardColor}
-          adding={adding}
-          addBoard={addBoard}
-          deleteBoard={deleteBoard}
-          setEditingBoard={setEditingBoard}
-          onOpenBoard={onOpenBoard}
-        />
-        <AnimatePresence>
-          {editingBoard && (
-            <EditBoardModal board={editingBoard} onSave={handleUpdateBoard} onClose={() => setEditingBoard(null)} />
-          )}
-        </AnimatePresence>
-      </>
-    );
-  }
+ if (isMobile) {
+ return (
+ <>
+ <MobileBoardGallery
+ boards={boards}
+ showAdd={showAdd}
+ setShowAdd={setShowAdd}
+ boardName={boardName}
+ setBoardName={setBoardName}
+ boardColor={boardColor}
+ setBoardColor={setBoardColor}
+ adding={adding}
+ addBoard={addBoard}
+ deleteBoard={deleteBoard}
+ setEditingBoard={setEditingBoard}
+ onOpenBoard={onOpenBoard}
+ />
+ <AnimatePresence>
+ {editingBoard && (
+ <EditBoardModal board={editingBoard} onSave={handleUpdateBoard} onClose={() => setEditingBoard(null)} />
+ )}
+ </AnimatePresence>
+ </>
+ );
+ }
 
-  return (
-    <>
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 lg:mb-10">
-        <div className="space-y-1">
-          <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Murais</h1>
-          <p className="text-[15px] sm:text-[17px] text-[#86868B]">{boards.length} mural de recados{boards.length !== 1 ? 's' : ''}</p>
-        </div>
-        <button type="button" onClick={() => setShowAdd(true)}
-          className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
-          <Plus size={14} strokeWidth={3} /> Novo Mural
-        </button>
-      </motion.div>
+ return (
+ <>
+ <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+ className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 lg:mb-10">
+ <div className="space-y-1">
+ <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight">Meus Murais</h1>
+ <p className="text-[15px] sm:text-[17px] text-[#86868B]">{boards.length} mural de recados{boards.length !== 1 ?'s' :''}</p>
+ </div>
+ <button type="button" onClick={() => setShowAdd(true)}
+ className="flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 rounded-[10px] bg-[#F5F5F7] text-[#000000] text-[12px] sm:text-[13px] font-bold hover:bg-white transition-all cursor-pointer shadow-sm active:scale-95 self-start sm:self-auto">
+ <Plus size={14} strokeWidth={3} /> Novo Mural
+ </button>
+ </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-        className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-        {boards.map(board => (
-          <motion.div key={board.id} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}
-            className="group relative rounded-[16px] overflow-hidden cursor-pointer shadow-lg border border-white/[0.04] hover:border-white/[0.12] transition-all"
-            style={{ background: board.color || '#2C2C2E', minHeight: 84 }}
-            onClick={() => onOpenBoard(board)}>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
-            <div className="relative z-10 p-3 flex flex-col justify-end h-full" style={{ minHeight: 84 }}>
-              <h3 className="text-[14px] sm:text-[16px] font-bold text-white truncate drop-shadow-md tracking-tight">{board.name}</h3>
-            </div>
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
-              <button type="button" onClick={(e) => { e.stopPropagation(); setEditingBoard(board); }}
-                className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/70 transition-colors outline-none cursor-pointer">
-                <Pencil size={14} />
-              </button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); }}
-                className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-[#FF453A] hover:bg-black/70 transition-colors outline-none cursor-pointer">
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </motion.div>
-        ))}
+ <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+ className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+ {boards.map(board => (
+ <motion.div key={board.id} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}
+ className="group relative rounded-[16px] overflow-hidden cursor-pointer shadow-lg border border-white/[0.04] hover:border-white/[0.12] transition-all"
+ style={{ background: board.color ||'#2C2C2E', minHeight: 84 }}
+ onClick={() => onOpenBoard(board)}>
+ <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+ <div className="relative z-10 p-3 flex flex-col justify-end h-full" style={{ minHeight: 84 }}>
+ <h3 className="text-[14px] sm:text-[16px] font-bold text-white truncate drop-shadow-md tracking-tight">{board.name}</h3>
+ </div>
+ <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
+ <button type="button" onClick={(e) => { e.stopPropagation(); setEditingBoard(board); }}
+ className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/70 transition-colors outline-none cursor-pointer">
+ <Pencil size={14} />
+ </button>
+ <button type="button" onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); }}
+ className="p-1.5 rounded-[8px] bg-black/50 backdrop-blur-sm text-white/70 hover:text-[#FF453A] hover:bg-black/70 transition-colors outline-none cursor-pointer">
+ <Trash2 size={14} />
+ </button>
+ </div>
+ </motion.div>
+ ))}
 
-        {/* Add board card */}
-        {showAdd ? (
-          <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg flex flex-col gap-3" style={{ background: '#202020' }}>
-            <input ref={inputRef} value={boardName} onChange={e => setBoardName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') addBoard(); if (e.key === 'Escape') { setShowAdd(false); setBoardName(''); } }}
-              placeholder="Nome do seu mural..."
-              className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
-              style={{ background: '#2C2C2E' }} />
-            <div className="flex flex-wrap gap-2">
-              {BOARD_COLORS.map(c => (
-                <button key={c} type="button" onClick={() => setBoardColor(c)}
-                  className={`w-6 h-6 rounded-full transition-all outline-none cursor-pointer ${boardColor === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#202020] scale-110' : 'hover:scale-110'}`}
-                  style={{ background: c }} />
-              ))}
-              <div className="flex items-center gap-2 ml-1">
-                <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/20 group cursor-pointer" style={{ background: boardColor }}>
-                  <input type="color" value={boardColor} onChange={e => setBoardColor(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[2]" title="Escolher cor personalizada" />
-                </div>
-                <input type="text" value={boardColor}
-                  onChange={e => {
-                    let val = e.target.value;
-                    if (val && !val.startsWith('#')) val = '#' + val;
-                    setBoardColor(val.substring(0, 7));
-                  }}
-                  placeholder="#000000"
-                  className="w-[75px] bg-[#2C2C2E] text-[11px] text-[#F5F5F7] px-2 py-1 rounded-[6px] border border-white/10 outline-none focus:border-[#0A84FF]/50 transition-colors uppercase font-mono" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={addBoard} disabled={adding || !boardName.trim()}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
-                style={{ background: '#0A84FF' }}>
-                {adding && <Loader2 size={14} className="animate-spin" />}
-                Criar Mural
-              </button>
-              <button type="button" onClick={() => { setShowAdd(false); setBoardName(''); }}
-                className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" onClick={() => setShowAdd(true)}
-            className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 rounded-[16px] text-[12px] sm:text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.02] transition-all cursor-pointer outline-none"
-            style={{ minHeight: 84 }}>
-            <Plus size={18} strokeWidth={1.5} />
-            <span className="text-center line-clamp-1 px-2">Novo mural</span>
-          </button>
-        )}
-      </motion.div>
+ {/* Add board card */}
+ {showAdd ? (
+ <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg flex flex-col gap-3" style={{ background:'#202020' }}>
+ <input ref={inputRef} value={boardName} onChange={e => setBoardName(e.target.value)}
+ onKeyDown={e => { if (e.key ==='Enter') addBoard(); if (e.key ==='Escape') { setShowAdd(false); setBoardName(''); } }}
+ placeholder="Nome do seu mural..."
+ className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
+ style={{ background:'#2C2C2E' }} />
+ <div className="flex flex-wrap gap-2">
+ {BOARD_COLORS.map(c => (
+ <button key={c} type="button" onClick={() => setBoardColor(c)}
+ className={`w-6 h-6 rounded-full transition-all outline-none cursor-pointer ${boardColor === c ?'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#202020] scale-110' :'hover:scale-110'}`}
+ style={{ background: c }} />
+ ))}
+ <div className="flex items-center gap-2 ml-1">
+ <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/20 group cursor-pointer" style={{ background: boardColor }}>
+ <input type="color" value={boardColor} onChange={e => setBoardColor(e.target.value)}
+ className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[2]" title="Escolher cor personalizada" />
+ </div>
+ <input type="text" value={boardColor}
+ onChange={e => {
+ let val = e.target.value;
+ if (val && !val.startsWith('#')) val ='#' + val;
+ setBoardColor(val.substring(0, 7));
+ }}
+ placeholder="#000000"
+ className="w-[75px] bg-[#2C2C2E] text-[11px] text-[#F5F5F7] px-2 py-1 rounded-[6px] border border-white/10 outline-none focus:border-[#0A84FF]/50 transition-colors font-mono" />
+ </div>
+ </div>
+ <div className="flex gap-2">
+ <button type="button" onClick={addBoard} disabled={adding || !boardName.trim()}
+ className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
+ style={{ background:'#0A84FF' }}>
+ {adding && <Loader2 size={14} className="animate-spin" />}
+ Criar Mural
+ </button>
+ <button type="button" onClick={() => { setShowAdd(false); setBoardName(''); }}
+ className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+ <X size={16} />
+ </button>
+ </div>
+ </div>
+ ) : (
+ <button type="button" onClick={() => setShowAdd(true)}
+ className="flex flex-col items-center justify-center gap-1.5 px-3 py-6 rounded-[16px] text-[12px] sm:text-[14px] font-medium text-[#48484A] hover:text-[#86868B] border border-dashed border-white/[0.08] hover:bg-white/[0.02] transition-all cursor-pointer outline-none"
+ style={{ minHeight: 84 }}>
+ <Plus size={18} strokeWidth={1.5} />
+ <span className="text-center line-clamp-1 px-2">Novo mural</span>
+ </button>
+ )}
+ </motion.div>
 
-      {boards.length === 0 && !showAdd && (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-60">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
-            <Kanban size={28} strokeWidth={1.2} className="text-[#86868B]" />
-          </div>
-          <p className="text-[15px] text-[#86868B]">Crie seu primeiro mural de recados para começar.</p>
-        </div>
-      )}
+ {boards.length === 0 && !showAdd && (
+ <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-60">
+ <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background:'rgba(255,255,255,0.04)' }}>
+ <Kanban size={28} strokeWidth={1.2} className="text-[#86868B]" />
+ </div>
+ <p className="text-[15px] text-[#86868B]">Crie seu primeiro mural de recados para começar.</p>
+ </div>
+ )}
 
-      <AnimatePresence>
-        {editingBoard && (
-          <EditBoardModal board={editingBoard} onSave={handleUpdateBoard} onClose={() => setEditingBoard(null)} />
-        )}
-      </AnimatePresence>
-    </>
-  );
+ <AnimatePresence>
+ {editingBoard && (
+ <EditBoardModal board={editingBoard} onSave={handleUpdateBoard} onClose={() => setEditingBoard(null)} />
+ )}
+ </AnimatePresence>
+ </>
+ );
 }
 
 function EditBoardModal({ board, onSave, onClose }) {
-  const [name, setName] = useState(board.name);
-  const [color, setColor] = useState(board.color || '#2C2C2E');
-  const [saving, setSaving] = useState(false);
-  const { error: showError } = useToast();
-  const { t } = useTranslation();
+ const [name, setName] = useState(board.name);
+ const [color, setColor] = useState(board.color ||'#2C2C2E');
+ const [saving, setSaving] = useState(false);
+ const { error: showError } = useToast();
+ const { t } = useTranslation();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (saving || !name.trim()) return;
-    setSaving(true);
-    try {
-      const resp = await api(`/task-boards/${board.id}`, { method: 'PUT', body: JSON.stringify({ name, color }) });
-      onSave(resp);
-    } catch (err) { showError(err.message); }
-    finally { setSaving(false); }
-  }
+ async function handleSubmit(e) {
+ e.preventDefault();
+ if (saving || !name.trim()) return;
+ setSaving(true);
+ try {
+ const resp = await api(`/task-boards/${board.id}`, { method:'PUT', body: JSON.stringify({ name, color }) });
+ onSave(resp);
+ } catch (err) { showError(err.message); }
+ finally { setSaving(false); }
+ }
 
-  return (
-    <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4" style={{ fontFamily: FONT }}>
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-[20px] font-semibold text-[#F5F5F7]">Editar Mural</h2>
-          <button onClick={onClose} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] transition-colors outline-none cursor-pointer"><X size={18} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-[#86868B] ml-1">Nome do mural</label>
-            <input autoFocus value={name} onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.boardColorLabel}</label>
-            <div className="flex flex-wrap gap-2.5 p-1 items-center">
-              {BOARD_COLORS.map(c => (
-                <button key={c} type="button" onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full transition-all outline-none cursor-pointer ${color === c ? 'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#202020] scale-110' : 'hover:scale-110'}`}
-                  style={{ background: c }} />
-              ))}
-              <div className="flex items-center gap-3 ml-2 bg-[#2C2C2E] px-3 py-1.5 rounded-[12px] border border-white/5">
-                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-inner" style={{ background: color }}>
-                  <input type="color" value={color} onChange={e => setColor(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[3]" title="Paleta de cores" />
-                </div>
-                <input type="text" value={color}
-                  onChange={e => {
-                    let val = e.target.value;
-                    if (val && !val.startsWith('#')) val = '#' + val;
-                    setColor(val.substring(0, 7));
-                  }}
-                  placeholder="#HEX"
-                  className="w-[90px] bg-transparent text-[13px] text-[#F5F5F7] outline-none uppercase font-mono tracking-tighter" />
-              </div>
-            </div>
-          </div>
-          <button type="submit" disabled={saving || !name.trim()}
-            className="w-full py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-            {saving ? <Loader2 size={20} className="animate-spin" /> : t.boardSaveEdits}
-          </button>
-        </form>
-      </motion.div>
-    </div>
-  );
+ return (
+ <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md flex items-center justify-center z-50 p-4" style={{ fontFamily: FONT }}>
+ <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+ className="solid-modal bg-[#202020] border border-white/[0.08] rounded-[28px] p-7 w-full max-w-md shadow-2xl relative">
+ <div className="flex justify-between items-center mb-6">
+ <h2 className="text-[20px] font-semibold text-[#F5F5F7]">Editar Mural</h2>
+ <button onClick={onClose} className="p-2 text-[#86868B] hover:text-[#F5F5F7] rounded-[8px] transition-colors outline-none cursor-pointer"><X size={18} /></button>
+ </div>
+ <form onSubmit={handleSubmit} className="space-y-6">
+ <div className="space-y-1.5">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">Nome do mural</label>
+ <input autoFocus value={name} onChange={e => setName(e.target.value)}
+ className="w-full px-4 py-3.5 rounded-[16px] bg-[#2C2C2E] border border-transparent text-[#F5F5F7] focus:border-[#0A84FF] focus:outline-none transition-all" />
+ </div>
+ <div className="space-y-1.5">
+ <label className="text-[13px] font-medium text-[#86868B] ml-1">{t.boardColorLabel}</label>
+ <div className="flex flex-wrap gap-2.5 p-1 items-center">
+ {BOARD_COLORS.map(c => (
+ <button key={c} type="button" onClick={() => setColor(c)}
+ className={`w-8 h-8 rounded-full transition-all outline-none cursor-pointer ${color === c ?'ring-2 ring-[#0A84FF] ring-offset-2 ring-offset-[#202020] scale-110' :'hover:scale-110'}`}
+ style={{ background: c }} />
+ ))}
+ <div className="flex items-center gap-3 ml-2 bg-[#2C2C2E] px-3 py-1.5 rounded-[12px] border border-white/5">
+ <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-inner" style={{ background: color }}>
+ <input type="color" value={color} onChange={e => setColor(e.target.value)}
+ className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-[3]" title="Paleta de cores" />
+ </div>
+ <input type="text" value={color}
+ onChange={e => {
+ let val = e.target.value;
+ if (val && !val.startsWith('#')) val ='#' + val;
+ setColor(val.substring(0, 7));
+ }}
+ placeholder="#HEX"
+ className="w-[90px] bg-transparent text-[13px] text-[#F5F5F7] outline-none font-mono tracking-tighter" />
+ </div>
+ </div>
+ </div>
+ <button type="submit" disabled={saving || !name.trim()}
+ className="w-full py-4 rounded-[18px] bg-[#0A84FF] text-white text-[16px] font-semibold hover:bg-[#007AFF] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+ {saving ? <Loader2 size={20} className="animate-spin" /> : t.boardSaveEdits}
+ </button>
+ </form>
+ </motion.div>
+ </div>
+ );
 }
 
 /* ──────────────────────────────────────────────────────
-   BOARD KANBAN — lists & cards inside a specific board
+ BOARD KANBAN — lists & cards inside a specific board
 ────────────────────────────────────────────────────── */
 function BoardKanban({ board, onBack }) {
-  const [lists, setLists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddList, setShowAddList] = useState(false);
-  const [listName, setListName] = useState('');
-  const [addingList, setAddingList] = useState(false);
-  const [editingCard, setEditingCard] = useState(null);
-  const [activeCard, setActiveCard] = useState(null);
-  const [activeList, setActiveList] = useState(null);
-  const listInputRef = useRef(null);
-  const dragOriginListId = useRef(null);
-  const { success, error: showError } = useToast();
-  const { confirm } = useConfirm();
-  const { activeTeam } = useAuth();
-  const { t } = useTranslation();
+ const [lists, setLists] = useState([]);
+ const [loading, setLoading] = useState(true);
+ const [showAddList, setShowAddList] = useState(false);
+ const [listName, setListName] = useState('');
+ const [addingList, setAddingList] = useState(false);
+ const [editingCard, setEditingCard] = useState(null);
+ const [activeCard, setActiveCard] = useState(null);
+ const [activeList, setActiveList] = useState(null);
+ const listInputRef = useRef(null);
+ const dragOriginListId = useRef(null);
+ const { success, error: showError } = useToast();
+ const { confirm } = useConfirm();
+ const { activeTeam } = useAuth();
+ const { t } = useTranslation();
 
-  const scrollRef = useRef(null);
-  const contentRef = useRef(null);
-  const pageRef = useRef(null);
-  const liveCursorsRef = useRef(null);
-  const animationFrameId = useRef(null);
-  const mousePos = useRef({ x: 0, y: 0 });
+ const scrollRef = useRef(null);
+ const contentRef = useRef(null);
+ const pageRef = useRef(null);
+ const liveCursorsRef = useRef(null);
+ const animationFrameId = useRef(null);
+ const mousePos = useRef({ x: 0, y: 0 });
 
-  const handleMouseMove = (e) => {
-    mousePos.current = { x: e.clientX, y: e.clientY };
-  };
+ const handleMouseMove = (e) => {
+ mousePos.current = { x: e.clientX, y: e.clientY };
+ };
 
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+ useEffect(() => {
+ const scrollContainer = scrollRef.current;
+ if (!scrollContainer) return;
 
-    const autoScroll = () => {
-      if (!activeCard && !activeList) return;
+ const autoScroll = () => {
+ if (!activeCard && !activeList) return;
 
-      const { x } = mousePos.current;
-      const rect = scrollContainer.getBoundingClientRect();
-      const edgeSize = 120;
-      const maxSpeed = 40;
+ const { x } = mousePos.current;
+ const rect = scrollContainer.getBoundingClientRect();
+ const edgeSize = 120;
+ const maxSpeed = 40;
 
-      // Horizontal
-      if (x < rect.left + edgeSize) {
-        const intensity = Math.pow((rect.left + edgeSize - x) / edgeSize, 2);
-        scrollContainer.scrollLeft -= maxSpeed * intensity;
-      } else if (x > rect.right - edgeSize) {
-        const intensity = Math.pow((x - (rect.right - edgeSize)) / edgeSize, 2);
-        scrollContainer.scrollLeft += maxSpeed * intensity;
-      }
+ // Horizontal
+ if (x < rect.left + edgeSize) {
+ const intensity = Math.pow((rect.left + edgeSize - x) / edgeSize, 2);
+ scrollContainer.scrollLeft -= maxSpeed * intensity;
+ } else if (x > rect.right - edgeSize) {
+ const intensity = Math.pow((x - (rect.right - edgeSize)) / edgeSize, 2);
+ scrollContainer.scrollLeft += maxSpeed * intensity;
+ }
 
-      // Vertical (for the whole page/board container)
-      const { y } = mousePos.current;
-      if (y < rect.top + edgeSize) {
-        const intensity = Math.pow((rect.top + edgeSize - y) / edgeSize, 2);
-        window.scrollBy(0, -maxSpeed * intensity);
-      } else if (y > rect.bottom - edgeSize) {
-        const intensity = Math.pow((y - (rect.bottom - edgeSize)) / edgeSize, 2);
-        window.scrollBy(0, maxSpeed * intensity);
-      }
+ // Vertical (for the whole page/board container)
+ const { y } = mousePos.current;
+ if (y < rect.top + edgeSize) {
+ const intensity = Math.pow((rect.top + edgeSize - y) / edgeSize, 2);
+ window.scrollBy(0, -maxSpeed * intensity);
+ } else if (y > rect.bottom - edgeSize) {
+ const intensity = Math.pow((y - (rect.bottom - edgeSize)) / edgeSize, 2);
+ window.scrollBy(0, maxSpeed * intensity);
+ }
 
-      animationFrameId.current = requestAnimationFrame(autoScroll);
-    };
+ animationFrameId.current = requestAnimationFrame(autoScroll);
+ };
 
-    if (activeCard || activeList) {
-      animationFrameId.current = requestAnimationFrame(autoScroll);
-      window.addEventListener('mousemove', handleMouseMove);
-    }
+ if (activeCard || activeList) {
+ animationFrameId.current = requestAnimationFrame(autoScroll);
+ window.addEventListener('mousemove', handleMouseMove);
+ }
 
-    return () => {
-      cancelAnimationFrame(animationFrameId.current);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [activeCard, activeList]);
+ return () => {
+ cancelAnimationFrame(animationFrameId.current);
+ window.removeEventListener('mousemove', handleMouseMove);
+ };
+ }, [activeCard, activeList]);
 
-  const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: { distance: 3 },
-  });
+ const mouseSensor = useSensor(MouseSensor, {
+ activationConstraint: { distance: 3 },
+ });
 
-  const touchSensor = useSensor(TouchSensor, {
-    // Delay of 150ms and 5px tolerance allows for scrolling before drag starts
-    activationConstraint: { delay: 150, tolerance: 5 },
-  });
+ const touchSensor = useSensor(TouchSensor, {
+ // Delay of 150ms and 5px tolerance allows for scrolling before drag starts
+ activationConstraint: { delay: 150, tolerance: 5 },
+ });
 
-  const sensors = useSensors(mouseSensor, touchSensor);
+ const sensors = useSensors(mouseSensor, touchSensor);
 
-  function load({ silent = false } = {}) {
-    if (!silent) setLoading(true);
-    api(`/task-lists?board_id=${board.id}`)
-      .then(data => { setLists(data); setLoading(false); })
-      .catch(err => { showError(err.message); setLoading(false); });
-  }
+ function load({ silent = false } = {}) {
+ if (!silent) setLoading(true);
+ api(`/task-lists?board_id=${board.id}`)
+ .then(data => { setLists(data); setLoading(false); })
+ .catch(err => { showError(err.message); setLoading(false); });
+ }
 
-  useEffect(() => { load(); }, [board.id, activeTeam]); // eslint-disable-line
+ useEffect(() => { load(); }, [board.id, activeTeam]); // eslint-disable-line
 
-  useRealtimeSubscription(
-    ['task_lists', 'task_cards', 'task_boards'],
-    (detail) => {
-      const { table, payload } = detail;
-      if (['task_lists', 'task_cards'].includes(table)) {
-        load({ silent: true });
-      }
-      if (table === 'task_boards' && payload?.eventType === 'DELETE' && payload?.old?.id === board.id) {
-        success('Este mural foi apagado.');
-        onBack();
-      }
-    },
-    [board.id, onBack]
-  );
-  useEffect(() => { if (showAddList) listInputRef.current?.focus(); }, [showAddList]);
+ useRealtimeSubscription(
+ ['task_lists','task_cards','task_boards'],
+ (detail) => {
+ const { table, payload } = detail;
+ if (['task_lists','task_cards'].includes(table)) {
+ load({ silent: true });
+ }
+ if (table ==='task_boards' && payload?.eventType ==='DELETE' && payload?.old?.id === board.id) {
+ success('Este mural foi apagado.');
+ onBack();
+ }
+ },
+ [board.id, onBack]
+ );
+ useEffect(() => { if (showAddList) listInputRef.current?.focus(); }, [showAddList]);
 
-  async function addList() {
-    const v = listName.trim();
-    if (!v) return;
-    setAddingList(true);
-    try {
-      const list = await api('/task-lists', { method: 'POST', body: JSON.stringify({ name: v, board_id: board.id }) });
-      setLists(prev => [...prev, list]);
-      setListName('');
-      setShowAddList(false);
-      success(t.boardListCreated);
-    } catch (err) { showError(err.message); }
-    finally { setAddingList(false); }
-  }
+ async function addList() {
+ const v = listName.trim();
+ if (!v) return;
+ setAddingList(true);
+ try {
+ const list = await api('/task-lists', { method:'POST', body: JSON.stringify({ name: v, board_id: board.id }) });
+ setLists(prev => [...prev, list]);
+ setListName('');
+ setShowAddList(false);
+ success(t.boardListCreated);
+ } catch (err) { showError(err.message); }
+ finally { setAddingList(false); }
+ }
 
-  function handleRenameList(upd) {
-    setLists(prev => prev.map(l => l.id === upd.id ? { ...l, name: upd.name } : l));
-    success(t.boardListRenamed);
-  }
+ function handleRenameList(upd) {
+ setLists(prev => prev.map(l => l.id === upd.id ? { ...l, name: upd.name } : l));
+ success(t.boardListRenamed);
+ }
 
-  function handleDeleteList(id) {
-    confirm({
-      title: t.boardListDelConfirm,
-      message: t.boardListDelText,
-      onConfirm: async () => {
-        try {
-          await api(`/task-lists/${id}`, { method: 'DELETE' });
-          setLists(prev => prev.filter(l => l.id !== id));
-          success(t.boardListDeleted);
-        } catch (err) { showError(err.message); }
-      },
-    });
-  }
+ function handleDeleteList(id) {
+ confirm({
+ title: t.boardListDelConfirm,
+ message: t.boardListDelText,
+ onConfirm: async () => {
+ try {
+ await api(`/task-lists/${id}`, { method:'DELETE' });
+ setLists(prev => prev.filter(l => l.id !== id));
+ success(t.boardListDeleted);
+ } catch (err) { showError(err.message); }
+ },
+ });
+ }
 
-  function handleCardAdded(listId, card) {
-    setLists(prev => prev.map(l => l.id !== listId ? l : { ...l, cards: [...l.cards, card] }));
-  }
+ function handleCardAdded(listId, card) {
+ setLists(prev => prev.map(l => l.id !== listId ? l : { ...l, cards: [...l.cards, card] }));
+ }
 
-  function handleCardSaved(upd) {
-    setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === upd.id ? { ...c, ...upd } : c) })));
-    setEditingCard(null);
-    success(t.boardCardUpdated);
-  }
+ function handleCardSaved(upd) {
+ setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === upd.id ? { ...c, ...upd } : c) })));
+ setEditingCard(null);
+ success(t.boardCardUpdated);
+ }
 
-  function handleDeleteCard(cardId) {
-    confirm({
-      title: 'Apagar este recado?',
-      message: 'Este recado será removido permanentemente.',
-      onConfirm: async () => {
-        try {
-          await api(`/task-cards/${cardId}`, { method: 'DELETE' });
-          setLists(prev => prev.map(l => ({ ...l, cards: l.cards.filter(c => c.id !== cardId) })));
-          success('Recado apagado');
-        } catch (err) { showError(err.message); }
-      },
-    });
-  }
+ function handleDeleteCard(cardId) {
+ confirm({
+ title:'Apagar este recado?',
+ message:'Este recado será removido permanentemente.',
+ onConfirm: async () => {
+ try {
+ await api(`/task-cards/${cardId}`, { method:'DELETE' });
+ setLists(prev => prev.map(l => ({ ...l, cards: l.cards.filter(c => c.id !== cardId) })));
+ success('Recado apagado');
+ } catch (err) { showError(err.message); }
+ },
+ });
+ }
 
-  async function handleToggleCard(card) {
-    const newStatus = !card.completed;
-    setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === card.id ? { ...c, completed: newStatus } : c) })));
-    try {
-      await api(`/task-cards/${card.id}`, { method: 'PUT', body: JSON.stringify({ completed: newStatus }) });
-      success(newStatus ? t.boardCardDone : t.boardCardPending);
-    } catch (err) {
-      showError(err.message);
-      load();
-    }
-  }
+ async function handleToggleCard(card) {
+ const newStatus = !card.completed;
+ setLists(prev => prev.map(l => ({ ...l, cards: l.cards.map(c => c.id === card.id ? { ...c, completed: newStatus } : c) })));
+ try {
+ await api(`/task-cards/${card.id}`, { method:'PUT', body: JSON.stringify({ completed: newStatus }) });
+ success(newStatus ? t.boardCardDone : t.boardCardPending);
+ } catch (err) {
+ showError(err.message);
+ load();
+ }
+ }
 
-  function findListByCard(cardId) {
-    return lists.find(l => l.cards.some(c => c.id === cardId));
-  }
+ function findListByCard(cardId) {
+ return lists.find(l => l.cards.some(c => c.id === cardId));
+ }
 
-  function onDragStart({ active }) {
-    const d = active.data.current;
-    document.body.classList.add('grabbing-active');
-    if (d?.type === 'card') {
-      setActiveCard(d.card);
-      dragOriginListId.current = d.listId;
-      liveCursorsRef.current?.broadcastDragStart({
-        type: 'card',
-        id: active.id,
-        title: d.card?.name,
-      });
-    }
-    if (d?.type === 'list') {
-      setActiveList(d.list);
-      liveCursorsRef.current?.broadcastDragStart({
-        type: 'list',
-        id: active.id,
-        title: d.list?.name,
-      });
-    }
-  }
+ function onDragStart({ active }) {
+ const d = active.data.current;
+ document.body.classList.add('grabbing-active');
+ if (d?.type ==='card') {
+ setActiveCard(d.card);
+ dragOriginListId.current = d.listId;
+ liveCursorsRef.current?.broadcastDragStart({
+ type:'card',
+ id: active.id,
+ title: d.card?.name,
+ });
+ }
+ if (d?.type ==='list') {
+ setActiveList(d.list);
+ liveCursorsRef.current?.broadcastDragStart({
+ type:'list',
+ id: active.id,
+ title: d.list?.name,
+ });
+ }
+ }
 
-  function onDragOver({ active, over }) {
-    if (!over) return;
-    const aData = active.data.current;
-    const oData = over.data.current;
-    if (!aData) return;
+ function onDragOver({ active, over }) {
+ if (!over) return;
+ const aData = active.data.current;
+ const oData = over.data.current;
+ if (!aData) return;
 
-    if (aData.type === 'list') {
-      let overListId = null;
-      if (oData?.type === 'list') overListId = over.id;
-      else if (oData?.type === 'card') overListId = `list-${oData.listId}`;
+ if (aData.type ==='list') {
+ let overListId = null;
+ if (oData?.type ==='list') overListId = over.id;
+ else if (oData?.type ==='card') overListId = `list-${oData.listId}`;
 
-      if (overListId && active.id !== overListId) {
-        const ai = lists.findIndex(l => `list-${l.id}` === active.id);
-        const oi = lists.findIndex(l => `list-${l.id}` === overListId);
-        if (ai !== -1 && oi !== -1) {
-          setLists(prev => arrayMove(prev, ai, oi));
-        }
-      }
-      return;
-    }
+ if (overListId && active.id !== overListId) {
+ const ai = lists.findIndex(l => `list-${l.id}` === active.id);
+ const oi = lists.findIndex(l => `list-${l.id}` === overListId);
+ if (ai !== -1 && oi !== -1) {
+ setLists(prev => arrayMove(prev, ai, oi));
+ }
+ }
+ return;
+ }
 
-    if (aData.type !== 'card') return;
+ if (aData.type !=='card') return;
 
-    const cardId = Number(active.id);
-    const aList = lists.find(l => l.cards.some(c => Number(c.id) === cardId));
-    if (!aList) return;
+ const cardId = Number(active.id);
+ const aList = lists.find(l => l.cards.some(c => Number(c.id) === cardId));
+ if (!aList) return;
 
-    let targetId = null;
-    let overIndex = -1;
+ let targetId = null;
+ let overIndex = -1;
 
-    if (oData?.type === 'card') {
-      targetId = Number(oData.listId);
-      const targetList = lists.find(l => Number(l.id) === targetId);
-      if (targetList) {
-        overIndex = targetList.cards.findIndex(c => Number(c.id) === Number(over.id));
-      }
-    } else if (oData?.type === 'list') {
-      targetId = Number(oData.list.id);
-    }
+ if (oData?.type ==='card') {
+ targetId = Number(oData.listId);
+ const targetList = lists.find(l => Number(l.id) === targetId);
+ if (targetList) {
+ overIndex = targetList.cards.findIndex(c => Number(c.id) === Number(over.id));
+ }
+ } else if (oData?.type ==='list') {
+ targetId = Number(oData.list.id);
+ }
 
-    if (!targetId || targetId === Number(aList.id)) return;
+ if (!targetId || targetId === Number(aList.id)) return;
 
-    setLists(prev => {
-      const card = aList.cards.find(c => Number(c.id) === cardId);
-      if (!card) return prev;
-      return prev.map(l => {
-        if (Number(l.id) === Number(aList.id)) {
-          return { ...l, cards: l.cards.filter(c => Number(c.id) !== cardId) };
-        }
-        if (Number(l.id) === targetId) {
-          const newCards = [...l.cards];
-          const isBelowOverItem =
-            over &&
-            active.rect.current.translated &&
-            active.rect.current.translated.top > over.rect.top + over.rect.height;
-          const modifier = isBelowOverItem ? 1 : 0;
-          const insertIndex = overIndex >= 0 ? overIndex + modifier : newCards.length;
-          newCards.splice(insertIndex, 0, card);
-          return { ...l, cards: newCards };
-        }
-        return l;
-      });
-    });
-  }
+ setLists(prev => {
+ const card = aList.cards.find(c => Number(c.id) === cardId);
+ if (!card) return prev;
+ return prev.map(l => {
+ if (Number(l.id) === Number(aList.id)) {
+ return { ...l, cards: l.cards.filter(c => Number(c.id) !== cardId) };
+ }
+ if (Number(l.id) === targetId) {
+ const newCards = [...l.cards];
+ const isBelowOverItem =
+ over &&
+ active.rect.current.translated &&
+ active.rect.current.translated.top > over.rect.top + over.rect.height;
+ const modifier = isBelowOverItem ? 1 : 0;
+ const insertIndex = overIndex >= 0 ? overIndex + modifier : newCards.length;
+ newCards.splice(insertIndex, 0, card);
+ return { ...l, cards: newCards };
+ }
+ return l;
+ });
+ });
+ }
 
-  async function onDragEnd({ active, over }) {
-    setActiveCard(null);
-    setActiveList(null);
-    document.body.classList.remove('grabbing-active');
-    liveCursorsRef.current?.broadcastDragEnd();
+ async function onDragEnd({ active, over }) {
+ setActiveCard(null);
+ setActiveList(null);
+ document.body.classList.remove('grabbing-active');
+ liveCursorsRef.current?.broadcastDragEnd();
 
-    const aData = active.data.current;
-    const oData = over?.data.current;
+ const aData = active.data.current;
+ const oData = over?.data.current;
 
-    if (aData?.type === 'list') {
-      dragOriginListId.current = null;
-      // Since sorting happened in onDragOver, we just persist the current state
-      try {
-        const items = lists.map((l, i) => ({ id: l.id, position: i }));
-        await api('/task-lists/reorder', { method: 'POST', body: JSON.stringify({ items }) });
-      } catch (err) {
-        showError(err.message);
-        load();
-      }
-      return;
-    }
+ if (aData?.type ==='list') {
+ dragOriginListId.current = null;
+ // Since sorting happened in onDragOver, we just persist the current state
+ try {
+ const items = lists.map((l, i) => ({ id: l.id, position: i }));
+ await api('/task-lists/reorder', { method:'POST', body: JSON.stringify({ items }) });
+ } catch (err) {
+ showError(err.message);
+ load();
+ }
+ return;
+ }
 
-    if (aData?.type === 'card') {
-      const originalListId = Number(dragOriginListId.current);
-      dragOriginListId.current = null;
-      const cardId = Number(active.id);
+ if (aData?.type ==='card') {
+ const originalListId = Number(dragOriginListId.current);
+ dragOriginListId.current = null;
+ const cardId = Number(active.id);
 
-      if (!originalListId || !over) return;
+ if (!originalListId || !over) return;
 
-      let targetListId = originalListId;
-      let overCardId = null;
+ let targetListId = originalListId;
+ let overCardId = null;
 
-      if (oData?.type === 'card') {
-        targetListId = Number(oData.listId);
-        overCardId = Number(over.id);
-      } else if (oData?.type === 'list') {
-        targetListId = Number(oData.list.id);
-      }
+ if (oData?.type ==='card') {
+ targetListId = Number(oData.listId);
+ overCardId = Number(over.id);
+ } else if (oData?.type ==='list') {
+ targetListId = Number(oData.list.id);
+ }
 
-      const isMove = targetListId !== originalListId;
-      const targetList = lists.find(l => Number(l.id) === targetListId);
-      if (!targetList) return;
+ const isMove = targetListId !== originalListId;
+ const targetList = lists.find(l => Number(l.id) === targetListId);
+ if (!targetList) return;
 
-      const oldIdx = targetList.cards.findIndex(c => Number(c.id) === cardId);
-      const newIdx = overCardId ? targetList.cards.findIndex(c => Number(c.id) === overCardId) : targetList.cards.length - 1;
+ const oldIdx = targetList.cards.findIndex(c => Number(c.id) === cardId);
+ const newIdx = overCardId ? targetList.cards.findIndex(c => Number(c.id) === overCardId) : targetList.cards.length - 1;
 
-      const reordered = arrayMove(targetList.cards, oldIdx < 0 ? 0 : oldIdx, newIdx < 0 ? 0 : newIdx);
-      setLists(prev => prev.map(l => Number(l.id) === targetListId ? { ...l, cards: reordered } : l));
+ const reordered = arrayMove(targetList.cards, oldIdx < 0 ? 0 : oldIdx, newIdx < 0 ? 0 : newIdx);
+ setLists(prev => prev.map(l => Number(l.id) === targetListId ? { ...l, cards: reordered } : l));
 
-      if (isMove) {
-        try {
-          await api(`/task-cards/${cardId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ list_id: targetListId, position: newIdx }),
-          });
-          const items = reordered.map((c, i) => ({ id: c.id, position: i }));
-          await api('/task-cards/reorder', { method: 'POST', body: JSON.stringify({ items }) });
-        } catch (err) {
-          showError(err.message);
-          load();
-        }
-      } else {
-        if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return;
-        try {
-          const items = reordered.map((c, i) => ({ id: c.id, position: i }));
-          await api('/task-cards/reorder', { method: 'POST', body: JSON.stringify({ items }) });
-        } catch { /* suppress */ }
-      }
-    }
-  }
+ if (isMove) {
+ try {
+ await api(`/task-cards/${cardId}`, {
+ method:'PUT',
+ body: JSON.stringify({ list_id: targetListId, position: newIdx }),
+ });
+ const items = reordered.map((c, i) => ({ id: c.id, position: i }));
+ await api('/task-cards/reorder', { method:'POST', body: JSON.stringify({ items }) });
+ } catch (err) {
+ showError(err.message);
+ load();
+ }
+ } else {
+ if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return;
+ try {
+ const items = reordered.map((c, i) => ({ id: c.id, position: i }));
+ await api('/task-cards/reorder', { method:'POST', body: JSON.stringify({ items }) });
+ } catch { /* suppress */ }
+ }
+ }
+ }
 
-  const listIds = lists.map(l => `list-${l.id}`);
-  const dropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) };
+ const listIds = lists.map(l => `list-${l.id}`);
+ const dropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity:'0.4' } } }) };
 
-  if (loading) return <LoadingSkeleton variant="tasks" />;
+ if (loading) return <LoadingSkeleton variant="tasks" />;
 
-  return (
-    <div ref={pageRef} className="relative">
-      <LiveCursors
-        ref={liveCursorsRef}
-        roomId={`board:${board.id}`}
-        contentRef={pageRef}
-        renderDragGhost={(drag) => {
-          if (!drag) return null;
-          if (drag.type === 'card') {
-            const card = lists.flatMap(l => l.cards || [])
-              .find(c => String(c.id) === String(drag.id));
-            return card ? <CardOverlay card={card} /> : null;
-          }
-          if (drag.type === 'list') {
-            const list = lists.find(l => String(l.id) === String(drag.id));
-            return list ? <ListOverlay list={list} /> : null;
-          }
-          return null;
-        }}
-      />
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
-        <div className="flex items-start gap-3">
-          <button type="button" onClick={onBack}
-            className="mt-1 p-1.5 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-          </button>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: board.color || '#0A84FF', boxShadow: `0 0 10px ${board.color || '#0A84FF'}80` }} />
-              <h1 className="text-[28px] md:text-[32px] leading-none font-bold text-[#F5F5F7] tracking-tight">{board.name}</h1>
-            </div>
-            <div className="flex items-center gap-3 text-[12.5px] text-[#86868B] pl-5">
-              <span><span className="text-[#E5E5EA] font-semibold">{lists.length}</span> coluna{lists.length !== 1 ? 's' : ''}</span>
-              <span className="w-1 h-1 rounded-full bg-[#48484A]" />
-              <span><span className="text-[#E5E5EA] font-semibold">{lists.reduce((a, l) => a + l.cards.length, 0)}</span> tarefa{lists.reduce((a, l) => a + l.cards.length, 0) !== 1 ? 's' : ''}</span>
-            </div>
-          </div>
-        </div>
+ return (
+ <div ref={pageRef} className="relative">
+ <LiveCursors
+ ref={liveCursorsRef}
+ roomId={`board:${board.id}`}
+ contentRef={pageRef}
+ renderDragGhost={(drag) => {
+ if (!drag) return null;
+ if (drag.type ==='card') {
+ const card = lists.flatMap(l => l.cards || [])
+ .find(c => String(c.id) === String(drag.id));
+ return card ? <CardOverlay card={card} /> : null;
+ }
+ if (drag.type ==='list') {
+ const list = lists.find(l => String(l.id) === String(drag.id));
+ return list ? <ListOverlay list={list} /> : null;
+ }
+ return null;
+ }}
+ />
+ <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
+ <div className="flex items-start gap-3">
+ <button type="button" onClick={onBack}
+ className="mt-1 p-1.5 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+ </button>
+ <div className="space-y-1.5">
+ <div className="flex items-center gap-2.5">
+ <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: board.color ||'#0A84FF', boxShadow: `0 0 10px ${board.color ||'#0A84FF'}80` }} />
+ <h1 className="text-[28px] md:text-[32px] leading-none font-bold text-[#F5F5F7] tracking-tight">{board.name}</h1>
+ </div>
+ <div className="flex items-center gap-3 text-[12.5px] text-[#86868B] pl-5">
+ <span><span className="text-[#E5E5EA] font-semibold">{lists.length}</span> coluna{lists.length !== 1 ?'s' :''}</span>
+ <span className="w-1 h-1 rounded-full bg-[#48484A]" />
+ <span><span className="text-[#E5E5EA] font-semibold">{lists.reduce((a, l) => a + l.cards.length, 0)}</span> tarefa{lists.reduce((a, l) => a + l.cards.length, 0) !== 1 ?'s' :''}</span>
+ </div>
+ </div>
+ </div>
 
-        <button type="button" onClick={() => setShowAddList(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] bg-white text-black text-[12.5px] font-semibold hover:bg-white/90 active:scale-[0.97] transition-all cursor-pointer self-start sm:self-auto shadow-sm">
-          <Plus size={13} strokeWidth={2.5} /> {t.boardNewListBtn}
-        </button>
-      </motion.div>
+ <button type="button" onClick={() => setShowAddList(true)}
+ className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] bg-white text-black text-[12.5px] font-semibold hover:bg-white/90 active:scale-[0.97] transition-all cursor-pointer self-start sm:self-auto shadow-sm">
+ <Plus size={13} strokeWidth={2.5} /> {t.boardNewListBtn}
+ </button>
+ </motion.div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCorners}
-        onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd}>
-        <div
-          ref={scrollRef}
-          onMouseMove={handleMouseMove}
-          className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-4 sm:gap-6 pb-20 scrollbar-board cursor-default snap-x snap-mandatory sm:snap-none px-4 sm:px-0"
-        >
-          <div ref={contentRef} className="flex gap-6 items-start min-w-full">
-            <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
-              {lists.map(list => (
-                <KanbanList key={list.id} list={list}
-                  onRename={handleRenameList}
-                  onDelete={handleDeleteList}
-                  onCardAdded={handleCardAdded}
-                  onEditCard={setEditingCard}
-                  onDeleteCard={handleDeleteCard}
-                  onToggleCard={handleToggleCard} />
-              ))}
-            </SortableContext>
+ <DndContext sensors={sensors} collisionDetection={closestCorners}
+ onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd}>
+ <div
+ ref={scrollRef}
+ onMouseMove={handleMouseMove}
+ className="flex-1 overflow-x-auto overflow-y-hidden flex items-start gap-4 sm:gap-6 pb-20 scrollbar-board cursor-default snap-x snap-mandatory sm:snap-none px-4 sm:px-0"
+ >
+ <div ref={contentRef} className="flex gap-6 items-start min-w-full">
+ <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
+ {lists.map(list => (
+ <KanbanList key={list.id} list={list}
+ onRename={handleRenameList}
+ onDelete={handleDeleteList}
+ onCardAdded={handleCardAdded}
+ onEditCard={setEditingCard}
+ onDeleteCard={handleDeleteCard}
+ onToggleCard={handleToggleCard} />
+ ))}
+ </SortableContext>
 
-            {showAddList ? (
-              <div className="w-[300px] shrink-0">
-                <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg" style={{ background: '#202020' }}>
-                  <input ref={listInputRef} value={listName} onChange={e => setListName(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') addList(); if (e.key === 'Escape') { setShowAddList(false); setListName(''); } }}
-                    placeholder={t.boardListPh}
-                    className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
-                    style={{ background: '#2C2C2E' }} />
-                  <div className="flex gap-2 mt-3">
-                    <button type="button" onClick={addList} disabled={addingList || !listName.trim()}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
-                      style={{ background: '#0A84FF' }}>
-                      {addingList && <Loader2 size={14} className="animate-spin" />}
-                      {t.boardAddList}
-                    </button>
-                    <button type="button" onClick={() => { setShowAddList(false); setListName(''); }}
-                      className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setShowAddList(true)}
-                className="w-[300px] shrink-0 flex items-center justify-center gap-2 py-3.5 rounded-[18px] text-[12.5px] font-medium text-[#63646B] hover:text-[#A1A1AA] border border-dashed border-white/[0.06] hover:border-white/15 hover:bg-white/[0.02] transition-all cursor-pointer outline-none self-start">
-                <Plus size={14} strokeWidth={2} /> {t.boardAddListInline}
-              </button>
-            )}
-          </div>
-        </div>
+ {showAddList ? (
+ <div className="w-[300px] shrink-0">
+ <div className="rounded-[16px] border border-[#0A84FF]/40 p-4 shadow-lg" style={{ background:'#202020' }}>
+ <input ref={listInputRef} value={listName} onChange={e => setListName(e.target.value)}
+ onKeyDown={e => { if (e.key ==='Enter') addList(); if (e.key ==='Escape') { setShowAddList(false); setListName(''); } }}
+ placeholder={t.boardListPh}
+ className="w-full rounded-[10px] px-3 py-2.5 text-[14px] text-[#F5F5F7] placeholder:text-[#86868B] outline-none border border-transparent focus:border-[#0A84FF]/50 transition-colors"
+ style={{ background:'#2C2C2E' }} />
+ <div className="flex gap-2 mt-3">
+ <button type="button" onClick={addList} disabled={addingList || !listName.trim()}
+ className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold text-white disabled:opacity-40 transition-colors outline-none cursor-pointer hover:opacity-90"
+ style={{ background:'#0A84FF' }}>
+ {addingList && <Loader2 size={14} className="animate-spin" />}
+ {t.boardAddList}
+ </button>
+ <button type="button" onClick={() => { setShowAddList(false); setListName(''); }}
+ className="p-2 rounded-[10px] text-[#86868B] hover:text-[#F5F5F7] hover:bg-white/[0.06] transition-colors outline-none cursor-pointer">
+ <X size={16} />
+ </button>
+ </div>
+ </div>
+ </div>
+ ) : (
+ <button type="button" onClick={() => setShowAddList(true)}
+ className="w-[300px] shrink-0 flex items-center justify-center gap-2 py-3.5 rounded-[18px] text-[12.5px] font-medium text-[#63646B] hover:text-[#A1A1AA] border border-dashed border-white/[0.06] hover:border-white/15 hover:bg-white/[0.02] transition-all cursor-pointer outline-none self-start">
+ <Plus size={14} strokeWidth={2} /> {t.boardAddListInline}
+ </button>
+ )}
+ </div>
+ </div>
 
-        <DragOverlay dropAnimation={dropAnimation}>
-          {activeCard ? <CardOverlay card={lists.flatMap(l => l.cards).find(c => c.id === activeCard.id) || activeCard} /> : null}
-          {activeList ? <ListOverlay list={lists.find(l => l.id === activeList.id) || activeList} /> : null}
-        </DragOverlay>
-      </DndContext>
+ <DragOverlay dropAnimation={dropAnimation}>
+ {activeCard ? <CardOverlay card={lists.flatMap(l => l.cards).find(c => c.id === activeCard.id) || activeCard} /> : null}
+ {activeList ? <ListOverlay list={lists.find(l => l.id === activeList.id) || activeList} /> : null}
+ </DragOverlay>
+ </DndContext>
 
-      {lists.length === 0 && !showAddList && (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-60">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
-            <Kanban size={28} strokeWidth={1.2} className="text-[#86868B]" />
-          </div>
-          <p className="text-[15px] text-[#86868B]">{t.boardFirstListHint}</p>
-        </div>
-      )}
+ {lists.length === 0 && !showAddList && (
+ <div className="flex flex-col items-center justify-center py-24 gap-4 opacity-60">
+ <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background:'rgba(255,255,255,0.04)' }}>
+ <Kanban size={28} strokeWidth={1.2} className="text-[#86868B]" />
+ </div>
+ <p className="text-[15px] text-[#86868B]">{t.boardFirstListHint}</p>
+ </div>
+ )}
 
-      <AnimatePresence>
-        {editingCard && (
-          <EditCardModal key={editingCard.id} card={editingCard} onSave={handleCardSaved} onClose={() => setEditingCard(null)} />
-        )}
-      </AnimatePresence>
-    </div>
-  );
+ <AnimatePresence>
+ {editingCard && (
+ <EditCardModal key={editingCard.id} card={editingCard} onSave={handleCardSaved} onClose={() => setEditingCard(null)} />
+ )}
+ </AnimatePresence>
+ </div>
+ );
 }
 
 
 function BoardView() {
-  const [activeBoard, setActiveBoard] = useState(() => {
-    const saved = localStorage.getItem('active_board');
-    return saved ? JSON.parse(saved) : null;
-  });
+ const [activeBoard, setActiveBoard] = useState(() => {
+ const saved = localStorage.getItem('active_board');
+ return saved ? JSON.parse(saved) : null;
+ });
 
-  const handleOpenBoard = (board) => {
-    localStorage.setItem('active_board', JSON.stringify(board));
-    setActiveBoard(board);
-  };
+ const handleOpenBoard = (board) => {
+ localStorage.setItem('active_board', JSON.stringify(board));
+ setActiveBoard(board);
+ };
 
-  const handleBack = () => {
-    localStorage.removeItem('active_board');
-    setActiveBoard(null);
-  };
+ const handleBack = () => {
+ localStorage.removeItem('active_board');
+ setActiveBoard(null);
+ };
 
-  if (activeBoard) {
-    return (
-      <BoardKanban board={activeBoard} onBack={handleBack} />
-    );
-  }
+ if (activeBoard) {
+ return (
+ <BoardKanban board={activeBoard} onBack={handleBack} />
+ );
+ }
 
-  return <BoardGallery onOpenBoard={handleOpenBoard} />;
+ return <BoardGallery onOpenBoard={handleOpenBoard} />;
 }
 
 
 export default function Tasks() {
-  const [view, setView] = useState(() => localStorage.getItem('tasks_view') || 'list');
-  const tasksPageRef = useRef(null);
+ const [view, setView] = useState(() => localStorage.getItem('tasks_view') ||'list');
+ const tasksPageRef = useRef(null);
 
-  const handleViewChange = (v) => {
-    localStorage.setItem('tasks_view', v);
-    setView(v);
-  };
+ const handleViewChange = (v) => {
+ localStorage.setItem('tasks_view', v);
+ setView(v);
+ };
 
-  return (
-    <div
-      ref={tasksPageRef}
-      className="max-w-5xl mx-auto pb-12 font-sans relative"
-      style={{ fontFamily: FONT }}
-    >
-      {view === 'list' && <TeamLiveCursors roomId="tasks-list" contentRef={tasksPageRef} />}
-      { }
-      <div className="flex justify-end mb-6">
-        <ViewToggle view={view} onChange={handleViewChange} />
-      </div>
+ return (
+ <div
+ ref={tasksPageRef}
+ className="max-w-5xl mx-auto pb-12 font-sans relative"
+ style={{ fontFamily: FONT }}
+ >
+ {view ==='list' && <TeamLiveCursors roomId="tasks-list" contentRef={tasksPageRef} />}
+ { }
+ <div className="flex justify-end mb-6">
+ <ViewToggle view={view} onChange={handleViewChange} />
+ </div>
 
-      <AnimatePresence mode="wait">
-        {view === 'list' ? (
-          <motion.div key="list"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}>
-            <ListView />
-          </motion.div>
-        ) : (
-          <motion.div key="board"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}>
-            <BoardView />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+ <AnimatePresence mode="wait">
+ {view ==='list' ? (
+ <motion.div key="list"
+ initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+ transition={{ duration: 0.2 }}>
+ <ListView />
+ </motion.div>
+ ) : (
+ <motion.div key="board"
+ initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+ transition={{ duration: 0.2 }}>
+ <BoardView />
+ </motion.div>
+ )}
+ </AnimatePresence>
+ </div>
+ );
 }

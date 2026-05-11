@@ -77,7 +77,7 @@ router.put('/:id', [
     if (!existing) return res.status(404).json({ error: 'Cartão não encontrado' });
 
     const updates = {};
-    ['name', 'list_id', 'position', 'cover_url', 'due_date', 'completed'].forEach(f => {
+    ['name', 'list_id', 'position', 'cover_url', 'due_date', 'completed', 'alarm_time'].forEach(f => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
 

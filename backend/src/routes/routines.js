@@ -166,7 +166,7 @@ router.put('/:id/tasks/:taskId', [
     if (!routine) return res.status(404).json({ error: 'Rotina não encontrada' });
 
     const updates = {};
-    ['title', 'description', 'priority', 'completed', 'start_time', 'day_of_week'].forEach(f => {
+    ['title', 'description', 'priority', 'completed', 'start_time', 'day_of_week', 'alarm_enabled'].forEach(f => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });

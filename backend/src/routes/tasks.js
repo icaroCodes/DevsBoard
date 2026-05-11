@@ -30,17 +30,19 @@ router.post('/', [
   body('title').trim().notEmpty().withMessage('Título é obrigatório'),
   body('description').optional().trim(),
   body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
+  body('alarm_time').optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Horário de alarme inválido'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { title, description, priority = 'medium' } = req.body;
+    const { title, description, priority = 'medium', alarm_time } = req.body;
     const insertData = {
       user_id: req.userId,
       title,
       description: description || null,
-      priority
+      priority,
+      alarm_time: alarm_time || null,
     };
 
     if (req.teamId) {
@@ -78,7 +80,7 @@ router.put('/:id', [
     if (!existing) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
     const updates = {};
-    ['title', 'description', 'priority', 'completed'].forEach(f => {
+    ['title', 'description', 'priority', 'completed', 'alarm_time'].forEach(f => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });

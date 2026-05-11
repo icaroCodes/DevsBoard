@@ -20,6 +20,7 @@ import teamsRoutes from './routes/teams.js';
 import achievementsRoutes from './routes/achievements.js';
 import sessionsRoutes from './routes/sessions.js';
 import publicRoutes from './routes/public.js';
+import alarmsRoutes from './routes/alarms.js';
 import profilesRoutes from './routes/profiles.js';
 import { interceptMembers } from './middleware/interceptMembers.js';
 import { authenticate, checksOwnership } from './middleware/auth.js';
@@ -74,6 +75,7 @@ app.use('/task-cards', interceptMembers('task_cards'), taskCardsRoutes);
 app.use('/teams', teamsRoutes);
 app.use('/achievements', achievementsRoutes);
 app.use('/sessions', sessionsRoutes);
+app.use('/alarms', alarmsRoutes);
 
 
 app.use((req, res) => {

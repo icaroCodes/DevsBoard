@@ -1,13 +1,13 @@
-import { useIsMobile } from '../hooks/useIsMobile';
-import AchievementsDesktop from './achievements/AchievementsDesktop';
-import AchievementsMobile from './achievements/AchievementsMobile';
+﻿import { useIsMobile } from'../hooks/useIsMobile';
+import AchievementsDesktop from'./achievements/AchievementsDesktop';
+import AchievementsMobile from'./achievements/AchievementsMobile';
 
 export default function Achievements() {
-  const isMobile = useIsMobile();
+ const isMobile = useIsMobile();
 
-  if (isMobile) {
-    return <AchievementsMobile />;
-  }
+ if (isMobile) {
+ return <AchievementsMobile />;
+ }
 
-  return <AchievementsDesktop />;
+ return <AchievementsDesktop />;
 }
