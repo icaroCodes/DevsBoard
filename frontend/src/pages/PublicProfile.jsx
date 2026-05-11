@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Github, Twitter, Linkedin, Globe, Calendar, Flame, Search, Loader2, Trophy, Clock, Target, ArrowRight } from 'lucide-react';
+import { Github, Twitter, Linkedin, Globe, Calendar, Flame, Search, Loader2, Trophy, Clock, Target, ArrowRight, ArrowLeft } from 'lucide-react';
 import { api } from '../lib/api';
 import NotFound from './NotFound';
+import { useIsMobile } from '../hooks/useIsMobile';
+import PublicProfileMobile from './PublicProfileMobile';
 
 const SOCIAL_ICONS = {
   github: Github,
@@ -34,6 +36,7 @@ export default function PublicProfile() {
   const { atUsername } = useParams();
   const navigate = useNavigate();
   const [state, setState] = useState({ loading: true, profile: null, error: null });
+  const isMobile = useIsMobile();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -120,15 +123,25 @@ export default function PublicProfile() {
   const memberSince = formatDate(p.created_at);
   const links = Object.entries(p.social_links || {}).filter(([, v]) => v);
 
+  if (isMobile) {
+    return <PublicProfileMobile profile={p} memberSince={memberSince} links={links} />;
+  }
+
   return (
     <div className="min-h-screen font-[Poppins,sans-serif] text-zinc-100" style={{ backgroundColor: '#191919' }}>
       {/* HEADER WITH APPLE-STYLE SEARCH */}
       <header className="border-b border-white/5 bg-[#1C1C1E]/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4 sm:gap-8">
-          <Link to="/" className="shrink-0">
-            <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center font-bold text-white tracking-tighter">
-              DB
-            </div>
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-colors shrink-0"
+            title="Voltar"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          
+          <Link to="/" className="shrink-0 hidden sm:block">
+            <img src="/devsboard.png" alt="DevsBoard" className="w-10 h-10 object-cover rounded-xl" />
           </Link>
           
           <div className="flex-1 max-w-md relative" ref={searchRef}>
