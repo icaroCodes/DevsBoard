@@ -39,17 +39,8 @@ export function AuthProvider({ children }) {
   }, [activeTeam]);
 
   useEffect(() => {
-    // If there's no access token we have nothing to validate — don't hit
-    // /auth/session, which would just 401 and trigger lib/api.js cleanup.
-    // That cleanup wipes localStorage and, on protected routes, redirects
-    // to "/", and combined with stale tokens can leave the app in a state
-    // where Routes resolves to nothing visible (blank black screen).
-    const hasToken = !!localStorage.getItem('token');
-    if (!hasToken) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
+    // We must validate the session via /auth/session because we use HTTP-only cookies
+    // for authentication. The frontend cannot check if a cookie exists.
 
     const initAuth = async () => {
       try {

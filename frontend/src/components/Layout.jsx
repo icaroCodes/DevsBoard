@@ -354,7 +354,9 @@ function DesktopLayout({ children }) {
                 <span className="text-[12px] font-bold text-[#86868B]">{section.title}</span>
               </div>
             )}
-            {section.items.map(({ to, icon: Icon, key, label: fallbackLabel }) => {
+            {section.items.map((item) => {
+              const { icon: Icon, key, label: fallbackLabel } = item;
+              const to = item.to === '/account' && user?.username ? `/@${user.username}` : item.to;
               const label = t[key] || fallbackLabel;
               const isActive = location.pathname === to;
 
@@ -366,7 +368,7 @@ function DesktopLayout({ children }) {
 
               const content = (
                 <Link
-                  key={to}
+                  key={item.to}
                   to={to}
                   onClick={() => isMobile && setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-[8px] transition-all duration-200 group relative ${isActive ? 'bg-white/[0.06] shadow-sm' : 'hover:bg-white/[0.03]'}`}

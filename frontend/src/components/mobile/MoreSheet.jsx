@@ -27,7 +27,7 @@ const SECONDARY_LINKS = [
 const THEMES = ['obsidian', 'midnight', 'arctic', 'forest', 'liquidglass'];
 
 export default function MoreSheet({ open, onClose }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { lang, setLang } = useTranslation();
 
@@ -42,22 +42,25 @@ export default function MoreSheet({ open, onClose }) {
     <Sheet open={open} onClose={onClose} title="Mais">
       <div className="px-4 pt-1 pb-6 space-y-5">
         <div className="grid grid-cols-2 gap-2">
-          {SECONDARY_LINKS.map(({ to, icon: Icon, label, tone }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={onClose}
-              className="flex items-center gap-3 p-3.5 rounded-[14px] bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] active:bg-white/[0.08] transition-colors outline-none"
-            >
-              <div
-                className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
-                style={{ background: `${tone}1A`, color: tone }}
+          {SECONDARY_LINKS.map(({ to: originalTo, icon: Icon, label, tone }) => {
+            const to = originalTo === '/account' && user?.username ? `/@${user.username}` : originalTo;
+            return (
+              <Link
+                key={originalTo}
+                to={to}
+                onClick={onClose}
+                className="flex items-center gap-3 p-3.5 rounded-[14px] bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] active:bg-white/[0.08] transition-colors outline-none"
               >
-                <Icon size={18} strokeWidth={1.8} />
-              </div>
-              <span className="text-[14px] font-medium text-[#F5F5F7] truncate">{label}</span>
-            </Link>
-          ))}
+                <div
+                  className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+                  style={{ background: `${tone}1A`, color: tone }}
+                >
+                  <Icon size={18} strokeWidth={1.8} />
+                </div>
+                <span className="text-[14px] font-medium text-[#F5F5F7] truncate">{label}</span>
+              </Link>
+            );
+          })}
         </div>
 
         <div className="rounded-[14px] bg-white/[0.03] border border-white/[0.05] divide-y divide-white/[0.04]">
