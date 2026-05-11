@@ -33,7 +33,8 @@ import {
   LogOut,
   Trophy,
   Timer,
-  PanelLeft
+  PanelLeft,
+  User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRealtime } from '../contexts/RealtimeContext';

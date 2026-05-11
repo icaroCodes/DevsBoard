@@ -6,7 +6,18 @@ function getHeaders() {
   const token = localStorage.getItem('token');
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const activeTeam = JSON.parse(localStorage.getItem('activeTeam'));
+  // Defensive parse: if activeTeam ended up as the literal string "undefined"
+  // (happens when JSON.stringify(undefined) is mistakenly cached), JSON.parse
+  // throws and the throw propagates into every request — which silently
+  // breaks the whole app before any UI renders. Wipe the bad entry so the
+  // next render gets a clean state.
+  let activeTeam = null;
+  try {
+    const raw = localStorage.getItem('activeTeam');
+    if (raw && raw !== 'undefined') activeTeam = JSON.parse(raw);
+  } catch {
+    localStorage.removeItem('activeTeam');
+  }
   if (activeTeam) headers['x-team-id'] = activeTeam.id;
 
   return headers;
