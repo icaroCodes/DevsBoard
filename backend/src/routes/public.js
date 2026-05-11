@@ -48,6 +48,28 @@ router.get('/profile/:username', async (req, res) => {
   }
 });
 
+// Search users by username — used by the "Conta" page to discover profiles.
+router.get('/search/users', async (req, res) => {
+  const q = String(req.query.q || '').trim().toLowerCase().replace(/^@/, '');
+  if (!q || q.length < 2) return res.json([]);
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, username, name:display_name, avatar_url, is_public')
+      .ilike('username', `${q}%`)
+      .eq('is_public', true)
+      .order('username')
+      .limit(10);
+
+    if (error) throw error;
+    res.json((data || []).map(({ is_public, ...u }) => u));
+  } catch (err) {
+    console.error('[GET /public/search/users]', err);
+    res.status(500).json({ error: 'Erro na busca' });
+  }
+});
+
 // Phase 4: invite-link preview. The frontend page /invite/:token shows the
 // team name + inviter before the user logs in / signs up. Anyone with the
 // token already has the right to that information, so this is safe to

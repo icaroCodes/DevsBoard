@@ -8,6 +8,7 @@ import {
   Moon,
   Languages,
   LogOut,
+  User,
 } from 'lucide-react';
 import Sheet from './Sheet';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,6 +20,7 @@ const SECONDARY_LINKS = [
   { to: '/routines', icon: RefreshCw, label: 'Rotinas', tone: '#F59E0B' },
   { to: '/goals', icon: Target, label: 'Metas', tone: '#10B981' },
   { to: '/achievements', icon: Trophy, label: 'Conquistas', tone: '#FFD60A' },
+  { to: '/account', icon: User, label: 'Conta', tone: '#0A84FF' },
   { to: '/settings', icon: SettingsIcon, label: 'Configurações', tone: '#A1A1AA' },
 ];
 

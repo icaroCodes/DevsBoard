@@ -5,7 +5,7 @@ import {
   LogOut, User, Camera, Mail, ShieldAlert, Trash2,
   Clock, Calendar, Timer, Flame, Globe, Palette,
   Check, ChevronRight, Sparkles, Image, Upload, X, Film,
-  Music, Play, Pause
+  Music, Play, Pause, ExternalLink, Trophy, Zap, Award
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,6 +23,8 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [usageStats, setUsageStats] = useState(null);
+  const [settingsUsername, setSettingsUsername] = useState(null);
+  const [achievementCount, setAchievementCount] = useState({ unlocked: 0, total: 0 });
   const [wallpaperPreview, setWallpaperPreview] = useState(null);
   const [wallpaperBase64, setWallpaperBase64] = useState(null);
   const [wallpaperOpacity, setWallpaperOpacity] = useState(15);
@@ -52,9 +54,10 @@ export default function Settings() {
     setLoading(true);
     Promise.all([
       api('/settings'),
-      api('/sessions/stats').catch(() => ({})), 
+      api('/sessions/stats').catch(() => ({})),
+      api('/achievements').catch(() => ({ stats: { unlocked: 0, total: 0 } })),
     ])
-      .then(([settingsData, statsData]) => {
+      .then(([settingsData, statsData, achieveData]) => {
         setForm({ name: settingsData.name || '' });
         setAvatarUrl(settingsData.avatar_url || null);
         setWallpaperPreview(settingsData.wallpaper_url || null);
@@ -65,6 +68,8 @@ export default function Settings() {
         setAudioName(settingsData.audio_name || '');
         setAudioArtist(settingsData.audio_artist || '');
         setAudioCoverUrl(settingsData.audio_cover_url || null);
+        setSettingsUsername(settingsData.username || null);
+        setAchievementCount(achieveData?.stats || { unlocked: 0, total: 0 });
         setUsageStats({
           totalSeconds: settingsData.total_usage_seconds || 0,
           accountAgeDays: settingsData.account_age_days || 0,
@@ -749,50 +754,129 @@ export default function Settings() {
           </section>
         </div>
 
-        {}
-        <div className="lg:col-span-4 space-y-8">
+        {/* ── SIDEBAR DIREITA ── */}
+        <div className="lg:col-span-4 space-y-6">
 
-          {}
-          {usageStats && (
-            <div className="glass-target bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-2xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--db-accent)]/20 to-[var(--db-accent-hover)]/10 z-0 pointer-events-none" />
-              <div className="relative z-10 text-[var(--db-text)]">
-                <div className="flex items-center gap-2 mb-6">
-                  <Flame size={20} />
-                  <span className="font-bold text-[12px] uppercase tracking-widest opacity-80 text-[var(--db-accent)]">Impacto Total</span>
+          {/* ── Minha Conta ── */}
+          <section className="glass-target bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] overflow-hidden shadow-2xl">
+            {/* Header gradiente */}
+            <div className="relative h-28 bg-gradient-to-br from-[var(--db-accent)] via-[var(--db-accent-hover)] to-[var(--db-blue)] overflow-hidden">
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.15) 0%, transparent 60%)' }} />
+            </div>
+
+            {/* Avatar + info */}
+            <div className="px-6 pb-6">
+              <div className="-mt-10 flex items-end gap-4 mb-4">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-[var(--db-surface-2)] border-4 border-[var(--db-surface)] shadow-xl shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User size={28} className="text-[var(--db-text-3)]" />
+                    </div>
+                  )}
                 </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-5xl font-black tracking-tighter">
-                      {Math.floor(usageStats.totalSeconds / 3600)}h
-                    </p>
-                    <p className="text-sm font-bold opacity-70 mt-1 uppercase tracking-wider">Produtividade Acumulada</p>
-                  </div>
-
-                  <div className="pt-6 border-t border-[var(--db-bg)]/10 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xl font-bold">{usageStats.currentStreak}d</p>
-                      <p className="text-[10px] uppercase font-bold opacity-60">Streak Atual</p>
-                    </div>
-                    <div>
-                      <p className="text-xl font-bold">{usageStats.accountAgeDays}d</p>
-                      <p className="text-[10px] uppercase font-bold opacity-60">Na plataforma</p>
-                    </div>
-                  </div>
+                <div className="min-w-0 pb-1">
+                  <p className="text-base font-bold text-[var(--db-text)] truncate">{form.name || 'Seu Nome'}</p>
+                  {settingsUsername && (
+                    <p className="text-[13px] text-[var(--db-text-3)] truncate">@{settingsUsername}</p>
+                  )}
                 </div>
               </div>
+
+              {/* Link para perfil público */}
+              {settingsUsername && (
+                <button
+                  onClick={() => navigate(`/@${settingsUsername}`)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-[var(--db-accent)]/10 hover:bg-[var(--db-accent)]/20 border border-[var(--db-accent)]/20 text-[var(--db-accent)] text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  <ExternalLink size={15} />
+                  Ver perfil público
+                </button>
+              )}
             </div>
+          </section>
+
+          {/* ── Estatísticas ── */}
+          {usageStats && (
+            <section className="glass-target bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-6 shadow-xl space-y-5">
+              {/* Hero stat: Total de horas */}
+              <div className="text-center py-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--db-accent)]/10 text-[var(--db-accent)] text-[11px] font-bold uppercase tracking-widest mb-3">
+                  <Zap size={12} />
+                  Tempo Acumulado
+                </div>
+                <p className="text-6xl font-black tracking-tighter text-[var(--db-text)]">
+                  {Math.floor(usageStats.totalSeconds / 3600)}<span className="text-2xl font-bold opacity-40 ml-1">h</span>
+                </p>
+                <p className="text-[13px] text-[var(--db-text-3)] mt-1">
+                  {Math.floor((usageStats.totalSeconds % 3600) / 60)} minutos acumulados
+                </p>
+              </div>
+
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[var(--db-bg-secondary)] rounded-2xl p-4 text-center">
+                  <div className="flex items-center justify-center gap-1.5 mb-2">
+                    <Flame size={14} className="text-orange-400" />
+                  </div>
+                  <p className="text-2xl font-black text-[var(--db-text)]">{usageStats.currentStreak}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--db-text-3)] mt-0.5">Streak Atual</p>
+                </div>
+                <div className="bg-[var(--db-bg-secondary)] rounded-2xl p-4 text-center">
+                  <div className="flex items-center justify-center gap-1.5 mb-2">
+                    <Award size={14} className="text-yellow-400" />
+                  </div>
+                  <p className="text-2xl font-black text-[var(--db-text)]">{usageStats.longestStreak}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--db-text-3)] mt-0.5">Maior Streak</p>
+                </div>
+                <div className="bg-[var(--db-bg-secondary)] rounded-2xl p-4 text-center">
+                  <div className="flex items-center justify-center gap-1.5 mb-2">
+                    <Timer size={14} className="text-[var(--db-blue)]" />
+                  </div>
+                  <p className="text-2xl font-black text-[var(--db-text)]">
+                    {usageStats.longestSessionSeconds >= 3600
+                      ? `${Math.floor(usageStats.longestSessionSeconds / 3600)}h`
+                      : `${Math.floor(usageStats.longestSessionSeconds / 60)}m`}
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--db-text-3)] mt-0.5">Maior Sessão</p>
+                </div>
+                <div className="bg-[var(--db-bg-secondary)] rounded-2xl p-4 text-center">
+                  <div className="flex items-center justify-center gap-1.5 mb-2">
+                    <Calendar size={14} className="text-emerald-400" />
+                  </div>
+                  <p className="text-2xl font-black text-[var(--db-text)]">{usageStats.accountAgeDays}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--db-text-3)] mt-0.5">Dias na Plataforma</p>
+                </div>
+              </div>
+
+              {/* Conquistas */}
+              <button
+                onClick={() => navigate('/achievements')}
+                className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/15 hover:border-amber-500/30 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                    <Trophy size={16} className="text-amber-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-[var(--db-text)]">{achievementCount.unlocked}/{achievementCount.total} Conquistas</p>
+                    <p className="text-[11px] text-[var(--db-text-3)]">{achievementCount.total > 0 ? Math.round((achievementCount.unlocked / achievementCount.total) * 100) : 0}% completo</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-[var(--db-text-3)] group-hover:translate-x-1 transition-transform" />
+              </button>
+            </section>
           )}
 
-          {}
-          <div className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-8 shadow-xl">
-            <div className="flex items-center gap-2 mb-6 text-[var(--db-red)]">
-              <ShieldAlert size={18} />
-              <h3 className="font-bold text-sm uppercase tracking-wider">Zona Crítica</h3>
+          {/* ── Zona Crítica ── */}
+          <section className="glass-target relative bg-[var(--db-surface)] border border-[var(--db-border)] rounded-[32px] p-6 shadow-xl">
+            <div className="flex items-center gap-2 mb-5 text-[var(--db-red)]">
+              <ShieldAlert size={16} />
+              <h3 className="font-bold text-[11px] uppercase tracking-widest">Zona Crítica</h3>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <button
                 onClick={() => {
                   confirm({
@@ -801,27 +885,27 @@ export default function Settings() {
                     onConfirm: () => { logout(); navigate('/'); }
                   });
                 }}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-3)] transition-all group"
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-[var(--db-bg-secondary)] hover:bg-[var(--db-surface-3)] transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <LogOut size={18} className="text-[var(--db-text-3)]" />
-                  <span className="text-sm font-bold text-[var(--db-text-2)]">Encerrar Sessão</span>
+                  <LogOut size={16} className="text-[var(--db-text-3)]" />
+                  <span className="text-[13px] font-bold text-[var(--db-text-2)]">Encerrar Sessão</span>
                 </div>
-                <ChevronRight size={16} className="text-[var(--db-text-3)] group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={14} className="text-[var(--db-text-3)] group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
                 onClick={handleDelete}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-[var(--db-red)]/5 hover:bg-[var(--db-red)]/10 border border-[var(--db-red)]/10 transition-all group"
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-[var(--db-red)]/5 hover:bg-[var(--db-red)]/10 border border-[var(--db-red)]/10 transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <Trash2 size={18} className="text-[var(--db-red)]" />
-                  <span className="text-sm font-bold text-[var(--db-red)]">Deletar Conta</span>
+                  <Trash2 size={16} className="text-[var(--db-red)]" />
+                  <span className="text-[13px] font-bold text-[var(--db-red)]">Deletar Conta</span>
                 </div>
-                <ChevronRight size={16} className="text-[var(--db-red)]/40 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={14} className="text-[var(--db-red)]/40 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
-          </div>
+          </section>
 
         </div>
       </div>

@@ -72,6 +72,7 @@ const navSections = [
   {
     title: 'Personalizar',
     items: [
+      { to: '/account', icon: User, key: 'navAccount', label: 'Conta' },
       { to: '/settings', icon: Layers, key: 'navSettings', label: 'Widget' },
     ]
   }

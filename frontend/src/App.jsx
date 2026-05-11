@@ -16,6 +16,7 @@ import Teams from './pages/Teams';
 import Settings from './pages/Settings';
 import Achievements from './pages/Achievements';
 import Leaderboard from './pages/Leaderboard';
+import Account from './pages/Account';
 import NotFound from './pages/NotFound';
 import PublicProfile from './pages/PublicProfile';
 import InviteLink from './pages/InviteLink';
@@ -104,6 +105,7 @@ export default function App() {
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
                     <Route path="/achievements/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                    <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
                     <Route path="/invite/:token" element={<InviteLink />} />
                     <Route path="/:atUsername" element={<PublicProfile />} />
                     <Route path="*" element={<NotFound />} />
