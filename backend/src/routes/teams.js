@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
       const memberIds = members?.map(m => m.user_id) || [];
       const { data: users } = await supabase
         .from('users')
-        .select('id, display_name as name, email, avatar_url')
+        .select('id, name:display_name, email, avatar_url')
         .in('id', memberIds);
 
       const membersWithInfo = members?.map(m => ({
@@ -222,7 +222,7 @@ router.post('/:id/invite', async (req, res) => {
     if (user_id) {
       const { data } = await supabase
         .from('users')
-        .select('id, display_name as name, email, username, avatar_url')
+        .select('id, name:display_name, email, username, avatar_url')
         .eq('id', user_id)
         .maybeSingle();
       invitedUser = data || null;
@@ -230,7 +230,7 @@ router.post('/:id/invite', async (req, res) => {
       const cleaned = String(username).trim().replace(/^@/, '').toLowerCase();
       const { data } = await supabase
         .from('users')
-        .select('id, display_name as name, email, username, avatar_url')
+        .select('id, name:display_name, email, username, avatar_url')
         .ilike('username', cleaned)
         .maybeSingle();
       invitedUser = data || null;
@@ -286,7 +286,7 @@ router.post('/:id/invite', async (req, res) => {
 
     const { data: inviter } = await supabase
       .from('users')
-      .select('display_name as name, email, avatar_url, username')
+      .select('name:display_name, email, avatar_url, username')
       .eq('id', req.userId)
       .single();
 
@@ -424,7 +424,7 @@ router.get('/invitations/inbox', async (req, res) => {
 
       const { data: inviter } = await supabase
         .from('users')
-        .select('display_name as name, email, avatar_url')
+        .select('name:display_name, email, avatar_url')
         .eq('id', inv.invited_by)
         .single();
 
@@ -464,7 +464,7 @@ router.get('/invitations/sent', async (req, res) => {
 
       const { data: invitedUser } = await supabase
         .from('users')
-        .select('display_name as name, email, avatar_url')
+        .select('name:display_name, email, avatar_url')
         .eq('id', inv.invited_user_id)
         .single();
 
@@ -503,7 +503,7 @@ router.get('/change-requests/inbox', async (req, res) => {
     
     const { data, error } = await supabase
       .from('change_requests')
-      .select('*, user:users(name, avatar_url), team:teams(name)')
+      .select('*, user:users(display_name, avatar_url), team:teams(name)')
       .in('team_id', teamIds)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });

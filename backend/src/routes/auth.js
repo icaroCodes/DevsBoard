@@ -69,7 +69,7 @@ const buildUserPayload = (user) => ({
   email: user.email,
   avatar_url: user.avatar_url,
   username: user.username || null,
-  needs_onboarding: !user.username,
+  needs_onboarding: !!user.needs_onboarding,
 });
 
 // Username availability check (used by onboarding & settings)
@@ -104,8 +104,13 @@ router.post('/refresh', async (req, res) => {
       refreshToken: refreshToken
     });
   } catch {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    const cookieOptions = {
+      httpOnly: true,
+      secure: config.cookie.secure,
+      sameSite: config.cookie.sameSite,
+    };
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', cookieOptions);
     res.status(401).json({ error: 'Sessão expirada' });
   }
 });
@@ -122,7 +127,7 @@ router.post('/exchange', async (req, res) => {
 
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, display_name, email, avatar_url, auth_id, username')
+      .select('id, name:display_name, email, avatar_url, auth_id, username, needs_onboarding')
       .eq('id', decoded.userId)
       .single();
     if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado' });
@@ -156,7 +161,7 @@ router.get('/session', authenticate, async (req, res) => {
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, display_name, email, avatar_url, auth_id, username')
+      .select('id, name:display_name, email, avatar_url, auth_id, username, needs_onboarding')
       .eq('id', req.userId)
       .single();
     if (error || !user) return res.status(401).json({ error: 'Sessão inválida' });
@@ -195,8 +200,13 @@ router.get('/realtime-token', authenticate, async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
+  const cookieOptions = {
+    httpOnly: true,
+    secure: config.cookie.secure,
+    sameSite: config.cookie.sameSite,
+  };
+  res.clearCookie('accessToken', cookieOptions);
+  res.clearCookie('refreshToken', cookieOptions);
   res.status(200).json({ message: 'Sessão encerrada' });
 });
 

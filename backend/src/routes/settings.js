@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     
     const { data, error } = await supabase
       .from('users')
-      .select('id, display_name as name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url, username, display_name, bio, social_links, is_public, last_username_change_at')
+      .select('id, name:display_name, email, avatar_url, created_at, language, theme, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url, username, display_name, bio, social_links, is_public, last_username_change_at, needs_onboarding')
       .eq('id', req.userId)
       .single();
     if (error || !data) return res.status(404).json({ error: 'Usu├írio n├úo encontrado' });
@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       ...data,
-      needs_onboarding: !data.username,
+      needs_onboarding: !!data.needs_onboarding,
       current_streak: streakRow?.current_streak || 0,
       longest_streak: streakRow?.longest_streak || 0,
       last_access_date: streakRow?.last_access_date || null,
@@ -240,7 +240,7 @@ router.put('/', [
       .from('users')
       .update(updateData)
       .eq('id', req.userId)
-      .select('id, display_name as name, email, avatar_url, language, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url')
+      .select('id, name:display_name, email, avatar_url, language, wallpaper_url, wallpaper_opacity, wallpaper_type, audio_url, audio_volume, audio_enabled, audio_name, audio_artist, audio_cover_url')
       .single();
 
     if (error) throw error;

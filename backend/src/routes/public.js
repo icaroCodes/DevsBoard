@@ -15,7 +15,7 @@ import config from '../config/index.js';
 const router = Router();
 
 const PUBLIC_COLUMNS =
-  'id, username, display_name, name, avatar_url, bio, social_links, created_at, current_streak, longest_streak';
+  'id, username, name:display_name, avatar_url, bio, social_links, created_at, current_streak, longest_streak';
 
 router.get('/profile/:username', async (req, res) => {
   const username = String(req.params.username || '').trim().toLowerCase();
@@ -40,7 +40,7 @@ router.get('/profile/:username', async (req, res) => {
     // sensible without explicitly migrating display_name.
     res.json({
       ...publicData,
-      display_name: publicData.display_name || publicData.name,
+      display_name: publicData.name || publicData.username,
     });
   } catch (err) {
     console.error('[GET /public/profile/:username]', err);
@@ -79,7 +79,7 @@ router.get('/invite/:token', async (req, res) => {
         .maybeSingle(),
       supabase
         .from('users')
-        .select('name, username, avatar_url')
+        .select('name:display_name, username, avatar_url')
         .eq('id', decoded.invited_by)
         .maybeSingle(),
     ]);

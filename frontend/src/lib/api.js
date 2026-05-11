@@ -69,7 +69,7 @@ export async function api(endpoint, options = {}, isRetry = false) {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('activeTeam');
     if (!window.location.pathname.includes('/auth') && window.location.pathname !== '/') {
-      window.location.href = '/auth';
+      window.location.href = '/';
     }
     throw new Error('Sessão expirada. Faça login novamente.');
   }

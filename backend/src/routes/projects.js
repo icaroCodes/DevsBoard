@@ -260,7 +260,7 @@ router.get('/:id/comments', async (req, res) => {
     if (needs.length > 0) {
       const ids = [...new Set(needs.map(c => c.user_id))];
       const { data: users, error: uerr } = await supabase.from('users')
-        .select('id, display_name as name, avatar_url, email').in('id', ids);
+        .select('id, name:display_name, avatar_url, email').in('id', ids);
 
       if (uerr) {
         console.error('[comments] lookup users falhou:', uerr.message, 'ids:', ids);
@@ -307,7 +307,7 @@ router.post('/:id/comments', async (req, res) => {
 
     // Snapshot do usu├írio no momento do insert ÔÇö independente de joins funcionarem.
     const { data: u, error: uerr } = await supabase.from('users')
-      .select('id, display_name as name, avatar_url, email').eq('id', req.userId).maybeSingle();
+      .select('id, name:display_name, avatar_url, email').eq('id', req.userId).maybeSingle();
     if (uerr) console.error('[comments] user fetch on insert:', uerr);
 
     const userName   = u?.name || u?.email?.split('@')[0] || null;
@@ -380,7 +380,7 @@ router.post('/:id/code-comments', async (req, res) => {
     if (!block_id || !content?.trim()) return res.status(400).json({ error: 'Dados inv├ílidos' });
 
     const { data: u } = await supabase.from('users')
-      .select('name, avatar_url, email').eq('id', req.userId).maybeSingle();
+      .select('name:display_name, avatar_url, email').eq('id', req.userId).maybeSingle();
 
     const { data, error } = await supabase.from('code_comments')
       .insert({
@@ -441,7 +441,7 @@ router.post('/:id/code-comments/:commentId/replies', async (req, res) => {
     if (!content?.trim()) return res.status(400).json({ error: 'Resposta vazia' });
 
     const { data: u } = await supabase.from('users')
-      .select('name, avatar_url, email').eq('id', req.userId).maybeSingle();
+      .select('name:display_name, avatar_url, email').eq('id', req.userId).maybeSingle();
 
     const { data, error } = await supabase.from('code_comment_replies')
       .insert({

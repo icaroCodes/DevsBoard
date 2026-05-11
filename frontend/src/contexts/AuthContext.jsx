@@ -105,6 +105,21 @@ export function AuthProvider({ children }) {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const refreshUser = async () => {
+    try {
+      const data = await api('/auth/session');
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.supabaseToken) {
+        applyRealtimeAuth(data.supabaseToken);
+      }
+      return data.user;
+    } catch (err) {
+      console.error('Erro ao atualizar usuário:', err);
+      return null;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -114,7 +129,8 @@ export function AuthProvider({ children }) {
       loginWithOAuth,
       exchangeOAuthCode,
       logout,
-      updateUser
+      updateUser,
+      refreshUser
     }}>
       {children}
     </AuthContext.Provider>

@@ -8,7 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 const PROFILE_COLUMNS =
-  'id, display_name as name, email, avatar_url, username, display_name, bio, social_links, is_public, last_username_change_at, created_at';
+  'id, name:display_name, email, avatar_url, username, display_name, bio, social_links, is_public, last_username_change_at, created_at, needs_onboarding';
 
 const socialLinksSchema = z
   .object({
@@ -27,6 +27,7 @@ const updateSchema = z
     bio: z.string().max(500).nullable().optional(),
     social_links: socialLinksSchema.optional(),
     is_public: z.boolean().optional(),
+    needs_onboarding: z.boolean().optional(),
   })
   .strict();
 
@@ -38,7 +39,7 @@ router.get('/me', async (req, res) => {
       .eq('id', req.userId)
       .single();
     if (error || !data) return res.status(404).json({ error: 'Perfil n├úo encontrado' });
-    res.json({ ...data, needs_onboarding: !data.username });
+    res.json({ ...data, needs_onboarding: !!data.needs_onboarding });
   } catch (err) {
     console.error('[GET /profiles/me]', err);
     res.status(500).json({ error: 'Erro ao carregar perfil' });
@@ -62,6 +63,7 @@ router.put('/me', async (req, res) => {
           .json({ error: 'username_unavailable', reason: result.reason });
       }
       parsed.username = result.username; // canonical lowercase
+      parsed.needs_onboarding = false; // They chose a username, onboarding complete!
     }
 
     const { data, error } = await supabase
@@ -92,7 +94,7 @@ router.put('/me', async (req, res) => {
       throw error;
     }
 
-    res.json({ ...data, needs_onboarding: !data.username });
+    res.json({ ...data, needs_onboarding: !!data.needs_onboarding });
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ errors: err.errors });

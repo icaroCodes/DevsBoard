@@ -67,7 +67,7 @@ router.get('/leaderboard', async (req, res) => {
 
     const { data: users } = await supabase
       .from('users')
-      .select('id, name, avatar_url')
+      .select('id, name:display_name, avatar_url')
       .in('id', userIds);
 
     const leaderboard = (users || [])

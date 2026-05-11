@@ -88,7 +88,7 @@ export default function PublicProfile() {
             DevsBoard
           </Link>
           <Link
-            to="/auth"
+            to="/"
             className="text-sm text-zinc-400 hover:text-zinc-200"
           >
             Entrar
