@@ -204,8 +204,8 @@ function DesktopLayout({ children }) {
  }}
  transition={{ type:'spring', stiffness: 350, damping: 40, mass: 1 }}
  className={`!fixed z-40 flex flex-col ${isMobile ?'overflow-visible' : (isExpanded ?'overflow-visible' :'overflow-x-hidden overflow-y-visible')} ${isMobile
- ?'bg-[#202020] border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.6)]'
- :'inset-y-0 left-0 bg-[#202020] border-r border-[#2C2C2C] shadow-2xl lg:shadow-none'
+ ?'bg-[#1C1C1E] border border-white/[0.08] shadow-[0_32px_64px_rgba(0,0,0,0.6)] rounded-[18px]'
+ :'inset-y-0 left-0 bg-[#1C1C1E] border-r border-white/[0.05]'
  }`}
  >
  <div className="pt-8 pb-4 px-4 shrink-0 relative">
@@ -217,7 +217,7 @@ function DesktopLayout({ children }) {
  whileHover={{ scale: 1.08 }}
  whileTap={{ scale: 0.93 }}
  transition={{ type:'spring', stiffness: 400, damping: 25 }}
- className="mx-auto w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer shadow-lg border border-white/8 bg-[#202020]"
+ className="mx-auto w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
  >
  <motion.div
  initial={false}
@@ -236,7 +236,7 @@ function DesktopLayout({ children }) {
  whileHover={{ scale: 1.08 }}
  whileTap={{ scale: 0.93 }}
  transition={{ type:'spring', stiffness: 400, damping: 25 }}
- className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 shadow-lg border border-white/8 bg-[#202020] hover:bg-white/8 transition-colors cursor-pointer"
+ className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] transition-colors cursor-pointer"
  >
  <PanelLeft size={20} className="text-[#A1A1AA]" strokeWidth={1.5} />
  </motion.button>
@@ -248,10 +248,10 @@ function DesktopLayout({ children }) {
  className="flex-1 flex items-center justify-between min-w-0 p-2 -ml-1 hover:bg-white/[0.04] rounded-[10px] transition-colors group outline-none"
  >
  <div className="flex flex-col min-w-0 text-left">
- <span className="text-[15px] font-bold text-[#F5F5F7] tracking-tight leading-tight truncate">
+ <span className="text-[14.5px] font-semibold text-[#F5F5F7] tracking-[-0.015em] leading-tight truncate">
  {activeTeam ? activeTeam.name : (user?.name ||'DevsBoard')}
  </span>
- <span className="text-[12px] text-[#A1A1AA] leading-tight truncate mt-0.5">
+ <span className="text-[11.5px] text-[#86868B] leading-tight truncate mt-0.5">
  {activeTeam
  ? (activeTeam.my_role ==='owner' ?'dono' : activeTeam.my_role ==='admin' ?'admin' :'membro')
  :'pessoal'}
@@ -345,13 +345,13 @@ function DesktopLayout({ children }) {
  variants={isMobile ? containerVariants : {}}
  initial="hidden"
  animate="show"
- className={`flex-1 px-4 py-2 space-y-6 overflow-y-auto custom-scrollbar overflow-x-hidden ${(isExpanded || isMobile) ?'min-w-[224px]' :''}`}
+ className={`flex-1 px-3 py-2 space-y-5 overflow-y-auto custom-scrollbar overflow-x-hidden ${(isExpanded || isMobile) ?'min-w-[224px]' :''}`}
  >
  {navSections.map((section, idx) => (
  <div key={idx} className="flex flex-col space-y-1">
  {section.title && (isExpanded || isMobile) && (
- <div className="flex items-center justify-between px-3 mb-1">
- <span className="text-[12px] font-bold text-[#86868B]">{section.title}</span>
+ <div className="flex items-center justify-between px-3 mb-1.5 mt-1">
+ <span className="text-[10px] font-semibold text-[#6B6B70] uppercase tracking-[0.08em]">{section.title}</span>
  </div>
  )}
  {section.items.map((item) => {
@@ -371,7 +371,7 @@ function DesktopLayout({ children }) {
  key={item.to}
  to={to}
  onClick={() => isMobile && setSidebarOpen(false)}
- className={`flex items-center gap-3 px-3 py-2.5 rounded-[8px] transition-all duration-200 group relative ${isActive ?'bg-white/[0.06] shadow-sm' :'hover:bg-white/[0.03]'}`}
+ className={`flex items-center gap-3 px-3 py-2 rounded-[8px] transition-colors duration-150 group relative ${isActive ?'bg-white/[0.07]' :'hover:bg-white/[0.035]'}`}
  title={(!isExpanded && !isMobile) ? label :''}
  style={{ width: isExpanded || isMobile ?'100%' :'56px', margin: (!isExpanded && !isMobile) ?'0 auto' : undefined }}
  >
@@ -384,9 +384,9 @@ function DesktopLayout({ children }) {
  className="shrink-0"
  >
  <Icon
- size={18}
+ size={17}
  className={iconColor}
- strokeWidth={isActive ? 2 : 1.5}
+ strokeWidth={1.6}
  />
  </motion.div>
  <AnimatePresence initial={false} mode="wait">
@@ -396,7 +396,7 @@ function DesktopLayout({ children }) {
  animate={{ opacity: 1, width:'auto', x: 0 }}
  exit={{ opacity: 0, width: 0, x: -4 }}
  transition={{ type:'spring', stiffness: 380, damping: 32, mass: 0.8 }}
- className={`whitespace-nowrap overflow-hidden text-[13px] ${isActive ?'font-semibold text-[#F5F5F7]' :'font-medium text-[#A1A1AA] group-hover:text-[#F5F5F7]'}`}
+ className={`whitespace-nowrap overflow-hidden text-[13.5px] tracking-[-0.01em] ${isActive ?'font-semibold text-[#F5F5F7]' :'font-medium text-[#C7C7CC] group-hover:text-[#F5F5F7]'}`}
  >
  {label}
  </motion.span>
@@ -404,12 +404,6 @@ function DesktopLayout({ children }) {
  </AnimatePresence>
  {to ==='/teams' && (notifications?.length > 0) && (
  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-1.5 w-1.5 rounded-full bg-[#FF453A] animate-pulse" />
- )}
- {label ==='Done' && (isExpanded || isMobile) && (
- <MoreHorizontal size={14} className="ml-auto text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity" />
- )}
- {label ==='In Progress' && (isExpanded || isMobile) && (
- <MoreHorizontal size={14} className="ml-auto text-[#A1A1AA] opacity-0 group-hover:opacity-100 transition-opacity" />
  )}
  </Link>
  );
@@ -424,26 +418,26 @@ function DesktopLayout({ children }) {
 
  { }
  <div className={`px-4 pb-2 space-y-1 ${(isExpanded || isMobile) ?'' :'hidden'}`}>
- <button onClick={handleToggleTheme} className="flex items-center justify-between px-3 py-2 text-[#A1A1AA] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/[0.03] transition-colors w-full outline-none group cursor-pointer">
+ <button onClick={handleToggleTheme} className="flex items-center justify-between px-3 py-2 text-[#C7C7CC] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/[0.035] transition-colors w-full outline-none group cursor-pointer">
  <div className="flex items-center gap-3">
- <Moon size={18} strokeWidth={1.5} className="group-active:scale-95 transition-transform" />
- <span className="text-[13px] font-medium tracking-wide">Tema</span>
+ <Moon size={18} strokeWidth={1.5} />
+ <span className="text-[13.5px] font-medium tracking-[-0.01em]">Tema</span>
  </div>
- <span className="text-[10px] text-[#86868B] font-bold tracking-normal opacity-30 group-hover:opacity-100 transition-opacity">{theme}</span>
+ <span className="text-[10px] text-[#6B6B70] font-medium tracking-normal opacity-60 group-hover:opacity-100 transition-opacity">{theme}</span>
  </button>
- <button onClick={handleToggleLang} className="flex items-center justify-between px-3 py-2 text-[#A1A1AA] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/[0.03] transition-colors w-full outline-none group cursor-pointer">
+ <button onClick={handleToggleLang} className="flex items-center justify-between px-3 py-2 text-[#C7C7CC] hover:text-[#F5F5F7] rounded-[8px] hover:bg-white/[0.035] transition-colors w-full outline-none group cursor-pointer">
  <div className="flex items-center gap-3">
- <Languages size={18} strokeWidth={1.5} className="group-active:scale-95 transition-transform" />
- <span className="text-[13px] font-medium tracking-wide">Idioma</span>
+ <Languages size={18} strokeWidth={1.5} />
+ <span className="text-[13.5px] font-medium tracking-[-0.01em]">Idioma</span>
  </div>
- <span className="text-[10px] text-[#86868B] font-bold tracking-normal opacity-30 group-hover:opacity-100 transition-opacity">{lang}</span>
+ <span className="text-[10px] text-[#6B6B70] font-medium tracking-normal opacity-60 group-hover:opacity-100 transition-opacity">{lang}</span>
  </button>
  </div>
 
  { }
  {user && (
  <div className={`mx-3 mb-1 ${(isExpanded || isMobile) ?'min-w-[200px]' :''}`}>
- <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#202020]/60 border border-white/[0.04] ${isExpanded || isMobile ?'' :'justify-center'}`}>
+ <div className={`flex items-center gap-2.5 px-3 py-2 rounded-[10px] bg-white/[0.025] border border-white/[0.04] ${isExpanded || isMobile ?'' :'justify-center'}`}>
  <div className="relative shrink-0">
  <Timer size={14} className="text-[#30D158]" />
  <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse" />
@@ -472,7 +466,7 @@ function DesktopLayout({ children }) {
  e.stopPropagation();
  setShowSwitcher(!showSwitcher);
  }}
- className={`w-full p-2 flex items-center gap-3 overflow-hidden shrink-0 transition-colors rounded-[12px] outline-none ${(isExpanded || isMobile) ?'border border-[#5E5CE6] bg-[#5E5CE6]/5 hover:bg-[#5E5CE6]/10 shadow-[0_0_15px_rgba(94,92,230,0.1)]' :'justify-center border border-transparent hover:bg-white/5'}`}
+ className={`w-full p-2 flex items-center gap-3 overflow-hidden shrink-0 transition-colors rounded-[12px] outline-none ${(isExpanded || isMobile) ?'border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06]' :'justify-center border border-transparent hover:bg-white/[0.05]'}`}
  >
  {user.avatar_url ? (
  <img src={user.avatar_url} alt={user.name} className="w-9 h-9 aspect-square rounded-[8px] shrink-0 object-cover" />
@@ -491,10 +485,10 @@ function DesktopLayout({ children }) {
  className="flex-1 min-w-0"
  >
  <div className="whitespace-nowrap flex flex-col justify-center text-left">
- <p className="text-[14px] font-bold text-[#F5F5F7] truncate leading-tight">
+ <p className="text-[13.5px] font-semibold text-[#F5F5F7] tracking-[-0.01em] truncate leading-tight">
  {user.name}
  </p>
- <p className="text-[12px] text-[#A1A1AA] truncate leading-tight mt-0.5">{user.email}</p>
+ <p className="text-[11.5px] text-[#86868B] truncate leading-tight mt-0.5">{user.email}</p>
  </div>
  </motion.div>
  )}
