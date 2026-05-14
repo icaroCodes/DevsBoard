@@ -74,35 +74,16 @@ export async function supabaseForRequest(req) {
   if (req._supabaseClient) return req._supabaseClient;
   if (!req.userId) throw new Error('supabaseForRequest exige req.userId (authenticate middleware).');
 
-  try {
-    const authUuid = await ensureAuthId(req.userId);
-    const jwtToken = signSupabaseJwt(authUuid);
-    const client = createUserClient(jwtToken);
+  // Fail-closed: any error building the RLS-scoped client (missing ANON_KEY,
+  // JWT sign failure, broken auth_id, etc.) must abort the request. Falling
+  // back to supabaseAdmin here would silently bypass RLS for the duration of
+  // the request — the exact thing the helper exists to prevent.
+  const authUuid = await ensureAuthId(req.userId);
+  const jwtToken = signSupabaseJwt(authUuid);
+  const client = createUserClient(jwtToken);
 
-    // Quick validation: try a lightweight query to confirm RLS policies are active.
-    // If they aren't deployed yet, Supabase returns zero rows for everything or
-    // throws permission errors. We test with a simple users lookup.
-    const { error: testErr } = await client
-      .from('users')
-      .select('id')
-      .eq('id', req.userId)
-      .maybeSingle();
-
-    if (testErr) {
-      console.warn(`[supabaseForRequest] RLS client test failed (${testErr.message}). Falling back to supabaseAdmin. Apply RLS policies to fix.`);
-      req._supabaseClient = supabaseAdmin;
-      return supabaseAdmin;
-    }
-
-    req._supabaseClient = client;
-    return client;
-  } catch (err) {
-    // If anything goes wrong (missing ANON_KEY, JWT sign failure, etc.)
-    // fall back to the admin client so the app doesn't break.
-    console.warn(`[supabaseForRequest] Error creating user client: ${err.message}. Falling back to supabaseAdmin.`);
-    req._supabaseClient = supabaseAdmin;
-    return supabaseAdmin;
-  }
+  req._supabaseClient = client;
+  return client;
 }
 
 /**
