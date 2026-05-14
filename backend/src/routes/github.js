@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import supabase from '../database/connection.js';
+import crypto from 'crypto';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 import config from '../config/index.js';
 import { resolveOAuthLogin } from '../utils/oauth.js';
+import { issueTokenPair, setAuthCookies } from '../utils/tokenStore.js';
 
 const router = Router();
 
@@ -11,39 +13,60 @@ const GITHUB_CLIENT_SECRET = (process.env.GITHUB_CLIENT_SECRET || '').trim();
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:5173').trim();
 const CALLBACK_URL = 'https://devsboard-backend.onrender.com/auth/github/callback';
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, config.jwt.accessSecret, { expiresIn: config.jwt.accessExpires });
-  const refreshToken = jwt.sign({ userId }, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpires });
-  return { accessToken, refreshToken };
+
+
+// Sign a short-lived state token. Carrying purpose+provider in the payload
+// means a state issued for Google can't be replayed against GitHub, and
+// generally protects against login-CSRF (where an attacker tricks the victim
+// into completing the OAuth dance for the attacker's pre-staged account).
+const signOAuthState = (provider) =>
+  jwt.sign(
+    {
+      purpose: 'oauth_state',
+      provider,
+      nonce: crypto.randomUUID(),
+    },
+    config.jwt.accessSecret,
+    { expiresIn: '10m' }
+  );
+
+const verifyOAuthState = (token, expectedProvider) => {
+  try {
+    const decoded = jwt.verify(token, config.jwt.accessSecret);
+    return (
+      decoded.purpose === 'oauth_state' &&
+      decoded.provider === expectedProvider
+    );
+  } catch {
+    return false;
+  }
 };
-
-const setAuthCookies = (res, { accessToken, refreshToken }) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: config.cookie.secure,
-    sameSite: config.cookie.sameSite,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-  res.cookie('refreshToken', refreshToken, cookieOptions);
-};
-
 
 router.get('/', (req, res) => {
   console.log('[GitHub Auth] Iniciando OAuth — CALLBACK_URL:', CALLBACK_URL);
+  const state = signOAuthState('github');
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
     redirect_uri: CALLBACK_URL,
     scope: 'user:email',
+    state,
   });
   res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 });
 
 
 router.get('/callback', async (req, res) => {
-  const { code } = req.query;
+
+  const { code, state } = req.query;
   if (!code) return res.redirect(`${FRONTEND_URL}/auth?error=codigo_invalido`);
+
+  // Reject the callback if state is missing, malformed, expired, or signed
+  // for a different provider. Without this check, an attacker could feed the
+  // victim a `code` from their own OAuth dance and log them into the
+  // attacker's account (login-CSRF).
+  if (!state || typeof state !== 'string' || !verifyOAuthState(state, 'github')) {
+    return res.redirect(`${FRONTEND_URL}/auth?error=state_invalido`);
+  }
 
   try {
     console.log('[GitHub Auth] Trocando code por token. CLIENT_ID:', GITHUB_CLIENT_ID?.substring(0, 8) + '...', 'SECRET_SET:', !!GITHUB_CLIENT_SECRET);
@@ -81,7 +104,7 @@ router.get('/callback', async (req, res) => {
       name,
       avatarUrl: avatar_url,
     });
-    const { accessToken, refreshToken } = generateTokens(userId);
+    const { accessToken, refreshToken } = await issueTokenPair(userId);
     setAuthCookies(res, { accessToken, refreshToken });
 
     const exchangeCode = jwt.sign(

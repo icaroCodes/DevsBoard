@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 import { processRecurring } from '../utils/recurrenceProcessor.js';
 
@@ -9,6 +9,7 @@ router.use(authenticate);
 
 router.get('/list', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase.from('finances').select('*');
 
 
@@ -38,6 +39,7 @@ router.post('/', [
   body('transaction_date').isDate().withMessage('Data inválida'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -76,6 +78,7 @@ router.put('/:id', [
   body('transaction_date').optional().isDate(),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('finances').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -103,6 +106,7 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('finances').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -128,6 +132,7 @@ router.delete('/:id', async (req, res) => {
 
 router.get('/recurring/list', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase.from('recurring_transactions').select('*');
     if (req.teamId) {
       query = query.eq('team_id', req.teamId);
@@ -152,6 +157,7 @@ router.post('/recurring', [
   body('recurrence_interval').isIn(['weekly', 'biweekly', 'monthly']),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -188,6 +194,7 @@ router.post('/recurring', [
 
 router.delete('/recurring/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
     const { deleteAll } = req.query;
 
@@ -230,6 +237,7 @@ router.delete('/recurring/:id', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
 
     await processRecurring(req.userId, req.teamId);
 

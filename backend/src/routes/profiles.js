@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 import { checkUsernameAvailable } from '../utils/usernames.js';
 
@@ -10,12 +10,24 @@ router.use(authenticate);
 const PROFILE_COLUMNS =
   'id, name:display_name, email, avatar_url, username, display_name, bio, social_links, is_public, last_username_change_at, created_at, needs_onboarding';
 
+// Only accept https:// URLs. zod's `.url()` happily accepts `javascript:`,
+// `data:`, `vbscript:` and other schemes that, when rendered as an anchor
+// href on the public profile page, become an XSS sink. The empty string is
+// preserved so the client can clear a previously set link.
+const httpsUrl = z
+  .string()
+  .max(2048)
+  .refine(
+    (v) => v === '' || /^https:\/\/[^\s/$.?#].[^\s]*$/i.test(v),
+    { message: 'Apenas URLs https:// são permitidas' }
+  );
+
 const socialLinksSchema = z
   .object({
-    twitter: z.string().url().or(z.literal('')).optional(),
-    github: z.string().url().or(z.literal('')).optional(),
-    linkedin: z.string().url().or(z.literal('')).optional(),
-    website: z.string().url().or(z.literal('')).optional(),
+    twitter: httpsUrl.optional(),
+    github: httpsUrl.optional(),
+    linkedin: httpsUrl.optional(),
+    website: httpsUrl.optional(),
   })
   .partial()
   .strict();
@@ -33,6 +45,7 @@ const updateSchema = z
 
 router.get('/me', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { data, error } = await supabase
       .from('users')
       .select(PROFILE_COLUMNS)
@@ -48,6 +61,7 @@ router.get('/me', async (req, res) => {
 
 router.put('/me', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const parsed = updateSchema.parse(req.body);
 
     // Username: validate against the same rules the SQL trigger enforces, and

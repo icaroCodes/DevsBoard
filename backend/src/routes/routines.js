@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase.from('routines').select('*, routine_tasks(*)');
 
     if (req.teamId) {
@@ -41,6 +42,7 @@ router.post('/', [
   body('visual_type').isIn(['daily', 'weekly']).withMessage('Tipo inválido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -66,6 +68,7 @@ router.put('/:id', [
   body('visual_type').optional().isIn(['daily', 'weekly']),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('routines').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -91,6 +94,7 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('routines').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -118,6 +122,7 @@ router.post('/:id/tasks', [
   body('day_of_week').optional().isInt({ min: 0, max: 6 }).withMessage('Dia inválido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('routines').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -155,6 +160,7 @@ router.put('/:id/tasks/:taskId', [
   body('completed').optional().isBoolean(),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('routines').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -183,6 +189,7 @@ router.put('/:id/tasks/:taskId', [
 
 router.post('/reorder', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { items } = req.body;
     const { userId, teamId } = req;
     for (const item of items) {
@@ -200,6 +207,7 @@ router.post('/reorder', async (req, res) => {
 
 router.post('/:id/tasks/reorder', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { items } = req.body;
     const { userId, teamId } = req;
     let query = supabase.from('routines').select('id').eq('id', req.params.id);
@@ -220,6 +228,7 @@ router.post('/:id/tasks/reorder', async (req, res) => {
 
 router.delete('/:id/tasks/:taskId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('routines').select('id').eq('id', req.params.id);
     if (teamId) query = query.eq('team_id', teamId);

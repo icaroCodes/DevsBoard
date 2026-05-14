@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, CheckCircle2, Users, Check, X, AlertTriangle, ChevronDown } from 'lucide-react';
 import LandingMobile from './LandingMobile';
+import FeedbackWall from '../components/FeedbackWall';
+import AskAnything from '../components/AskAnything';
 
 const IconGitHub = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -116,6 +118,10 @@ const translations = {
     ctaTitle: "Coloque sua rotina em ordem.",
     ctaDesc: "Suas tarefas e seu dinheiro organizados agora.",
     ctaBtn: "Começar agora",
+    coffeeTitle1: "Movido a café.",
+    coffeeDesc: "O DevsBoard é feito por um dev solo, sem anúncios e sem paywall. Se ele te ajuda, um café mantém ele de pé.",
+    coffeeBtn: "Pague um café",
+    coffeeMeta: "PIX · sem valor mínimo",
     footerMade: "Criado por",
     chartBalance: "Meu saldo",
     socialProof1: "Mais de 50 usuários já organizam projetos, finanças e rotina no DevsBoard.",
@@ -127,12 +133,25 @@ const translations = {
     feat5Desc: "Complete tarefas, alcance metas e desbloqueie conquistas inspiradas na PlayStation.",
     feat6Title: "Seu workspace do seu jeito.",
     feat6Desc: "Customize aparência, áudio e ambiente para criar uma experiência imersiva.",
-    testi1: "“Finalmente uma plataforma que junta produtividade pessoal e trabalho em equipe sem virar uma bagunça.”",
-    testi1Author: "— Usuário DevsBoard",
-    testi2: "“O realtime do DevsBoard é absurdo. Parece um mix de Linear, Notion e Discord.”",
-    testi2Author: "— Desenvolvedor frontend",
-    testi3: "“Uso diariamente pra organizar freelas, rotina e metas financeiras.”",
-    testi3Author: "— Indie hacker",
+    fbLabel: "Mural",
+    fbTitle: "Vozes de quem usa.",
+    fbDesc: "Sem testemunhos fabricados. Cada palavra abaixo foi deixada por alguém de verdade.",
+    fbEmpty: "Sem feedbacks ainda. Seja o primeiro.",
+    fbWrite: "Deixar feedback",
+    fbModalTitle: "Deixe seu feedback",
+    fbModalDesc: "Conte em poucas palavras o que o DevsBoard mudou no seu dia.",
+    fbName: "Seu nome",
+    fbNamePh: "Como gostaria de ser creditado",
+    fbPhoto: "Foto (opcional)",
+    fbPhotoPh: "Clique no avatar para enviar uma foto · JPG, PNG ou WebP até 2 MB",
+    fbRating: "Sua avaliação",
+    fbText: "Sua mensagem",
+    fbTextPh: "O que você quer dizer?",
+    fbCancel: "Cancelar",
+    fbSubmit: "Publicar",
+    fbSubmitting: "Enviando…",
+    fbThanks: "Publicado. Obrigado por compartilhar.",
+    fbErrorGeneric: "Não foi possível enviar. Tente novamente.",
     targetTitle: "Feito para pessoas que constroem coisas.",
     targetIdeal: "Ideal para:",
     targets: ["Desenvolvedores", "Times pequenos", "Startups", "Freelancers", "Estudantes", "Indie hackers", "Criadores", "Pessoas organizadas", "Quem odeia trocar entre 15 apps"],
@@ -204,6 +223,10 @@ const translations = {
     ctaTitle: "Get your routine in order.",
     ctaDesc: "Your tasks and money organized now.",
     ctaBtn: "Start now",
+    coffeeTitle1: "Fueled by coffee.",
+    coffeeDesc: "DevsBoard is built by one developer, no ads and no paywall. If it helps you, a coffee keeps it going.",
+    coffeeBtn: "Buy me a coffee",
+    coffeeMeta: "PIX · no minimum",
     footerMade: "Made by",
     chartBalance: "Balance",
     socialProof1: "Over 50 users already organize projects, finances, and routines in DevsBoard.",
@@ -215,12 +238,25 @@ const translations = {
     feat5Desc: "Complete tasks, reach goals, and unlock PlayStation-inspired achievements.",
     feat6Title: "Your workspace, your way.",
     feat6Desc: "Customize appearance, audio, and environment to create an immersive experience.",
-    testi1: "“Finally a platform that brings personal productivity and teamwork together without becoming a mess.”",
-    testi1Author: "— DevsBoard User",
-    testi2: "“DevsBoard's real-time is absurd. It feels like a mix of Linear, Notion, and Discord.”",
-    testi2Author: "— Frontend Developer",
-    testi3: "“I use it daily to organize freelancing, routines, and financial goals.”",
-    testi3Author: "— Indie hacker",
+    fbLabel: "Wall",
+    fbTitle: "Voices from real users.",
+    fbDesc: "No fabricated testimonials. Every word below was left by someone real.",
+    fbEmpty: "No feedback yet. Be the first.",
+    fbWrite: "Leave feedback",
+    fbModalTitle: "Leave your feedback",
+    fbModalDesc: "In a few words, tell us what DevsBoard changed in your day.",
+    fbName: "Your name",
+    fbNamePh: "How you'd like to be credited",
+    fbPhoto: "Photo (optional)",
+    fbPhotoPh: "Click the avatar to upload · JPG, PNG, or WebP up to 2 MB",
+    fbRating: "Your rating",
+    fbText: "Your message",
+    fbTextPh: "What do you want to say?",
+    fbCancel: "Cancel",
+    fbSubmit: "Publish",
+    fbSubmitting: "Sending…",
+    fbThanks: "Published. Thanks for sharing.",
+    fbErrorGeneric: "Couldn't send. Please try again.",
     targetTitle: "Built for people who build things.",
     targetIdeal: "Ideal for:",
     targets: ["Developers", "Small teams", "Startups", "Freelancers", "Students", "Indie hackers", "Creators", "Organized people", "Anyone who hates switching between 15 apps"],
@@ -1295,8 +1331,9 @@ export default function Landing() {
 
       { }
       <section id="philosophy" className="py-24 md:py-40 px-4 sm:px-6 bg-[#000000] relative overflow-hidden border-y border-white/5">
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-15" style={{ backgroundImage: 'url("/banner.png")', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', filter: 'contrast(1.2)' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#000000]/60 to-[#000000] z-0 pointer-events-none" />
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-35" style={{ backgroundImage: 'url("/background.png")', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', filter: 'contrast(1.05)' }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/70 via-[#000000]/40 to-[#000000] z-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.5)_70%,_#000_100%)] z-0 pointer-events-none" />
         <div className="max-w-4xl mx-auto relative z-10 text-center drop-shadow-2xl motion-gpu">
           <motion.p
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 1 }}
@@ -1379,34 +1416,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 md:py-32 px-4 sm:px-6 border-t border-white/5 bg-[#0a0a0a]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { text: t.testi1, author: t.testi1Author },
-              { text: t.testi2, author: t.testi2Author },
-              { text: t.testi3, author: t.testi3Author },
-            ].map((testi, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-[#111] border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between gap-6 hover:border-white/10 transition-colors"
-              >
-                <p className="text-base text-zinc-300 italic font-serif tracking-wide leading-relaxed">
-                  {testi.text}
-                </p>
-                <div className="text-sm text-[#8E9C78] font-medium font-mono">
-                  {testi.author}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FeedbackWall t={t} lang={lang} />
 
       {/* Target Audience */}
       <section className="py-20 md:py-32 px-4 sm:px-6 bg-[#000000] border-t border-white/5">
@@ -1444,27 +1454,48 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 md:py-32 px-4 sm:px-6 bg-[#0a0a0a] border-t border-white/5">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">{t.faqTitle}</h2>
+      {/* Ask anything — interactive chat (replaces classic FAQ) */}
+      <AskAnything t={t} lang={lang} />
+
+      {/* Buy me a coffee — sage spotlight */}
+      <section className="pt-32 md:pt-48 pb-24 md:pb-32 px-6 relative z-[50] bg-black overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] md:w-[720px] aspect-square bg-[radial-gradient(circle,_rgba(142,156,120,0.22)_0%,_rgba(142,156,120,0.08)_35%,_transparent_70%)] rounded-full pointer-events-none blur-[50px]"
+        />
+        <div
+          aria-hidden
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] md:w-[320px] aspect-square bg-[radial-gradient(circle,_rgba(142,156,120,0.28)_0%,_transparent_70%)] rounded-full pointer-events-none blur-[30px]"
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="relative max-w-[720px] mx-auto text-center"
+        >
+          <div className="inline-flex items-center gap-2 mb-7 md:mb-9">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-[#8E9C78] opacity-70 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#8E9C78]" />
+            </span>
+            <span className="text-[11px] text-[#8E9C78]/80 font-light tracking-wide">PIX</span>
           </div>
-          
-          <div className="space-y-4">
-            {[
-              { q: t.faq1Q, a: t.faq1A },
-              { q: t.faq2Q, a: t.faq2A },
-              { q: t.faq3Q, a: t.faq3A },
-              { q: t.faq4Q, a: t.faq4A },
-              { q: t.faq5Q, a: t.faq5A },
-              { q: t.faq6Q, a: t.faq6A },
-              { q: t.faq7Q, a: t.faq7A },
-            ].map((faq, i) => (
-              <FAQItem key={i} faq={faq} />
-            ))}
-          </div>
-        </div>
+          <h2 className="text-[36px] sm:text-[48px] md:text-[60px] font-light text-white tracking-[-0.025em] leading-[1.05]">
+            {t.coffeeTitle1}
+          </h2>
+          <p className="mt-6 md:mt-7 mx-auto max-w-[480px] text-[15px] md:text-[16px] leading-[1.55] text-white/55 font-light">
+            {t.coffeeDesc}
+          </p>
+          <Link
+            to="/support"
+            className="group mt-10 md:mt-12 inline-flex items-center gap-2 bg-white text-black px-7 py-3.5 rounded-full text-[14px] font-medium hover:bg-white active:scale-[0.99] transition-all shadow-[0_0_0_1px_rgba(142,156,120,0.0),0_18px_50px_-12px_rgba(142,156,120,0.55)] hover:shadow-[0_0_0_1px_rgba(142,156,120,0.4),0_22px_60px_-12px_rgba(142,156,120,0.75)]"
+          >
+            <span>{t.coffeeBtn}</span>
+            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+          <p className="mt-6 text-[12px] text-white/35 font-light">{t.coffeeMeta}</p>
+        </motion.div>
       </section>
 
       { }

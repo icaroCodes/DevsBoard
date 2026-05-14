@@ -1,4 +1,4 @@
-import supabase from '../database/connection.js';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 import { generateUniqueUsername } from './usernames.js';
 
 export const resolveOAuthLogin = async ({

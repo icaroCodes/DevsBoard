@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
-import supabase from '../database/connection.js';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 
 export const authenticate = (req, res, next) => {
   
@@ -21,18 +21,25 @@ export const authenticate = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, config.jwt.accessSecret);
     req.userId = decoded.userId;
-    
-    
+
     // Preserva o ID como string: o tipo real da coluna `teams.id` pode ser
     // BIGINT ou UUID, e o Supabase/PostgREST coage strings pra ambos.
     // `parseInt` em UUID quebra (retorna NaN), então mantemos cru.
+    //
+    // IMPORTANT: the x-team-id header is attacker-controlled. We park the
+    // raw value on `req._unverifiedTeamId` and ONLY promote it to
+    // `req.teamId` after `checksOwnership` confirms membership. Any route
+    // mounted before that middleware (or any code that reads `req.teamId`
+    // directly) will see `null` until the check has passed — making it
+    // impossible to write a route that trusts the header by mistake.
     const teamIdStr = req.headers['x-team-id'];
     if (teamIdStr && teamIdStr !== 'null' && teamIdStr !== 'undefined') {
-      req.teamId = String(teamIdStr);
+      req._unverifiedTeamId = String(teamIdStr);
     } else {
-      req.teamId = null;
+      req._unverifiedTeamId = null;
     }
-    
+    req.teamId = null;
+
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
@@ -44,20 +51,28 @@ export const authenticate = (req, res, next) => {
 
 
 export const checksOwnership = async (req, res, next) => {
-  if (!req.teamId) return next();
+  // No team header → personal context. Make doubly sure req.teamId stays null
+  // even if upstream middleware ever sets it.
+  if (!req._unverifiedTeamId) {
+    req.teamId = null;
+    return next();
+  }
 
   try {
     const { data: member, error } = await supabase
       .from('team_members')
       .select('role')
-      .eq('team_id', req.teamId)
+      .eq('team_id', req._unverifiedTeamId)
       .eq('user_id', req.userId)
       .single();
 
     if (error || !member) {
+      // Do NOT promote the header value. Keep `req.teamId` null so any
+      // accidental downstream read can't operate on an unverified team.
       return res.status(403).json({ error: 'Acesso negado: Você não pertence a este time.' });
     }
 
+    req.teamId = req._unverifiedTeamId;
     req.userRole = member.role;
     next();
   } catch (err) {

@@ -56,11 +56,8 @@ export async function api(endpoint, options = {}, isRetry = false) {
         });
 
         if (refreshReq.ok) {
-          const resJson = await refreshReq.json();
-          if (resJson.token) {
-            localStorage.setItem('token', resJson.token);
-            localStorage.setItem('refreshToken', resJson.refreshToken);
-          }
+          // Os tokens agora são gerenciados via cookies (HTTP-Only)
+          // Apenas re-tentamos a requisição original
           return api(endpoint, options, true);
         }
 
@@ -74,7 +71,10 @@ export async function api(endpoint, options = {}, isRetry = false) {
       }
     }
 
-    
+    if (errorData?.error === 'SESSION_REUSE_DETECTED') {
+      alert('Sessão expirada. Refaça o login por segurança.');
+    }
+
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
@@ -82,7 +82,7 @@ export async function api(endpoint, options = {}, isRetry = false) {
     if (!window.location.pathname.includes('/auth') && window.location.pathname !== '/') {
       window.location.href = '/';
     }
-    throw new Error('Sessão expirada. Faça login novamente.');
+    throw new Error(errorData?.error === 'SESSION_REUSE_DETECTED' ? 'Sessão expirada por segurança.' : 'Sessão expirada. Faça login novamente.');
   }
 
   const data = res.status === 204 ? null : await res.json().catch(() => null);

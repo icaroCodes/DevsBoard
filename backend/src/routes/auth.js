@@ -1,11 +1,17 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import supabase from '../database/connection.js';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 import config from '../config/index.js';
-import { authRateLimiter } from '../middleware/security.js';
 import { authenticate } from '../middleware/auth.js';
 import { checkUsernameAvailable } from '../utils/usernames.js';
+import {
+  issueTokenPair,
+  rotateRefresh,
+  revokeFamilyByToken,
+  setAuthCookies,
+  clearAuthCookies,
+} from '../utils/tokenStore.js';
 
 const router = Router();
 
@@ -44,24 +50,6 @@ const ensureAuthId = async (userId) => {
 };
 
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, config.jwt.accessSecret, { expiresIn: config.jwt.accessExpires });
-  const refreshToken = jwt.sign({ userId }, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpires });
-  return { accessToken, refreshToken };
-};
-
-const setAuthCookies = (res, { accessToken, refreshToken }) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: config.cookie.secure,
-    sameSite: config.cookie.sameSite,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-  res.cookie('refreshToken', refreshToken, cookieOptions);
-};
-
 // Helper to build the user response payload consistently
 const buildUserPayload = (user) => ({
   id: user.id,
@@ -75,6 +63,7 @@ const buildUserPayload = (user) => ({
 // Username availability check (used by onboarding & settings)
 router.get('/username/check', async (req, res) => {
   try {
+
     const { username, exclude_user_id } = req.query;
     if (!username) return res.status(400).json({ error: 'username obrigatório' });
 
@@ -91,31 +80,32 @@ router.get('/username/check', async (req, res) => {
 });
 
 router.post('/refresh', async (req, res) => {
+
   const token = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!token) return res.status(401).json({ error: 'Refresh token ausente' });
 
-  try {
-    const decoded = jwt.verify(token, config.jwt.refreshSecret);
-    const { accessToken, refreshToken } = generateTokens(decoded.userId);
-    setAuthCookies(res, { accessToken, refreshToken });
-    res.status(200).json({ 
-      success: true,
-      token: accessToken,
-      refreshToken: refreshToken
-    });
-  } catch {
-    const cookieOptions = {
-      httpOnly: true,
-      secure: config.cookie.secure,
-      sameSite: config.cookie.sameSite,
-    };
-    res.clearCookie('accessToken', cookieOptions);
-    res.clearCookie('refreshToken', cookieOptions);
-    res.status(401).json({ error: 'Sessão expirada' });
+  const result = await rotateRefresh(token);
+  if (!result.ok) {
+    clearAuthCookies(res);
+    // `reused` means we detected a replay and revoked the family. Surface a
+    // distinct error code so the client can tell the user their session was
+    // terminated for security reasons (not just expired).
+    if (result.code === 'reused') {
+      return res.status(401).json({ error: 'SESSION_REUSE_DETECTED', message: 'Sessão encerrada por segurança. Faça login novamente.' });
+    }
+    return res.status(401).json({ error: 'Sessão expirada' });
   }
+
+  setAuthCookies(res, { accessToken: result.accessToken, refreshToken: result.refreshToken });
+  res.status(200).json({
+    success: true,
+    token: result.accessToken,
+    refreshToken: result.refreshToken,
+  });
 });
 
 router.post('/exchange', async (req, res) => {
+
   const { code } = req.body || {};
   if (!code) return res.status(400).json({ error: 'Código ausente' });
 
@@ -132,7 +122,7 @@ router.post('/exchange', async (req, res) => {
       .single();
     if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado' });
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = await issueTokenPair(user.id);
     setAuthCookies(res, { accessToken, refreshToken });
 
     let authUuid;
@@ -158,6 +148,13 @@ router.post('/exchange', async (req, res) => {
 });
 
 router.get('/session', authenticate, async (req, res) => {
+
+  // IMPORTANT: this endpoint must NOT mint new access/refresh tokens. It only
+  // returns the user payload + a short-lived Supabase Realtime JWT scoped to
+  // this user. Re-issuing access/refresh here would let anyone holding a
+  // still-valid access cookie extend the session indefinitely, defeating the
+  // 15-min access TTL. To rotate access/refresh, the client must hit
+  // /auth/refresh, which requires possession of the refresh cookie/body.
   try {
     const { data: user, error } = await supabase
       .from('users')
@@ -165,9 +162,6 @@ router.get('/session', authenticate, async (req, res) => {
       .eq('id', req.userId)
       .single();
     if (error || !user) return res.status(401).json({ error: 'Sessão inválida' });
-
-    const { accessToken, refreshToken } = generateTokens(user.id);
-    setAuthCookies(res, { accessToken, refreshToken });
 
     let authUuid;
     try { authUuid = user.auth_id || (await ensureAuthId(user.id)); } catch { authUuid = null; }
@@ -178,8 +172,6 @@ router.get('/session', authenticate, async (req, res) => {
 
     res.json({
       user: buildUserPayload(user),
-      token: accessToken,
-      refreshToken,
       supabaseToken,
     });
   } catch (err) {
@@ -190,6 +182,7 @@ router.get('/session', authenticate, async (req, res) => {
 
 router.get('/realtime-token', authenticate, async (req, res) => {
   try {
+
     const authUuid = await ensureAuthId(req.userId);
     const supabaseToken = generateSupabaseJwt(authUuid);
     res.json({ supabaseToken });
@@ -199,14 +192,16 @@ router.get('/realtime-token', authenticate, async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: config.cookie.secure,
-    sameSite: config.cookie.sameSite,
-  };
-  res.clearCookie('accessToken', cookieOptions);
-  res.clearCookie('refreshToken', cookieOptions);
+router.post('/logout', async (req, res) => {
+
+  // Revoke the entire refresh-token family so the cookie can't be replayed
+  // even if it's still within its TTL. Best-effort: failures here shouldn't
+  // block the client from clearing local state.
+  const refresh = req.cookies?.refreshToken || req.body?.refreshToken;
+  if (refresh) {
+    try { await revokeFamilyByToken(refresh); } catch (err) { console.warn('[logout] revoke failed', err); }
+  }
+  clearAuthCookies(res);
   res.status(200).json({ message: 'Sessão encerrada' });
 });
 

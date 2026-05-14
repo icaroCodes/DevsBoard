@@ -1,4 +1,4 @@
-﻿import { Link } from'react-router-dom';
+import { Link } from'react-router-dom';
 import { motion } from'framer-motion';
 import {
  Wallet,
@@ -112,6 +112,7 @@ const stagger = {
 export default function MobileDashboard({
  data,
  displayName,
+ greeting,
  t,
  routineTab,
  setRoutineTab,
@@ -157,7 +158,7 @@ export default function MobileDashboard({
  {/* Greeting */}
  <motion.div variants={fadeUp} className="mb-5 px-1">
  <p className="text-[12.5px] font-medium text-[#86868B] tracking-tight">
- {t.dashHello}
+ {greeting}
  </p>
  <h1 className="text-[26px] font-semibold text-[#F5F5F7] tracking-tight leading-tight">
  {displayName}

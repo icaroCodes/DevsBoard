@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -18,6 +18,7 @@ router.post('/', [
   body('list_id').notEmpty().withMessage('list_id é obrigatório'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -67,6 +68,7 @@ router.put('/:id', [
   body('position').optional().isInt(),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let existsQuery = supabase
       .from('task_cards')
       .select('id, list_id')
@@ -103,6 +105,7 @@ router.post('/reorder', [
   body('items').isArray({ min: 1 }).withMessage('items deve ser um array'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -129,6 +132,7 @@ router.post('/reorder', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let q = supabase.from('task_cards').delete().eq('id', req.params.id);
     q = scopeQuery(q, req);
     const { data, error } = await q.select();

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.post('/heartbeat', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId } = req;
     const { session_id, active_seconds } = req.body;
 
@@ -61,6 +62,7 @@ function isTransientNetworkError(err) {
 
 router.post('/start', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId } = req;
     const { session_id } = req.body;
 
@@ -114,6 +116,7 @@ router.post('/start', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId } = req;
 
     

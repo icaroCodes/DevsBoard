@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase.from('tasks').select('*');
 
     if (req.teamId) {
@@ -30,9 +31,10 @@ router.post('/', [
   body('title').trim().notEmpty().withMessage('Título é obrigatório'),
   body('description').optional().trim(),
   body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
-  body('alarm_time').optional().matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Horário de alarme inválido'),
+  body('alarm_time').optional({ checkFalsy: true, nullable: true }).matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Horário de alarme inválido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -67,8 +69,10 @@ router.put('/:id', [
   body('description').optional().trim(),
   body('priority').optional().isIn(['low', 'medium', 'high', 'none']),
   body('completed').optional().isBoolean(),
+  body('alarm_time').optional({ checkFalsy: true, nullable: true }).matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Horário de alarme inválido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('tasks').select('id').eq('id', req.params.id);
     if (teamId) {
@@ -81,7 +85,7 @@ router.put('/:id', [
 
     const updates = {};
     ['title', 'description', 'priority', 'completed', 'alarm_time'].forEach(f => {
-      if (req.body[f] !== undefined) updates[f] = req.body[f];
+      if (req.body[f] !== undefined) updates[f] = req.body[f] === '' ? null : req.body[f];
     });
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
 
@@ -96,6 +100,7 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let query = supabase.from('tasks').select('id').eq('id', req.params.id);
     if (teamId) {

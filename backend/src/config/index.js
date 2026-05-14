@@ -42,6 +42,48 @@ const loadEnv = () => {
 
 const fileEnv = loadEnv();
 
+const accessSecret =
+  process.env.JWT_ACCESS_SECRET ||
+  fileEnv.JWT_ACCESS_SECRET ||
+  process.env.JWT_SECRET ||
+  fileEnv.JWT_SECRET;
+
+const refreshSecret =
+  process.env.JWT_REFRESH_SECRET || fileEnv.JWT_REFRESH_SECRET;
+
+// Hard fail if secrets are missing. A fallback string here would be a
+// public-knowledge signing key and let anyone forge tokens for any user.
+const missing = [];
+if (!accessSecret) missing.push('JWT_ACCESS_SECRET (or JWT_SECRET)');
+if (!refreshSecret) missing.push('JWT_REFRESH_SECRET');
+if (missing.length > 0) {
+  throw new Error(
+    `Configuração inválida: variáveis obrigatórias ausentes: ${missing.join(', ')}. ` +
+    `Defina-as no backend/.env antes de iniciar o servidor.`
+  );
+}
+
+// Refuse weak / placeholder secrets even if the operator set them by accident.
+const WEAK_SECRETS = new Set([
+  'strong-access-secret-mandatory',
+  'strong-refresh-secret-mandatory',
+  'secret',
+  'changeme',
+  'devsboard',
+]);
+for (const [label, value] of [['JWT_ACCESS_SECRET', accessSecret], ['JWT_REFRESH_SECRET', refreshSecret]]) {
+  if (WEAK_SECRETS.has(value) || value.length < 32) {
+    throw new Error(
+      `Configuração inválida: ${label} é fraco ou um placeholder. ` +
+      `Use uma string aleatória de pelo menos 32 caracteres.`
+    );
+  }
+}
+
+if (accessSecret === refreshSecret) {
+  throw new Error('JWT_ACCESS_SECRET e JWT_REFRESH_SECRET precisam ser diferentes.');
+}
+
 const config = {
   supabase: {
     url: process.env.SUPABASE_URL || fileEnv.SUPABASE_URL,
@@ -49,14 +91,14 @@ const config = {
     jwtSecret: process.env.SUPABASE_JWT_SECRET || fileEnv.SUPABASE_JWT_SECRET,
   },
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET || fileEnv.JWT_ACCESS_SECRET || process.env.JWT_SECRET || fileEnv.JWT_SECRET || 'strong-access-secret-mandatory',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || fileEnv.JWT_REFRESH_SECRET || 'strong-refresh-secret-mandatory',
+    accessSecret,
+    refreshSecret,
     accessExpires: '15m',
     refreshExpires: '7d',
   },
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   },
   server: {
     port: parseInt(process.env.PORT || fileEnv.PORT || '3001', 10),

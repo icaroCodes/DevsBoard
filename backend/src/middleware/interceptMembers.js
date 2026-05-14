@@ -1,4 +1,4 @@
-import supabase from '../database/connection.js';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 
 // Permission model:
 //   • Personal context (no team): always pass through.
@@ -22,14 +22,21 @@ export const interceptMembers = (entityType) => {
       const teamId = req.teamId;
       if (!teamId) return next();
 
-      const { data: member } = await supabase
+      const { data: member, error: memberErr } = await supabase
         .from('team_members')
         .select('role')
         .eq('team_id', teamId)
         .eq('user_id', req.userId)
         .single();
 
-      if (!member) return next();
+      // Fail closed: if we can't confirm membership (DB error, missing row,
+      // anything weird) we must NOT let the destructive action through. The
+      // earlier `checksOwnership` middleware should already have rejected
+      // non-members, so reaching here without a row is suspicious.
+      if (memberErr || !member) {
+        console.warn('[interceptMembers] membership lookup failed', { teamId, userId: req.userId, memberErr });
+        return res.status(403).json({ error: 'Acesso negado: associação ao time não pôde ser confirmada.' });
+      }
 
       if (['owner', 'admin'].includes(member.role)) {
         return next();
@@ -65,8 +72,10 @@ export const interceptMembers = (entityType) => {
         request,
       });
     } catch (err) {
-      console.error(err);
-      return next();
+      // Fail closed on unexpected errors: a destructive request should never
+      // slip through because of an exception we didn't anticipate.
+      console.error('[interceptMembers] unexpected error', err);
+      return res.status(500).json({ error: 'Erro ao validar permissões' });
     }
   };
 };

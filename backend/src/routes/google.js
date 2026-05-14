@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import supabase from '../database/connection.js';
+import crypto from 'crypto';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 import config from '../config/index.js';
 import { resolveOAuthLogin } from '../utils/oauth.js';
+import { issueTokenPair, setAuthCookies } from '../utils/tokenStore.js';
 
 const router = Router();
 
@@ -11,22 +13,22 @@ const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:5173').trim();
 const CALLBACK_URL = (process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback').trim();
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ userId }, config.jwt.accessSecret, { expiresIn: config.jwt.accessExpires });
-  const refreshToken = jwt.sign({ userId }, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpires });
-  return { accessToken, refreshToken };
-};
 
-const setAuthCookies = (res, { accessToken, refreshToken }) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: config.cookie.secure,
-    sameSite: config.cookie.sameSite,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
+// See backend/src/routes/github.js for the rationale on OAuth state.
+const signOAuthState = (provider) =>
+  jwt.sign(
+    { purpose: 'oauth_state', provider, nonce: crypto.randomUUID() },
+    config.jwt.accessSecret,
+    { expiresIn: '10m' }
+  );
 
-  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-  res.cookie('refreshToken', refreshToken, cookieOptions);
+const verifyOAuthState = (token, expectedProvider) => {
+  try {
+    const decoded = jwt.verify(token, config.jwt.accessSecret);
+    return decoded.purpose === 'oauth_state' && decoded.provider === expectedProvider;
+  } catch {
+    return false;
+  }
 };
 
 router.get('/', (req, res) => {
@@ -34,6 +36,7 @@ router.get('/', (req, res) => {
   if (!GOOGLE_CLIENT_ID) {
     return res.redirect(`${FRONTEND_URL}/auth?error=google_nao_configurado`);
   }
+  const state = signOAuthState('google');
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: CALLBACK_URL,
@@ -41,14 +44,20 @@ router.get('/', (req, res) => {
     scope: 'openid email profile',
     access_type: 'online',
     prompt: 'select_account',
+    state,
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
 });
 
 router.get('/callback', async (req, res) => {
-  const { code, error: oauthError } = req.query;
+
+  const { code, state, error: oauthError } = req.query;
   if (oauthError) return res.redirect(`${FRONTEND_URL}/auth?error=google_negado`);
   if (!code) return res.redirect(`${FRONTEND_URL}/auth?error=codigo_invalido`);
+
+  if (!state || typeof state !== 'string' || !verifyOAuthState(state, 'google')) {
+    return res.redirect(`${FRONTEND_URL}/auth?error=state_invalido`);
+  }
 
   try {
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -90,7 +99,7 @@ router.get('/callback', async (req, res) => {
       name,
       avatarUrl: avatar_url,
     });
-    const { accessToken, refreshToken } = generateTokens(userId);
+    const { accessToken, refreshToken } = await issueTokenPair(userId);
     setAuthCookies(res, { accessToken, refreshToken });
 
     const exchangeCode = jwt.sign(

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from'react';
+import { useState, useEffect, useRef } from'react';
 import { useNavigate } from'react-router-dom';
 import {
  Search, ExternalLink, Flame, Award, Timer, Calendar,
@@ -68,20 +68,30 @@ export default function Account() {
  return () => clearTimeout(searchTimeout.current);
  }, [searchQuery]);
 
- const handleDelete = () => {
- confirm({
- title:'Deletar conta permanentemente?',
- message:'Essa ação é irreversível. Todos os seus dados serão apagados.',
- onConfirm: async () => {
- try {
- await api('/settings', { method:'DELETE' });
- logout();
- } catch {
- showError('Erro ao deletar conta');
- }
- }
- });
- };
+  const handleDelete = () => {
+    const confirmationUsername = stats?.username || user?.username;
+    if (!confirmationUsername) {
+      showError('Username não encontrado. Tente novamente.');
+      return;
+    }
+    
+    confirm({
+      title: 'Deletar conta permanentemente?',
+      message: 'Essa ação é irreversível. Todos os seus dados serão apagados.',
+      requireInput: confirmationUsername,
+      onConfirm: async () => {
+        try {
+          await api('/settings', { 
+            method: 'DELETE', 
+            body: JSON.stringify({ confirmation_username: confirmationUsername })
+          });
+          logout();
+        } catch (err) {
+          showError(err?.message || 'Erro ao deletar conta');
+        }
+      }
+    });
+  };
 
  const totalHours = stats ? Math.floor(stats.totalSeconds / 3600) : 0;
  const totalMinutes = stats ? Math.floor((stats.totalSeconds % 3600) / 60) : 0;

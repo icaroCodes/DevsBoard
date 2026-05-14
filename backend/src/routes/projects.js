@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 import { assertProjectAccess, uploadBase64Image } from '../utils/projectAccess.js';
 
@@ -11,6 +11,7 @@ const FIELDS = ['name', 'description', 'color', 'icon', 'cover_url'];
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     let q = supabase.from('projects').select('*');
     if (teamId) q = q.eq('team_id', teamId);
@@ -26,6 +27,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { data, error } = await supabase.from('projects').select('*').eq('id', req.projectId).single();
@@ -39,6 +41,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', [body('name').trim().notEmpty().withMessage('Nome ├® obrigat├│rio')], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -63,6 +66,7 @@ router.post('/', [body('name').trim().notEmpty().withMessage('Nome ├® obrigat
 
 router.put('/:id', [body('name').optional().trim().notEmpty()], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const pid = req.projectId;
@@ -89,6 +93,7 @@ router.put('/:id', [body('name').optional().trim().notEmpty()], async (req, res)
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('projects').delete().eq('id', req.projectId);
@@ -103,6 +108,7 @@ router.delete('/:id', async (req, res) => {
 // ============ TASKS ============
 router.get('/:id/tasks', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { data, error } = await supabase.from('project_tasks').select('*').eq('project_id', req.projectId).order('position').order('id');
@@ -113,6 +119,7 @@ router.get('/:id/tasks', async (req, res) => {
 
 router.post('/:id/tasks', [body('title').trim().notEmpty().withMessage('T├¡tulo ├® obrigat├│rio')], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const ok = await assertProjectAccess(req.params.id, req);
@@ -131,6 +138,7 @@ router.post('/:id/tasks', [body('title').trim().notEmpty().withMessage('T├¡tu
 
 router.put('/:id/tasks/:taskId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -158,6 +166,7 @@ router.put('/:id/tasks/:taskId', async (req, res) => {
 
 router.delete('/:id/tasks/:taskId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('project_tasks').delete()
@@ -170,6 +179,7 @@ router.delete('/:id/tasks/:taskId', async (req, res) => {
 // ============ DOC ============
 router.get('/:id/doc', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const pid = req.projectId;
@@ -180,6 +190,7 @@ router.get('/:id/doc', async (req, res) => {
 
 router.put('/:id/doc', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const pid = req.projectId;
@@ -196,6 +207,7 @@ router.put('/:id/doc', async (req, res) => {
 // ============ ASSETS ============
 router.get('/:id/assets', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { data, error } = await supabase.from('assets').select('*')
@@ -207,6 +219,7 @@ router.get('/:id/assets', async (req, res) => {
 
 router.post('/:id/assets', [body('title').trim().notEmpty().withMessage('T├¡tulo ├® obrigat├│rio')], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const ok = await assertProjectAccess(req.params.id, req);
@@ -233,6 +246,7 @@ router.post('/:id/assets', [body('title').trim().notEmpty().withMessage('T├¡t
 
 router.delete('/:id/assets/:assetId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('assets').delete()
@@ -245,6 +259,7 @@ router.delete('/:id/assets/:assetId', async (req, res) => {
 // ============ COMENT├üRIOS DE P├üGINA ============
 router.get('/:id/comments', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -291,6 +306,7 @@ router.get('/:id/comments', async (req, res) => {
 
 router.post('/:id/comments', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -337,6 +353,7 @@ router.post('/:id/comments', async (req, res) => {
 
 router.delete('/:id/comments/:commentId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('project_comments')
@@ -352,6 +369,7 @@ router.delete('/:id/comments/:commentId', async (req, res) => {
 // ============ COMENT├üRIOS DE C├ôDIGO ============
 router.get('/:id/code-comments', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -373,6 +391,7 @@ router.get('/:id/code-comments', async (req, res) => {
 
 router.post('/:id/code-comments', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -401,6 +420,7 @@ router.post('/:id/code-comments', async (req, res) => {
 
 router.put('/:id/code-comments/:commentId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -421,6 +441,7 @@ router.put('/:id/code-comments/:commentId', async (req, res) => {
 
 router.delete('/:id/code-comments/:commentId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
     const { error } = await supabase.from('code_comments')
@@ -434,6 +455,7 @@ router.delete('/:id/code-comments/:commentId', async (req, res) => {
 
 router.post('/:id/code-comments/:commentId/replies', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -459,6 +481,7 @@ router.post('/:id/code-comments/:commentId/replies', async (req, res) => {
 
 router.put('/:id/code-comments/:commentId/replies/:replyId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 
@@ -481,6 +504,7 @@ router.put('/:id/code-comments/:commentId/replies/:replyId', async (req, res) =>
 
 router.delete('/:id/code-comments/:commentId/replies/:replyId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const ok = await assertProjectAccess(req.params.id, req);
     if (!ok) return res.status(404).json({ error: 'Projeto n├úo encontrado' });
 

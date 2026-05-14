@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, CheckCircle2, Users, Check, X, AlertTriangle, ChevronDown, Menu } from 'lucide-react';
+import FeedbackWall from '../components/FeedbackWall';
+import AskAnything from '../components/AskAnything';
 
 const IconGitHub = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -61,6 +63,31 @@ const translations = {
     ctaTitle: "Coloque sua rotina em ordem.",
     ctaDesc: "Suas tarefas e seu dinheiro organizados agora.",
     ctaBtn: "Começar agora",
+    coffeeEyebrow: "",
+    coffeeTitle1: "Movido a café.",
+    coffeeTitle2: "",
+    coffeeDesc: "Um dev solo, sem anúncios e sem paywall. Se o DevsBoard te ajuda, um café mantém ele de pé.",
+    coffeeBtn: "Pague um café",
+    coffeeMeta: "PIX · sem valor mínimo",
+    fbLabel: "Mural",
+    fbTitle: "Vozes de quem usa.",
+    fbDesc: "Sem testemunhos fabricados. Cada palavra abaixo foi deixada por alguém de verdade.",
+    fbEmpty: "Sem feedbacks ainda. Seja o primeiro.",
+    fbWrite: "Deixar feedback",
+    fbModalTitle: "Deixe seu feedback",
+    fbModalDesc: "Conte em poucas palavras o que o DevsBoard mudou no seu dia.",
+    fbName: "Seu nome",
+    fbNamePh: "Como gostaria de ser creditado",
+    fbPhoto: "Foto (opcional)",
+    fbPhotoPh: "Toque no avatar para enviar uma foto · JPG, PNG ou WebP até 2 MB",
+    fbRating: "Sua avaliação",
+    fbText: "Sua mensagem",
+    fbTextPh: "O que você quer dizer?",
+    fbCancel: "Cancelar",
+    fbSubmit: "Publicar",
+    fbSubmitting: "Enviando…",
+    fbThanks: "Publicado. Obrigado por compartilhar.",
+    fbErrorGeneric: "Não foi possível enviar. Tente novamente.",
     footerMade: "Criado por",
     chartBalance: "Meu saldo",
     socialProof1: "Mais de 50 usuários já organizam projetos, finanças e rotina no DevsBoard.",
@@ -135,6 +162,31 @@ const translations = {
     prot3Tag: "PROGRESS",
     prot3Title: "My goals",
     prot3Desc: "Set what you want to achieve and see your progress in charts.",
+    coffeeEyebrow: "",
+    coffeeTitle1: "Fueled by coffee.",
+    coffeeTitle2: "",
+    coffeeDesc: "One developer, no ads, no paywall. If DevsBoard helps you, a coffee keeps it going.",
+    coffeeBtn: "Buy me a coffee",
+    coffeeMeta: "PIX · no minimum",
+    fbLabel: "Wall",
+    fbTitle: "Voices from real users.",
+    fbDesc: "No fabricated testimonials. Every word below was left by someone real.",
+    fbEmpty: "No feedback yet. Be the first.",
+    fbWrite: "Leave feedback",
+    fbModalTitle: "Leave your feedback",
+    fbModalDesc: "In a few words, tell us what DevsBoard changed in your day.",
+    fbName: "Your name",
+    fbNamePh: "How you'd like to be credited",
+    fbPhoto: "Photo (optional)",
+    fbPhotoPh: "Tap the avatar to upload · JPG, PNG, or WebP up to 2 MB",
+    fbRating: "Your rating",
+    fbText: "Your message",
+    fbTextPh: "What do you want to say?",
+    fbCancel: "Cancel",
+    fbSubmit: "Publish",
+    fbSubmitting: "Sending…",
+    fbThanks: "Published. Thanks for sharing.",
+    fbErrorGeneric: "Couldn't send. Please try again.",
     ctaTitle: "Get your routine in order.",
     ctaDesc: "Your tasks and money organized now.",
     ctaBtn: "Start now",
@@ -541,6 +593,65 @@ export default function LandingMobile() {
               ))}
             </div>
           </div>
+
+          {/* Feature 5 — Conquistas (Platina) */}
+          <div className="bg-[#111] border border-white/5 rounded-[2rem] p-6 shadow-lg">
+            <div className="h-44 relative flex items-center justify-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="absolute w-32 h-32 rounded-full border border-dashed border-[#8E9C78]/30"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="relative w-28 h-28 bg-gradient-to-br from-[#8E9C78]/20 to-[#8E9C78]/5 rounded-2xl border border-[#8E9C78]/40 shadow-[0_0_30px_rgba(142,156,120,0.3)] flex items-center justify-center rotate-12"
+              >
+                <img src="/platina.svg" alt="Platina" className="w-20 h-20 object-contain -rotate-12" />
+              </motion.div>
+              <motion.div
+                animate={{ y: [-5, 5, -5] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -bottom-1 bg-[#0a0a0a] border border-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-lg"
+              >
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <span className="text-[10px] font-bold font-mono text-zinc-300">PLATINA</span>
+              </motion.div>
+            </div>
+            <div className="mt-6">
+              <h3 className="text-lg font-bold text-white mb-2">{t.feat5Title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{t.feat5Desc}</p>
+            </div>
+          </div>
+
+          {/* Feature 6 — Customização */}
+          <div className="bg-[#111] border border-white/5 rounded-[2rem] p-6 shadow-lg">
+            <div className="h-44 relative flex items-center justify-center">
+              <div className="w-full max-w-[200px] h-32 bg-[#0a0a0a] border border-white/10 rounded-xl relative overflow-hidden flex flex-col shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10" />
+                <div className="relative flex items-center gap-1.5 px-3 py-2 border-b border-white/5">
+                  <div className="w-2 h-2 rounded-full bg-red-500/60" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-500/60" />
+                  <div className="w-2 h-2 rounded-full bg-green-500/60" />
+                </div>
+                <div className="relative flex-1 flex items-center justify-center gap-2">
+                  {['#8E9C78', '#a78bfa', '#60a5fa', '#f472b6'].map((c, i) => (
+                    <motion.div
+                      key={c}
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.2, ease: 'easeInOut' }}
+                      className="w-5 h-5 rounded-full"
+                      style={{ background: c, boxShadow: `0 0 12px ${c}55` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-6">
+              <h3 className="text-lg font-bold text-white mb-2">{t.feat6Title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{t.feat6Desc}</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -567,20 +678,46 @@ export default function LandingMobile() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-12 px-4 bg-[#0a0a0a]">
-        <h2 className="text-2xl font-bold tracking-tight text-white mb-6 text-center">{t.faqTitle}</h2>
-        <div className="flex flex-col max-w-sm mx-auto">
-          {[
-            { q: t.faq1Q, a: t.faq1A },
-            { q: t.faq2Q, a: t.faq2A },
-            { q: t.faq3Q, a: t.faq3A },
-            { q: t.faq4Q, a: t.faq4A },
-            { q: t.faq5Q, a: t.faq5A },
-            { q: t.faq6Q, a: t.faq6A },
-          ].map((faq, i) => (
-            <FAQItem key={i} faq={faq} />
-          ))}
+      {/* Ask anything — interactive chat (replaces classic FAQ) */}
+      <AskAnything t={t} lang={lang} />
+
+      {/* Feedback wall */}
+      <FeedbackWall t={t} lang={lang} />
+
+      {/* Buy me a coffee — compact spotlight */}
+      <section className="pt-12 pb-6 px-6 text-center relative overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[radial-gradient(circle,_rgba(142,156,120,0.20)_0%,_rgba(142,156,120,0.05)_30%,_transparent_65%)] rounded-full pointer-events-none blur-[32px]"
+        />
+        <div
+          aria-hidden
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160px] h-[160px] bg-[radial-gradient(circle,_rgba(142,156,120,0.22)_0%,_transparent_70%)] rounded-full pointer-events-none blur-[20px]"
+        />
+
+        <div className="relative">
+          <div className="inline-flex items-center gap-1.5 mb-3.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-[#8E9C78] opacity-70 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#8E9C78]" />
+            </span>
+            <span className="text-[10px] text-[#8E9C78]/80 font-light tracking-wide">PIX</span>
+          </div>
+
+          <h3 className="text-[24px] font-light text-white tracking-[-0.025em] leading-[1.1]">
+            {t.coffeeTitle1}
+          </h3>
+          <p className="mt-2.5 mx-auto max-w-[300px] text-[13px] leading-[1.5] text-white/55 font-light">
+            {t.coffeeDesc}
+          </p>
+          <Link
+            to="/support"
+            className="mt-5 inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-[12.5px] font-medium active:scale-[0.99] transition-transform shadow-[0_12px_32px_-10px_rgba(142,156,120,0.6)]"
+          >
+            <span>{t.coffeeBtn}</span>
+            <ArrowRight size={12} />
+          </Link>
+          <p className="mt-3 text-[10.5px] text-white/35 font-light">{t.coffeeMeta}</p>
         </div>
       </section>
 

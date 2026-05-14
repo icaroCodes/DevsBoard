@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -9,6 +9,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase.from('task_boards').select('*');
     
     
@@ -34,6 +35,7 @@ router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -65,6 +67,7 @@ router.post('/', [
 
 router.put('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { name, color } = req.body;
     const updates = {};
     if (name) updates.name = name;
@@ -72,17 +75,20 @@ router.put('/:id', async (req, res) => {
 
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Nada para atualizar' });
 
-    const { data, error } = await supabase
-      .from('task_boards')
-      .update(updates)
-      .eq('id', req.params.id)
-      .eq('user_id', req.userId)
-      .select()
-      .single();
+    // Scope the UPDATE the same way DELETE/GET do (by team in team context,
+    // by user in personal context). The earlier `user_id`-only filter was a
+    // confused-deputy: a board created by user A inside team T could only be
+    // edited by user A even after team membership changed, and worse, the
+    // matcher used the *requester's* user_id which silently no-ops on rows
+    // they don't own instead of returning a clean 404/403.
+    let q = supabase.from('task_boards').update(updates).eq('id', req.params.id);
+    if (req.teamId) q = q.eq('team_id', req.teamId);
+    else q = q.eq('user_id', req.userId).is('team_id', null);
+    const { data, error } = await q.select();
 
     if (error) throw error;
-    if (!data) return res.status(404).json({ error: 'Quadro não encontrado' });
-    res.json(data);
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Quadro não encontrado' });
+    res.json(data[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao atualizar quadro' });
@@ -92,6 +98,7 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const scope = (q) => req.teamId
       ? q.eq('team_id', req.teamId)
       : q.eq('user_id', req.userId).is('team_id', null);

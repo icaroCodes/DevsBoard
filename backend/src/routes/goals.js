@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase.from('goals').select('*');
     
     if (req.teamId) {
@@ -34,6 +35,7 @@ router.post('/', [
   body('year').optional({ nullable: true }).isInt({ min: 2000, max: 2100 }).withMessage('Ano inválido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -76,6 +78,7 @@ router.put('/:id', [
   body('year').optional({ nullable: true }).isInt({ min: 2000, max: 2100 }).withMessage('Ano inválido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     const { data: goal, error: goalError } = await supabase
       .from('goals')
@@ -180,6 +183,7 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { userId, teamId } = req;
     const { data: goal } = await supabase
       .from('goals')

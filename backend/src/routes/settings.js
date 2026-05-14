@@ -1,13 +1,31 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import rateLimit from 'express-rate-limit';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 router.use(authenticate);
 
+// Account deletion is irreversible and cascades into every per-user table.
+// Limit attempts aggressively to slow down both bruteforce of the
+// confirmation token AND drive-by deletion via stolen cookies / CSRF.
+const deleteAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Bucket by the authenticated user, not IP — otherwise a user on a shared
+  // NAT could DoS another user's ability to delete their account. Safe to
+  // skip the IPv6-normalization helper because this router is mounted under
+  // `authenticate`, so req.userId is always present by the time we get here.
+  keyGenerator: (req) => `user:${req.userId}`,
+  message: { error: 'Muitas tentativas de exclusão. Tente novamente em uma hora.' },
+});
+
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     
     const { data, error } = await supabase
       .from('users')
@@ -64,6 +82,7 @@ router.put('/', [
   body('language').optional().isIn(['pt', 'en']).withMessage('Idioma inv├ílido'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -251,13 +270,49 @@ router.put('/', [
   }
 });
 
-router.delete('/', async (req, res) => {
+router.delete('/', deleteAccountLimiter, async (req, res) => {
+    const supabase = await supabaseForRequest(req);
+  // Require explicit typed confirmation. The client must echo the user's
+  // current username in the request body. This blocks:
+  //   - drive-by CSRF (attacker can't read the victim's username from
+  //     another origin to forge the request body),
+  //   - cookie-replay against the wrong user (mismatched username 400s),
+  //   - accidental "click the wrong button" deletions.
   try {
+    const { confirmation_username } = req.body || {};
+    if (typeof confirmation_username !== 'string' || !confirmation_username.trim()) {
+      return res.status(400).json({
+        error: 'confirmation_required',
+        message: 'Digite seu username para confirmar a exclusão da conta.',
+      });
+    }
+
+    const { data: user, error: lookupErr } = await supabase
+      .from('users')
+      .select('username')
+      .eq('id', req.userId)
+      .single();
+    if (lookupErr || !user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const expected = String(user.username || '').trim().toLowerCase();
+    const provided = String(confirmation_username || '').trim().toLowerCase().replace(/^@/, '');
+    if (!expected || expected !== provided) {
+      return res.status(400).json({
+        error: 'confirmation_mismatch',
+        message: 'O username informado não corresponde à conta atual.',
+      });
+    }
+
     const { error } = await supabase.from('users').delete().eq('id', req.userId);
     if (error) throw error;
+
+    // Clear auth cookies on the way out so the deleted session can't be
+    // reused with a still-valid access JWT (15-min TTL).
+    res.clearCookie('accessToken', { httpOnly: true });
+    res.clearCookie('refreshToken', { httpOnly: true });
     res.status(204).send();
   } catch (err) {
-    console.error(err);
+    console.error('[DELETE /settings]', err);
     res.status(500).json({ error: 'Erro ao excluir conta' });
   }
 });

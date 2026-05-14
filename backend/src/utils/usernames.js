@@ -1,4 +1,4 @@
-import supabase from '../database/connection.js';
+import { supabaseAdmin as supabase } from '../database/connection.js';
 
 /**
  * Username rules — kept in sync with the validate_username SQL function in

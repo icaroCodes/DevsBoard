@@ -19,6 +19,7 @@ import Leaderboard from'./pages/Leaderboard';
 import NotFound from'./pages/NotFound';
 import PublicProfile from'./pages/PublicProfile';
 import InviteLink from'./pages/InviteLink';
+import Support from'./pages/Support';
 import Onboarding from'./components/Onboarding';
 import { ToastProvider } from'./contexts/ToastContext';
 import { ConfirmProvider } from'./contexts/ConfirmModalContext';
@@ -103,6 +104,7 @@ export default function App() {
  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
  <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
  <Route path="/achievements/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+ <Route path="/support" element={<Support />} />
  <Route path="/invite/:token" element={<InviteLink />} />
  <Route path="/:atUsername" element={<PublicProfile />} />
  <Route path="*" element={<NotFound />} />

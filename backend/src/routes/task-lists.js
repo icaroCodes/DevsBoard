@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -18,6 +18,7 @@ function scopeQuery(query, req) {
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let query = supabase
       .from('task_lists')
       .select('*')
@@ -63,6 +64,7 @@ router.post('/', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -104,6 +106,7 @@ router.put('/:id', [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let existsQuery = supabase
       .from('task_lists')
       .select('id')
@@ -131,6 +134,7 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     let existsQuery = supabase
       .from('task_lists')
       .select('id')
@@ -161,6 +165,7 @@ router.post('/reorder', [
   body('items').isArray({ min: 1 }).withMessage('items deve ser um array'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 

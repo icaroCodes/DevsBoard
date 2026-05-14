@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import supabase from '../database/connection.js';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 router.use(authenticate);
 
 router.get('/', async (req, res) => {
+    const supabase = await supabaseForRequest(req);
   const { userId, teamId } = req;
   const alarms = [];
 

@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
-import supabase from '../database/connection.js';
+import crypto from 'crypto';
+import { supabaseForRequest } from '../utils/supabaseClient.js';
 import { authenticate } from '../middleware/auth.js';
 import config from '../config/index.js';
 
@@ -15,6 +16,7 @@ router.use(authenticate);
 
 router.get('/', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     
     const { data: memberships, error: memErr } = await supabase
       .from('team_members')
@@ -87,6 +89,7 @@ router.post('/', [
   body('type').isIn(['team', 'family']).withMessage('Tipo deve ser "team" ou "family"'),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
@@ -122,6 +125,7 @@ router.put('/:id', [
   body('name').optional().trim().notEmpty(),
 ], async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
 
     
@@ -160,6 +164,7 @@ router.put('/:id', [
 
 router.delete('/:id', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
 
     
@@ -193,6 +198,7 @@ router.delete('/:id', async (req, res) => {
 // preferred form because it's stable and unique.
 router.post('/:id/invite', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
     const { username, user_id } = req.body || {};
     if (!username && !user_id) {
@@ -302,12 +308,18 @@ router.post('/:id/invite', async (req, res) => {
   }
 });
 
-// Phase 4: invite-by-link. Admin generates a signed token; anyone with
-// the link can join by hitting POST /teams/invitations/accept-link
-// authenticated. Token is a JWT signed with the same access secret —
-// no DB row, so it's not revocable. 7-day TTL.
+// =============================================================================
+// Invite-by-link (revocable).
+//
+// Previously the token was a self-contained 7-day JWT with no DB row, which
+// meant any leak (screenshot, paste, browser history) was uncurable until
+// expiry. Now each link is backed by a row in `team_invite_links` keyed by
+// the JWT's `jti`. Acceptance requires the row to exist, not be revoked, and
+// not be past its `expires_at`. Owners/admins can list and revoke links.
+// =============================================================================
 router.post('/:id/invitations/links', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
     const role = req.body?.role && ['admin', 'member'].includes(req.body.role)
       ? req.body.role
@@ -327,10 +339,27 @@ router.post('/:id/invitations/links', async (req, res) => {
 
     // Don't let admins generate "owner" links — only one owner per team,
     // and ownership transfer should be explicit, not via a stale link.
+    const jti = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const { error: insertErr } = await supabase
+      .from('team_invite_links')
+      .insert({
+        jti,
+        team_id: id,
+        created_by: req.userId,
+        role,
+        expires_at: expiresAt.toISOString(),
+      });
+    if (insertErr) {
+      console.error('Erro ao gravar invite link:', insertErr);
+      return res.status(500).json({ error: 'Erro ao gerar link' });
+    }
+
     const token = jwt.sign(
-      { purpose: 'team_invite', team_id: id, role, invited_by: req.userId },
+      { purpose: 'team_invite', team_id: id, role, invited_by: req.userId, jti },
       config.jwt.accessSecret,
-      { expiresIn: '7d' }
+      { expiresIn: '7d', jwtid: jti }
     );
 
     const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -338,6 +367,8 @@ router.post('/:id/invitations/links', async (req, res) => {
       token,
       url: `${frontend}/invite/${token}`,
       expires_in_days: 7,
+      expires_at: expiresAt.toISOString(),
+      jti,
       role,
     });
   } catch (err) {
@@ -346,11 +377,76 @@ router.post('/:id/invitations/links', async (req, res) => {
   }
 });
 
+router.get('/:id/invitations/links', async (req, res) => {
+  try {
+    const supabase = await supabaseForRequest(req);
+    const { id } = req.params;
+
+    const { data: membership } = await supabase
+      .from('team_members')
+      .select('role')
+      .eq('team_id', id)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      return res.status(403).json({ error: 'Apenas administradores podem ver links' });
+    }
+
+    const { data, error } = await supabase
+      .from('team_invite_links')
+      .select('jti, role, expires_at, revoked_at, created_at, created_by')
+      .eq('team_id', id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar links:', err);
+    res.status(500).json({ error: 'Erro ao listar links' });
+  }
+});
+
+router.post('/:id/invitations/links/:jti/revoke', async (req, res) => {
+  try {
+    const supabase = await supabaseForRequest(req);
+    const { id, jti } = req.params;
+
+    const { data: membership } = await supabase
+      .from('team_members')
+      .select('role')
+      .eq('team_id', id)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      return res.status(403).json({ error: 'Apenas administradores podem revogar' });
+    }
+
+    const { data, error } = await supabase
+      .from('team_invite_links')
+      .update({ revoked_at: new Date().toISOString(), revoked_by: req.userId })
+      .eq('jti', jti)
+      .eq('team_id', id)
+      .is('revoked_at', null)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'Link não encontrado ou já revogado' });
+    }
+    res.json({ ok: true, jti });
+  } catch (err) {
+    console.error('Erro ao revogar link:', err);
+    res.status(500).json({ error: 'Erro ao revogar link' });
+  }
+});
+
 // Authenticated. Trade an invite token for a team_members row. The token's
-// JWT signature proves it came from us; we still re-check membership and
-// team existence in case the team was deleted after the link was issued.
+// JWT signature proves it came from us; we additionally require the matching
+// `team_invite_links` row to still be active (not revoked, not expired) so
+// leaked links can be cut off.
 router.post('/invitations/accept-link', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { token } = req.body || {};
     if (!token) return res.status(400).json({ error: 'token_missing' });
 
@@ -364,8 +460,26 @@ router.post('/invitations/accept-link', async (req, res) => {
       return res.status(400).json({ error: 'invite_link_invalid' });
     }
 
-    if (decoded.purpose !== 'team_invite' || !decoded.team_id) {
+    if (decoded.purpose !== 'team_invite' || !decoded.team_id || !decoded.jti) {
       return res.status(400).json({ error: 'invite_link_invalid' });
+    }
+
+    // Look up the persisted row keyed by jti. This is what makes the link
+    // revocable: even with a valid JWT signature, an attacker holding a
+    // leaked token gets nothing once the row is revoked.
+    const { data: linkRow, error: linkErr } = await supabase
+      .from('team_invite_links')
+      .select('jti, team_id, role, revoked_at, expires_at')
+      .eq('jti', decoded.jti)
+      .maybeSingle();
+
+    if (linkErr || !linkRow) return res.status(400).json({ error: 'invite_link_invalid' });
+    if (String(linkRow.team_id) !== String(decoded.team_id)) {
+      return res.status(400).json({ error: 'invite_link_invalid' });
+    }
+    if (linkRow.revoked_at) return res.status(400).json({ error: 'invite_link_revoked' });
+    if (linkRow.expires_at && new Date(linkRow.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'invite_link_expired' });
     }
 
     const { data: team } = await supabase
@@ -383,11 +497,12 @@ router.post('/invitations/accept-link', async (req, res) => {
       .maybeSingle();
 
     if (existing) {
-      // Idempotent: already a member, just acknowledge.
       return res.json({ already_member: true, team });
     }
 
-    const role = ['admin', 'member'].includes(decoded.role) ? decoded.role : 'member';
+    // Trust the persisted role over the JWT payload — if an admin generated
+    // a "member" link and somehow the JWT carried "admin", the DB row wins.
+    const role = ['admin', 'member'].includes(linkRow.role) ? linkRow.role : 'member';
 
     const { error: memberErr } = await supabase
       .from('team_members')
@@ -406,6 +521,7 @@ router.post('/invitations/accept-link', async (req, res) => {
 
 router.get('/invitations/inbox', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { data: invitations, error } = await supabase
       .from('team_invites')
       .select('*')
@@ -447,6 +563,7 @@ router.get('/invitations/inbox', async (req, res) => {
 
 router.get('/invitations/sent', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { data: invitations, error } = await supabase
       .from('team_invites')
       .select('*')
@@ -487,6 +604,7 @@ router.get('/invitations/sent', async (req, res) => {
 
 router.get('/change-requests/inbox', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     
     const { data: myMemberships } = await supabase
       .from('team_members')
@@ -521,6 +639,7 @@ router.get('/change-requests/inbox', async (req, res) => {
 
 router.post('/invitations/:invitationId/accept', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { invitationId } = req.params;
 
     
@@ -571,6 +690,7 @@ router.post('/invitations/:invitationId/accept', async (req, res) => {
 
 router.post('/invitations/:invitationId/reject', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { invitationId } = req.params;
 
     const { data: invitation } = await supabase
@@ -606,6 +726,7 @@ router.post('/invitations/:invitationId/reject', async (req, res) => {
 
 router.delete('/:id/members/:memberId', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id, memberId } = req.params;
 
     
@@ -658,6 +779,7 @@ router.delete('/:id/members/:memberId', async (req, res) => {
 
 router.put('/:id/members/:memberId/role', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id, memberId } = req.params;
     const { role } = req.body;
     
@@ -680,8 +802,45 @@ router.put('/:id/members/:memberId/role', async (req, res) => {
 
 
 
+// =============================================================================
+// Change-request approval — security-critical.
+//
+// A member can only submit a change_request indirectly (today via
+// `interceptMembers`, which only queues DELETEs). However, the approval
+// handler accepts payloads as-is and was the only line of defense against:
+//   1. Field injection: a payload claiming `is_premium=true`, `role='owner'`,
+//      or shifting `user_id` to another user — silently rubber-stamped when
+//      an admin clicks "approve".
+//   2. Cross-team writes: an entity_id pointing at a row in a different team.
+//   3. Arbitrary-table writes: a forged entity_type bypassing PostgREST's
+//      table policies.
+// We mitigate all three with: a per-entity column allowlist, forced ownership
+// fields, an entity_type allowlist, and a target-row ownership check.
+// =============================================================================
+const ENTITY_WRITABLE_COLUMNS = {
+  finances:    new Set(['category', 'description', 'amount', 'type', 'transaction_date']),
+  tasks:       new Set(['title', 'description', 'priority', 'completed', 'alarm_time']),
+  task_boards: new Set(['name', 'color']),
+  task_lists:  new Set(['name', 'position', 'board_id']),
+  task_cards:  new Set(['name', 'list_id', 'position', 'cover_url', 'due_date', 'completed', 'alarm_time', 'description']),
+  routines:    new Set(['name', 'visual_type', 'position']),
+  goals:       new Set(['name', 'type', 'deadline_type', 'deadline_date', 'target_value', 'year', 'completed']),
+  projects:    new Set(['name', 'description', 'color', 'icon', 'cover_url', 'logo_url']),
+};
+
+const filterToAllowedColumns = (entityType, payload) => {
+  const allowed = ENTITY_WRITABLE_COLUMNS[entityType];
+  if (!allowed) return null;
+  const filtered = {};
+  for (const [k, v] of Object.entries(payload || {})) {
+    if (allowed.has(k)) filtered[k] = v;
+  }
+  return filtered;
+};
+
 router.post('/change-requests/:id/approve', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
     const { data: request } = await supabase.from('change_requests').select('*').eq('id', id).single();
     if (!request) return res.status(404).json({ error: 'Solicitação não encontrada' });
@@ -691,75 +850,84 @@ router.post('/change-requests/:id/approve', async (req, res) => {
 
     if (request.status !== 'pending') return res.status(400).json({ error: 'Já processada' });
 
-    let finalPayload = { ...(request.payload || {}) };
-
-    if (request.action_type === 'create') {
-      const entity = request.entity_type;
-
-      // Entities scoped to a team must always carry both user_id (creator)
-      // and team_id (visibility scope used by NOT NULL constraints and the
-      // Supabase Realtime team channel filter).
-      const TEAM_SCOPED_ENTITIES = [
-        'finances', 'routines', 'goals', 'projects',
-        'tasks', 'task_boards', 'task_lists', 'task_cards',
-      ];
-
-      if (TEAM_SCOPED_ENTITIES.includes(entity)) {
-        finalPayload.user_id = request.user_id;
-        finalPayload.team_id = request.team_id;
-      }
-
-      // Validate referenced parent rows still exist before attempting the
-      // INSERT. A change_request may sit in the inbox for a while; the
-      // referenced board/list could have been deleted in the meantime,
-      // which would surface as a confusing FK error.
-      if (entity === 'task_lists' && finalPayload.board_id) {
-        const { data: board } = await supabase
-          .from('task_boards')
-          .select('id')
-          .eq('id', finalPayload.board_id)
-          .maybeSingle();
-        if (!board) {
-          await supabase.from('change_requests')
-            .update({ status: 'rejected' })
-            .eq('id', id);
-          return res.status(409).json({
-            error: 'O quadro referenciado não existe mais. Solicitação descartada.',
-          });
-        }
-      }
-      if (entity === 'task_cards' && finalPayload.list_id) {
-        const { data: list } = await supabase
-          .from('task_lists')
-          .select('id')
-          .eq('id', finalPayload.list_id)
-          .maybeSingle();
-        if (!list) {
-          await supabase.from('change_requests')
-            .update({ status: 'rejected' })
-            .eq('id', id);
-          return res.status(409).json({
-            error: 'A coluna referenciada não existe mais. Solicitação descartada.',
-          });
-        }
-      }
+    // Reject unknown entity types up front — entity_type is used as a table
+    // name. The allowlist is the only thing standing between us and an
+    // attacker-chosen INSERT/UPDATE/DELETE target.
+    if (!ENTITY_WRITABLE_COLUMNS[request.entity_type]) {
+      return res.status(400).json({ error: 'Tipo de entidade inválido.' });
     }
+    if (!['create', 'update', 'delete'].includes(request.action_type)) {
+      return res.status(400).json({ error: 'Ação inválida.' });
+    }
+
+    const entity = request.entity_type;
 
     let updateErr = null;
     if (request.action_type === 'create') {
-      const { error } = await supabase.from(request.entity_type).insert(finalPayload);
+      // Strip every column not on the allowlist (defeats `is_premium`,
+      // arbitrary FKs, `id` collisions, etc.). user_id / team_id are then
+      // forced from the change_request row — NOT from the member's payload.
+      const safe = filterToAllowedColumns(entity, request.payload);
+      safe.user_id = request.user_id;
+      safe.team_id = request.team_id;
+
+      // Validate referenced parent rows still exist AND belong to the same
+      // team. A member could otherwise queue a `task_lists` create with a
+      // `board_id` from a team they no longer have access to.
+      if (entity === 'task_lists' && safe.board_id) {
+        const { data: board } = await supabase
+          .from('task_boards')
+          .select('id, team_id, user_id')
+          .eq('id', safe.board_id)
+          .maybeSingle();
+        if (!board || (board.team_id ? board.team_id !== request.team_id : board.user_id !== request.user_id)) {
+          await supabase.from('change_requests').update({ status: 'rejected' }).eq('id', id);
+          return res.status(409).json({ error: 'O quadro referenciado não pertence a este time ou foi removido.' });
+        }
+      }
+      if (entity === 'task_cards' && safe.list_id) {
+        const { data: list } = await supabase
+          .from('task_lists')
+          .select('id, team_id, user_id')
+          .eq('id', safe.list_id)
+          .maybeSingle();
+        if (!list || (list.team_id ? list.team_id !== request.team_id : list.user_id !== request.user_id)) {
+          await supabase.from('change_requests').update({ status: 'rejected' }).eq('id', id);
+          return res.status(409).json({ error: 'A coluna referenciada não pertence a este time ou foi removida.' });
+        }
+      }
+
+      const { error } = await supabase.from(entity).insert(safe);
       updateErr = error;
     } else if (request.action_type === 'update') {
-      const { error } = await supabase.from(request.entity_type).update(finalPayload).eq('id', request.entity_id);
+      // Strip non-allowed columns; never let user_id / team_id / id move via
+      // a member-submitted update. Scope the UPDATE by team to neutralize a
+      // forged entity_id pointing outside the requester's team.
+      const safe = filterToAllowedColumns(entity, request.payload);
+      if (Object.keys(safe).length === 0) {
+        return res.status(400).json({ error: 'Nenhum campo válido para atualizar.' });
+      }
+      const { error } = await supabase
+        .from(entity)
+        .update(safe)
+        .eq('id', request.entity_id)
+        .eq('team_id', request.team_id);
       updateErr = error;
     } else if (request.action_type === 'delete') {
-      const { error } = await supabase.from(request.entity_type).delete().eq('id', request.entity_id);
+      // Same scope-by-team protection: a member submitting a delete for an
+      // entity_id outside their team must not affect that other row.
+      const { error } = await supabase
+        .from(entity)
+        .delete()
+        .eq('id', request.entity_id)
+        .eq('team_id', request.team_id);
       updateErr = error;
     }
 
     if (updateErr) {
       console.error('Erro do banco ao processar aprovação:', updateErr);
-      return res.status(400).json({ error: 'Falha técnica ao salvar no banco. ' + (updateErr.message || JSON.stringify(updateErr)) });
+      // Don't surface raw Supabase messages — they include table/column names.
+      return res.status(400).json({ error: 'Falha ao aplicar solicitação.' });
     }
 
     await supabase.from('change_requests').update({ status: 'approved' }).eq('id', id);
@@ -775,6 +943,7 @@ router.post('/change-requests/:id/approve', async (req, res) => {
 
 router.post('/change-requests/:id/reject', async (req, res) => {
   try {
+    const supabase = await supabaseForRequest(req);
     const { id } = req.params;
     const { data: request } = await supabase.from('change_requests').select('*').eq('id', id).single();
     if (!request) return res.status(404).json({ error: 'Solicitação não encontrada' });

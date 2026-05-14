@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef } from'react';
+import { useState, useEffect, useMemo, useRef } from'react';
 import { Link } from'react-router-dom';
 import { motion } from'framer-motion';
 import {
@@ -150,7 +150,7 @@ export default function Dashboard() {
  }));
  const { error: showError } = useToast();
  const { user, activeTeam } = useAuth();
- const { t } = useTranslation();
+ const { t, lang } = useTranslation();
  const isMobile = useIsMobile();
 
  const load = () => {
@@ -230,8 +230,29 @@ export default function Dashboard() {
  if (loading) return <LoadingSkeleton variant="dashboard" />;
  if (!data) return <div style={{ position:'fixed', top: 100, left: 300, zIndex: 99999, background:'red', color:'white', fontSize: 40 }}>DATA IS NULL! Dashboard not rendering.</div>;
 
- const { finance, tasks, goals, routines } = data;
- const displayName = user?.name?.split('')[0] || user?.email?.split('@')[0] ||'Usuário';
+  const { finance, tasks, goals, routines } = data;
+  const displayName = user?.name || user?.email?.split('@')[0] || 'Usuário';
+
+  // Dynamic greeting based on Brasília time (UTC-3)
+  const getGreeting = () => {
+    const brasiliaHour = new Date().toLocaleString('en-US', {
+      timeZone: 'America/Sao_Paulo',
+      hour: 'numeric',
+      hour12: false,
+    });
+    const hour = parseInt(brasiliaHour, 10);
+    if (lang === 'en') {
+      if (hour >= 5 && hour < 12) return 'Good morning';
+      if (hour >= 12 && hour < 18) return 'Good afternoon';
+      if (hour >= 18 && hour < 23) return 'Good evening';
+      return 'Good night';
+    }
+    if (hour >= 5 && hour < 12) return 'Bom dia';
+    if (hour >= 12 && hour < 18) return 'Boa tarde';
+    if (hour >= 18 && hour < 23) return 'Boa noite';
+    return 'Boa madrugada';
+  };
+  const greeting = getGreeting();
  const routineTypeTabs = ['daily','weekly'];
 
 
@@ -278,6 +299,7 @@ export default function Dashboard() {
  <MobileDashboard
  data={data}
  displayName={displayName}
+ greeting={greeting}
  t={t}
  routineTab={routineTab}
  setRoutineTab={setRoutineTab}
@@ -316,7 +338,7 @@ export default function Dashboard() {
  {/* Header */}
  <motion.div variants={itemVariants} className="flex flex-col gap-1 mb-8">
  <h1 className="text-[32px] md:text-[40px] leading-tight font-semibold text-[#F5F5F7] tracking-tight text-center">
- {t.dashHello}, {displayName}
+ {greeting}, {displayName}
  </h1>
  </motion.div>
 

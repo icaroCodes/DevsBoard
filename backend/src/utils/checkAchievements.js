@@ -1,4 +1,4 @@
-import supabase from '../database/connection.js';
+
 
 export const ACHIEVEMENTS = [
   
@@ -40,7 +40,7 @@ export const ACHIEVEMENTS = [
 ];
 
 
-export async function checkAndUnlock(userId) {
+export async function checkAndUnlock(userId, supabase) {
   
   const { data: saved } = await supabase
     .from('user_achievements')
