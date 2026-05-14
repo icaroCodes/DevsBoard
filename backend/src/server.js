@@ -154,6 +154,17 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: 'Erro interno do servidor', requestId });
 });
 
+// Safety net: Express 4 doesn't auto-catch async errors thrown before the
+// route's try/catch (e.g. a top-of-handler `await supabaseForRequest(req)`).
+// Without these, an unhandled rejection crashes the worker and Render
+// restarts in a loop. Log loudly so the real bug is fixed, but keep serving.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+
 const PORT = config.server.port;
 app.listen(PORT, () => {
   console.log(`DevsBoard API Segura rodando em http://localhost:${PORT}`);

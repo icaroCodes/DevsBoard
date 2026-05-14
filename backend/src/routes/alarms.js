@@ -6,11 +6,11 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', async (req, res) => {
-    const supabase = await supabaseForRequest(req);
-  const { userId, teamId } = req;
-  const alarms = [];
-
   try {
+    const supabase = await supabaseForRequest(req);
+    const { userId, teamId } = req;
+    const alarms = [];
+
     // Simple tasks with alarm_time
     let tasksQ = supabase
       .from('tasks')

@@ -51,11 +51,22 @@ const accessSecret =
 const refreshSecret =
   process.env.JWT_REFRESH_SECRET || fileEnv.JWT_REFRESH_SECRET;
 
+const supabaseUrl = process.env.SUPABASE_URL || fileEnv.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || fileEnv.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || fileEnv.SUPABASE_ANON_KEY;
+const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET || fileEnv.SUPABASE_JWT_SECRET;
+
 // Hard fail if secrets are missing. A fallback string here would be a
 // public-knowledge signing key and let anyone forge tokens for any user.
+// Supabase secrets are required at boot because supabaseForRequest is
+// fail-closed — missing them would crash every authenticated request.
 const missing = [];
 if (!accessSecret) missing.push('JWT_ACCESS_SECRET (or JWT_SECRET)');
 if (!refreshSecret) missing.push('JWT_REFRESH_SECRET');
+if (!supabaseUrl) missing.push('SUPABASE_URL');
+if (!supabaseServiceKey) missing.push('SUPABASE_SERVICE_KEY');
+if (!supabaseAnonKey) missing.push('SUPABASE_ANON_KEY');
+if (!supabaseJwtSecret) missing.push('SUPABASE_JWT_SECRET');
 if (missing.length > 0) {
   throw new Error(
     `Configuração inválida: variáveis obrigatórias ausentes: ${missing.join(', ')}. ` +
@@ -86,9 +97,10 @@ if (accessSecret === refreshSecret) {
 
 const config = {
   supabase: {
-    url: process.env.SUPABASE_URL || fileEnv.SUPABASE_URL,
-    serviceKey: process.env.SUPABASE_SERVICE_KEY || fileEnv.SUPABASE_SERVICE_KEY,
-    jwtSecret: process.env.SUPABASE_JWT_SECRET || fileEnv.SUPABASE_JWT_SECRET,
+    url: supabaseUrl,
+    serviceKey: supabaseServiceKey,
+    anonKey: supabaseAnonKey,
+    jwtSecret: supabaseJwtSecret,
   },
   jwt: {
     accessSecret,
