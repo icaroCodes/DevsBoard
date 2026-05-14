@@ -228,7 +228,14 @@ export default function Dashboard() {
  );
 
  if (loading) return <LoadingSkeleton variant="dashboard" />;
- if (!data) return <div style={{ position:'fixed', top: 100, left: 300, zIndex: 99999, background:'red', color:'white', fontSize: 40 }}>DATA IS NULL! Dashboard not rendering.</div>;
+  if (!data) return (
+  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+    <p className="text-[#86868B] text-[15px]">Não foi possível carregar o dashboard.</p>
+    <button onClick={() => { setLoading(true); load(); }} className="px-5 py-2 rounded-full bg-[#2C2C2E] hover:bg-[#3A3A3C] text-[14px] font-medium text-[#F5F5F7] transition-colors">
+      Tentar novamente
+    </button>
+  </div>
+  );
 
   const { finance, tasks, goals, routines } = data;
   const displayName = user?.name || user?.email?.split('@')[0] || 'Usuário';

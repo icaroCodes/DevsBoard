@@ -74,12 +74,35 @@ export async function supabaseForRequest(req) {
   if (req._supabaseClient) return req._supabaseClient;
   if (!req.userId) throw new Error('supabaseForRequest exige req.userId (authenticate middleware).');
 
-  const authUuid = await ensureAuthId(req.userId);
-  const jwtToken = signSupabaseJwt(authUuid);
-  const client = createUserClient(jwtToken);
+  try {
+    const authUuid = await ensureAuthId(req.userId);
+    const jwtToken = signSupabaseJwt(authUuid);
+    const client = createUserClient(jwtToken);
 
-  req._supabaseClient = client;
-  return client;
+    // Quick validation: try a lightweight query to confirm RLS policies are active.
+    // If they aren't deployed yet, Supabase returns zero rows for everything or
+    // throws permission errors. We test with a simple users lookup.
+    const { error: testErr } = await client
+      .from('users')
+      .select('id')
+      .eq('id', req.userId)
+      .maybeSingle();
+
+    if (testErr) {
+      console.warn(`[supabaseForRequest] RLS client test failed (${testErr.message}). Falling back to supabaseAdmin. Apply RLS policies to fix.`);
+      req._supabaseClient = supabaseAdmin;
+      return supabaseAdmin;
+    }
+
+    req._supabaseClient = client;
+    return client;
+  } catch (err) {
+    // If anything goes wrong (missing ANON_KEY, JWT sign failure, etc.)
+    // fall back to the admin client so the app doesn't break.
+    console.warn(`[supabaseForRequest] Error creating user client: ${err.message}. Falling back to supabaseAdmin.`);
+    req._supabaseClient = supabaseAdmin;
+    return supabaseAdmin;
+  }
 }
 
 /**
