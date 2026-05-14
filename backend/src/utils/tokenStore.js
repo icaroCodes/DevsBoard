@@ -23,7 +23,7 @@ const signAccessToken = (userId) =>
 
 const signRefreshToken = (userId, jti) =>
   jwt.sign(
-    { userId, jti, purpose: 'refresh' },
+    { userId, purpose: 'refresh' },
     config.jwt.refreshSecret,
     { expiresIn: config.jwt.refreshExpires, jwtid: jti }
   );
